@@ -2,15 +2,9 @@
 
 This project provides interactive data visualisations of risk analysis results.
 
-![About](images/screenshot-about.png)
-
 The tool presents the infrastructure systems and hazards considered in the
 analysis, then presents results as modelled for the whole system at a fine
 scale.
-
-See an overview of infrastructure networks:
-
-![Networks](images/screenshot-overview.png)
 
 Other functionality:
 
@@ -177,10 +171,16 @@ This tool has been developed through several projects.
   Countries, which is financed by the Government of Japan and managed by the
   Global Facility for Disaster Reduction and Recovery (GFDRR) through the Tokyo
   Disaster Risk Management Hub.
-- current development is by the Oxford Programme for Sustainable Infrastructure
+- [v0.3..v0.4](https://github.com/nismod/irv-jamaica/releases/tag/0.4.32)
+  was developed by the Oxford Programme for Sustainable Infrastructure
   Systems in the Environmental Change Institute, University of Oxford, for the
   Government of Jamaica (GoJ) as part of a project funded by UK Aid (FCDO). The
-  initiative forms part of the Coalition for Climate Resilient Investment’s
+  initiative formed part of the Coalition for Climate Resilient Investment’s
   (CCRI) collaboration with the GoJ, which also includes analysis of
   nature-based approaches to build resilience in Jamaica to be procured and
-  funded by the Green Climate Fund (GCF).
+  funded by the Green Climate Fund (GCF). Subsequently the Climate Studies Group
+  Mona at the University of the West Indies contributed to further development
+  funded by UK International Development (FCDO).
+- the current version is under development by the Oxford Programme for Sustainable
+  Infrastructure Systems, University of Oxford, again funded by UK International
+  Development (FCDO).
