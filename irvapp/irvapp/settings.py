@@ -78,7 +78,7 @@ WSGI_APPLICATION = 'irvapp.wsgi.application'
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "django.contrib.gis.db.backends.postgis",
         "NAME": os.environ.get("PGDATABASE"),
         "USER": os.environ.get("PGUSER"),
         "PASSWORD": os.environ.get("PGPASSWORD"),
