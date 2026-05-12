@@ -31,6 +31,17 @@ services:
       - "traefik.http.routers.frontend.entrypoints=web"
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
 
+  django:
+    build: ./irvapp
+    environment:
+      - PGHOST=db
+      - PGDATABASE=jamaicadev
+      - PGUSER=docker
+      - PGPASSWORD=docker
+    volumes:
+      - ./irvapp:/code
+    command: ["python", "manage.py", "runserver"]
+
   backend:
     image: ghcr.io/nismod/jsrat-backend:0.2
     build: ./backend
