@@ -38,11 +38,13 @@ services:
       - PGDATABASE=jamaicadev
       - PGUSER=docker
       - PGPASSWORD=docker
+    ports:
+      - 8000:8000
     depends_on:
       - db
     volumes:
       - ./irvapp:/code
-    command: ["python", "manage.py", "runserver"]
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
   backend:
     image: ghcr.io/nismod/jsrat-backend:0.2
