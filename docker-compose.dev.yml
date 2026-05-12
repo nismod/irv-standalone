@@ -38,6 +38,8 @@ services:
       - PGDATABASE=jamaicadev
       - PGUSER=docker
       - PGPASSWORD=docker
+    depends_on:
+      - db
     volumes:
       - ./irvapp:/code
     command: ["python", "manage.py", "runserver"]
