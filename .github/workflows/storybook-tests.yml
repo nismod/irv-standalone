@@ -1,7 +1,12 @@
 # .github/workflows/storybook-tests.yml
 
 name: "Storybook Tests"
-on: push
+on:
+  push:
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/storybook-tests.yml'
+
 jobs:
   test:
     timeout-minutes: 60
