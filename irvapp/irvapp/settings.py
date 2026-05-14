@@ -82,11 +82,14 @@ WSGI_APPLICATION = 'irvapp.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.contrib.gis.db.backends.postgis",
-        "NAME": os.environ.get("PGDATABASE"),
-        "USER": os.environ.get("PGUSER"),
-        "PASSWORD": os.environ.get("PGPASSWORD"),
-        "HOST": os.environ.get("PGHOST"),
-        "PORT": "5432",
+        "NAME": os.environ.get("PGDATABASE", "jamaicadev"),
+        "USER": os.environ.get("PGUSER", "docker"),
+        "PASSWORD": os.environ.get("PGPASSWORD", "docker"),
+        "HOST": os.environ.get("PGHOST", "localhost"),
+        "PORT": os.environ.get("PGPORT", "25432"),
+        "TEST": {
+            "NAME": os.environ.get("PGTESTDATABASE", "test_jamaicadev"),
+        },
     }
 }
 
