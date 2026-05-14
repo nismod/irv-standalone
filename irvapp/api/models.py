@@ -7,6 +7,7 @@
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.contrib.gis.db import models
 
+
 class AdaptationCostBenefit(models.Model):
     pk = models.CompositePrimaryKey(
         'feature_id',
@@ -14,14 +15,13 @@ class AdaptationCostBenefit(models.Model):
         'rcp',
         'adaptation_name',
         'adaptation_protection_level',
-        'protector_feature_id'
     )
-    feature = models.ForeignKey('Features', models.DO_NOTHING)
+    feature = models.ForeignKey('Feature', models.CASCADE)
     hazard = models.CharField(max_length=8)
     rcp = models.CharField(max_length=8)
     adaptation_name = models.CharField()
     adaptation_protection_level = models.FloatField()
-    protector_feature_id = models.IntegerField()
+    protector_feature_id = models.IntegerField(blank=True, null=True)
     adaptation_cost = models.FloatField(blank=True, null=True)
     avoided_ead_amin = models.FloatField(blank=True, null=True)
     avoided_ead_mean = models.FloatField(blank=True, null=True)
@@ -42,7 +42,7 @@ class DamagesExpected(models.Model):
         'epoch',
         'protection_standard'
     )
-    feature = models.ForeignKey('Features', models.DO_NOTHING)
+    feature = models.ForeignKey('Feature', models.CASCADE)
     hazard = models.CharField(max_length=8)
     rcp = models.CharField(max_length=8)
     epoch = models.IntegerField()
@@ -60,7 +60,7 @@ class DamagesExpected(models.Model):
 
 class DamagesNpv(models.Model):
     pk = models.CompositePrimaryKey('feature_id', 'hazard', 'rcp')
-    feature = models.ForeignKey('Features', models.DO_NOTHING)
+    feature = models.ForeignKey('Feature', models.CASCADE)
     hazard = models.CharField(max_length=8)
     rcp = models.CharField(max_length=8)
     ead_amin = models.FloatField(blank=True, null=True)
@@ -78,7 +78,7 @@ class DamagesRp(models.Model):
     pk = models.CompositePrimaryKey(
         'feature_id', 'hazard', 'rcp', 'epoch', 'rp'
     )
-    feature = models.ForeignKey('Features', models.DO_NOTHING)
+    feature = models.ForeignKey('Feature', models.CASCADE)
     hazard = models.CharField(max_length=8)
     rcp = models.CharField(max_length=8)
     epoch = models.IntegerField()
@@ -95,7 +95,7 @@ class DamagesRp(models.Model):
         db_table = 'damages_rp'
 
 
-class FeatureLayers(models.Model):
+class FeatureLayer(models.Model):
     layer_name = models.CharField(primary_key=True)
     sector = models.CharField()
     subsector = models.CharField()
@@ -105,10 +105,10 @@ class FeatureLayers(models.Model):
         db_table = 'feature_layers'
 
 
-class Features(models.Model):
+class Feature(models.Model):
     string_id = models.CharField()
     layer = models.ForeignKey(
-        FeatureLayers, models.DO_NOTHING, db_column='layer'
+        FeatureLayer, models.CASCADE, db_column='layer'
     )
     sublayer = models.CharField(blank=True, null=True)
     properties = models.JSONField()

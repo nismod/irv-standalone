@@ -1,10 +1,10 @@
 from django.contrib import admin
 
 from .models import (
-    FeatureLayers,
-    Features,
+    FeatureLayer,
+    Feature,
 )
 
 # Register your models here.
-admin.site.register(Features)
-admin.site.register(FeatureLayers)
+admin.site.register(Feature)
+admin.site.register(FeatureLayer)
