@@ -1,8 +1,11 @@
 import json
+from typing import cast
 
 from django.core.exceptions import FieldError
+from django.contrib.gis.db.models.functions import AsWKT, Envelope
 from django.db.models import ExpressionWrapper, F, FloatField, Sum, Value
 from rest_framework import status, viewsets
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -44,8 +47,28 @@ class DamagesRpViewset(viewsets.ModelViewSet):
     serializer_class = DamagesRpSerializer
 
 
-class AttributeLookupView(APIView):
-    """Lookup per-feature values for a field group and variable."""
+class FastAPIPagination(PageNumberPagination):
+    page_query_param = "page"
+    page_size_query_param = "size"
+    page_size = 50
+
+    def get_paginated_response(self, data):
+        page_size = (
+            self.get_page_size(self.request)
+            or self.page.paginator.per_page
+        )
+        return Response(
+            {
+                "items": data,
+                "total": self.page.paginator.count,
+                "page": self.page.number,
+                "size": page_size,
+                "pages": self.page.paginator.num_pages,
+            }
+        )
+
+
+class FieldGroupQueryParsingMixin:
 
     def _parse_json_query_param(self, request, key):
         raw = request.query_params.get(key)
@@ -70,15 +93,244 @@ class AttributeLookupView(APIView):
             return None, serializer.errors
         return serializer.validated_data, None
 
-    def _parse_parameters(self, field_group, field, parameters_data):
+    def _parse_parameters(
+        self,
+        field_group,
+        field,
+        parameters_data,
+    ) -> tuple[dict[str, float] | None, object | None]:
         if field_group == "adaptation" and field == "cost_benefit_ratio":
             serializer = AdaptationCostBenefitRatioParametersSerializer(
                 data=parameters_data
             )
             if not serializer.is_valid():
                 return None, serializer.errors
-            return serializer.validated_data, None
+            return cast(dict[str, float], serializer.validated_data), None
         return None, None
+
+
+class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
+    """Return features sorted by a requested attribute value."""
+
+    pagination_class = FastAPIPagination
+
+    def _layer_filters(self, request):
+        filters = {}
+        query_fields = {
+            "layer": "feature__layer__layer_name",
+            "sector": "feature__layer__sector",
+            "subsector": "feature__layer__subsector",
+            "asset_type": "feature__layer__asset_type",
+        }
+        for query_param, model_field in query_fields.items():
+            value = request.query_params.get(query_param)
+            if value is not None:
+                filters[model_field] = value
+        return filters
+
+    def _serialize_rows(self, rows):
+        return [
+            {
+                "id": row["feature_id"],
+                "string_id": row["feature__string_id"],
+                "layer": row["feature__layer__layer_name"],
+                "bbox_wkt": row["bbox_wkt"],
+                "value": row["value"],
+            }
+            for row in rows
+        ]
+
+    def get(self, request, field_group):
+        field = request.query_params.get("field")
+        if not field:
+            return Response(
+                {"field": ["This query parameter is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        dimensions_data, dimensions_parse_error = self._parse_json_query_param(
+            request, "dimensions"
+        )
+        if dimensions_parse_error is not None:
+            return Response(
+                dimensions_parse_error,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if request.query_params.get("parameters") is None:
+            parameters_data = {}
+        else:
+            parameters_data, parameters_parse_error = (
+                self._parse_json_query_param(request, "parameters")
+            )
+            if parameters_parse_error is not None:
+                return Response(
+                    parameters_parse_error,
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        dimensions, dimensions_error = self._parse_dimensions(
+            field_group, dimensions_data
+        )
+        if dimensions_error is not None:
+            return Response(
+                dimensions_error,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if dimensions is None:
+            return Response(
+                {"dimensions": ["Invalid dimensions payload."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        field_params, field_params_error = self._parse_parameters(
+            field_group, field, parameters_data
+        )
+        if field_params_error is not None:
+            return Response(
+                field_params_error,
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        base_filters = self._layer_filters(request)
+
+        try:
+            if field_group == "damages_expected":
+                query = DamagesExpected.objects.filter(
+                    **base_filters,
+                    rcp=dimensions["rcp"],
+                    epoch=dimensions["epoch"],
+                    protection_standard=dimensions["protection_standard"],
+                ).annotate(
+                    bbox_wkt=AsWKT(Envelope("feature__geom")),
+                )
+                if dimensions["hazard"] != "all":
+                    query = query.filter(hazard=dimensions["hazard"])
+                    query = query.annotate(value=F(field))
+                else:
+                    query = query.values(
+                        "feature_id",
+                        "feature__string_id",
+                        "feature__layer__layer_name",
+                        "bbox_wkt",
+                    ).annotate(value=Sum(field))
+            elif field_group == "adaptation":
+                query = AdaptationCostBenefit.objects.filter(
+                    **base_filters,
+                    hazard=dimensions["hazard"],
+                    rcp=dimensions["rcp"],
+                    adaptation_name=dimensions["adaptation_name"],
+                    adaptation_protection_level=dimensions[
+                        "adaptation_protection_level"
+                    ],
+                ).annotate(
+                    bbox_wkt=AsWKT(Envelope("feature__geom")),
+                )
+
+                if field == "cost_benefit_ratio":
+                    eael_days = 1
+                    if field_params is not None:
+                        eael_days = field_params["eael_days"]
+                    query = query.annotate(
+                        value=ExpressionWrapper(
+                            (
+                                F("avoided_ead_mean")
+                                + F("avoided_eael_mean") * Value(eael_days)
+                            )
+                            / F("adaptation_cost"),
+                            output_field=FloatField(),
+                        )
+                    )
+                else:
+                    query = query.annotate(value=F(field))
+            else:
+                return Response(
+                    {"field_group": ["Invalid field group."]},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        except FieldError:
+            return Response(
+                {"field": ["Invalid field for the requested field group."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if field_group == "damages_expected" and dimensions["hazard"] != "all":
+            query = query.values(
+                "feature_id",
+                "feature__string_id",
+                "feature__layer__layer_name",
+                "bbox_wkt",
+                "value",
+            )
+        elif field_group == "adaptation":
+            query = query.values(
+                "feature_id",
+                "feature__string_id",
+                "feature__layer__layer_name",
+                "bbox_wkt",
+                "value",
+            )
+
+        paginator = self.pagination_class()
+        page = paginator.paginate_queryset(
+            query.order_by("-value"), request, view=self
+        )
+        return paginator.get_paginated_response(self._serialize_rows(page))
+
+
+class ProtectedFeaturesView(APIView):
+    """Return adaptation options protected by a given feature."""
+
+    def get(self, request, protector_id):
+        rcp = request.query_params.get("rcp")
+        if not rcp:
+            return Response(
+                {"rcp": ["This query parameter is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        query = (
+            AdaptationCostBenefit.objects.filter(
+                protector_feature_id=protector_id,
+                rcp=rcp,
+            )
+            .values(
+                "feature_id",
+                "feature__string_id",
+                "feature__layer__layer_name",
+                "adaptation_name",
+                "adaptation_protection_level",
+                "adaptation_cost",
+                "avoided_ead_mean",
+                "avoided_eael_mean",
+                "hazard",
+                "rcp",
+            )
+            .order_by("feature_id", "adaptation_name", "hazard", "rcp")
+        )
+
+        rows = [
+            {
+                "id": row["feature_id"],
+                "string_id": row["feature__string_id"],
+                "layer": row["feature__layer__layer_name"],
+                "adaptation_name": row["adaptation_name"],
+                "adaptation_protection_level": row[
+                    "adaptation_protection_level"
+                ],
+                "adaptation_cost": row["adaptation_cost"],
+                "avoided_ead_mean": row["avoided_ead_mean"],
+                "avoided_eael_mean": row["avoided_eael_mean"],
+                "hazard": row["hazard"],
+                "rcp": row["rcp"],
+            }
+            for row in query
+        ]
+        return Response(rows)
+
+
+class AttributeLookupView(FieldGroupQueryParsingMixin, APIView):
+    """Lookup per-feature values for a field group and variable."""
 
     def post(self, request, field_group):
         layer = request.query_params.get("layer")
@@ -101,7 +353,11 @@ class AttributeLookupView(APIView):
                 body_serializer.errors,
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        ids = body_serializer.validated_data["ids"]
+        validated_data = cast(
+            dict[str, list[int]],
+            body_serializer.validated_data,
+        )
+        ids = validated_data["ids"]
 
         dimensions_data, dimensions_parse_error = self._parse_json_query_param(
             request, "dimensions"
@@ -198,7 +454,9 @@ class AttributeLookupView(APIView):
             )
 
             if field == "cost_benefit_ratio":
-                eael_days = field_params["eael_days"] if field_params else 1
+                eael_days = 1
+                if field_params is not None:
+                    eael_days = field_params["eael_days"]
                 ratio = ExpressionWrapper(
                     (
                         F("avoided_ead_mean")
