@@ -148,3 +148,5 @@ REST_FRAMEWORK = {
     ),
     'PAGE_SIZE': 100
 }
+
+APPEND_SLASH = False

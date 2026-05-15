@@ -10,7 +10,7 @@ from api.views import (
 from rest_framework.routers import DefaultRouter
 from django.urls import path
 
-router = DefaultRouter()
+router = DefaultRouter(trailing_slash=False)
 router.register(r'features', FeatureViewset)
 router.register(r'adaptation-cost-benefits', AdaptationCostBenefitViewset)
 router.register(r'damages-expected', DamagesExpectedViewset)
