@@ -45,24 +45,13 @@ services:
     volumes:
       - ./irvapp:/code
     command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-
-  backend:
-    image: ghcr.io/nismod/jsrat-backend:0.2
-    build: ./backend
-    ports:
-      - 8888:80
-    environment:
-      - PGHOST=db
-      - PGDATABASE=jamaicadev
-      - PGUSER=docker
-      - PGPASSWORD=docker
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`localhost`) && PathPrefix(`/api`)"
-      - "traefik.http.routers.backend.entrypoints=web"
-      - "traefik.http.routers.backend.middlewares=backend-stripprefix"
-      - "traefik.http.middlewares.backend-stripprefix.stripprefix.prefixes=/api"
-      - "traefik.http.services.backend.loadbalancer.server.port=80"
+      - "traefik.http.routers.django.rule=Host(`localhost`) && PathPrefix(`/api`)"
+      - "traefik.http.routers.django.entrypoints=web"
+      - "traefik.http.routers.django.middlewares=django-stripprefix"
+      - "traefik.http.middlewares.django-stripprefix.stripprefix.prefixes=/api"
+      - "traefik.http.services.django.loadbalancer.server.port=8000"
 
   vector-tileserver:
     image: ghcr.io/nismod/jsrat-vector-tileserver-dev:0.1

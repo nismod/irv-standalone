@@ -22,5 +22,5 @@ urlpatterns = [
         'features/<int:protector_id>/protected-by',
         ProtectedFeaturesView.as_view(),
     ),
-    path('attributes/<str:field_group>/', AttributeLookupView.as_view()),
+    path('attributes/<str:field_group>', AttributeLookupView.as_view()),
 ] + router.urls

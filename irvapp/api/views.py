@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 
 from api.serializers import (
     FeatureSerializer,
+    FeatureDetailSerializer,
     AdaptationCostBenefitSerializer,
     DamagesExpectedSerializer,
     DamagesRpSerializer,
@@ -30,6 +31,22 @@ from api.models import (
 class FeatureViewset(viewsets.ModelViewSet):
     queryset = Feature.objects.all()
     serializer_class = FeatureSerializer
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action == "retrieve":
+            return queryset.prefetch_related(
+                "adaptationcostbenefit_set",
+                "damagesexpected_set",
+                "damagesrp_set",
+                "damagesnpv_set",
+            )
+        return queryset
+
+    def get_serializer_class(self):  # type: ignore[override]
+        if self.action == "retrieve":
+            return FeatureDetailSerializer
+        return FeatureSerializer
 
 
 class AdaptationCostBenefitViewset(viewsets.ModelViewSet):
@@ -347,7 +364,11 @@ class AttributeLookupView(FieldGroupQueryParsingMixin, APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        body_serializer = AttributeLookupRequestSerializer(data=request.data)
+        request_body = request.data
+        if isinstance(request_body, list):
+            request_body = {"ids": request_body}
+
+        body_serializer = AttributeLookupRequestSerializer(data=request_body)
         if not body_serializer.is_valid():
             return Response(
                 body_serializer.errors,

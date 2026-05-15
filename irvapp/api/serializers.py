@@ -1,11 +1,11 @@
 from rest_framework import serializers
-from .models import Feature, AdaptationCostBenefit, DamagesExpected, DamagesRp
-
-
-class FeatureSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Feature
-        fields = '__all__'
+from .models import (
+    AdaptationCostBenefit,
+    DamagesExpected,
+    DamagesNpv,
+    DamagesRp,
+    Feature,
+)
 
 
 class AdaptationCostBenefitSerializer(serializers.ModelSerializer):
@@ -23,6 +23,46 @@ class DamagesExpectedSerializer(serializers.ModelSerializer):
 class DamagesRpSerializer(serializers.ModelSerializer):
     class Meta:
         model = DamagesRp
+        fields = '__all__'
+
+
+class DamagesNpvSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DamagesNpv
+        fields = '__all__'
+
+
+class FeatureSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Feature
+        fields = ['id', 'string_id', 'layer', 'sublayer', 'properties']
+
+
+class FeatureDetailSerializer(serializers.ModelSerializer):
+    # Explicitly map to Django's default reverse FK managers.
+    adaptation = AdaptationCostBenefitSerializer(
+        source='adaptationcostbenefit_set',
+        many=True,
+        read_only=True,
+    )
+    damages_expected = DamagesExpectedSerializer(
+        source='damagesexpected_set',
+        many=True,
+        read_only=True,
+    )
+    damages_return_period = DamagesRpSerializer(
+        source='damagesrp_set',
+        many=True,
+        read_only=True,
+    )
+    damages_npv = DamagesNpvSerializer(
+        source='damagesnpv_set',
+        many=True,
+        read_only=True,
+    )
+
+    class Meta:
+        model = Feature
         fields = '__all__'
 
 
