@@ -4,6 +4,8 @@ from api.views import (
     DamagesExpectedViewset,
     DamagesRpViewset,
     AttributeLookupView,
+    ProtectedFeaturesView,
+    SortedFeaturesView,
 )
 from rest_framework.routers import DefaultRouter
 from django.urls import path
@@ -15,5 +17,10 @@ router.register(r'damages-expected', DamagesExpectedViewset)
 router.register(r'damages-rp', DamagesRpViewset)
 
 urlpatterns = [
+    path('features/sorted-by/<str:field_group>', SortedFeaturesView.as_view()),
+    path(
+        'features/<int:protector_id>/protected-by',
+        ProtectedFeaturesView.as_view(),
+    ),
     path('attributes/<str:field_group>/', AttributeLookupView.as_view()),
 ] + router.urls
