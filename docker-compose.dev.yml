@@ -133,7 +133,7 @@ services:
       - POSTGRES_MULTIPLE_EXTENSIONS=postgis
       - WAL_SIZE=4GB
     ports:
-      - 25432:5432
+      - 5432:5432
     restart: on-failure
     healthcheck:
       test: "PGPASSWORD=docker pg_isready -h 127.0.0.1 -U docker -d jamaicadev"

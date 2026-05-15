@@ -133,7 +133,7 @@ docker, which is available through `postgresql-client` packages
 [conda-forge](https://anaconda.org/channels/conda-forge/packages/postgresql/overview).
 
 ```
-PGPORT=25432 \
+PGPORT=5432 \
 PGHOST=localhost \
 PGUSER=docker \
 PGPASSWORD=docker \
