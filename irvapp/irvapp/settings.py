@@ -86,7 +86,7 @@ DATABASES = {
         "USER": os.environ.get("PGUSER", "docker"),
         "PASSWORD": os.environ.get("PGPASSWORD", "docker"),
         "HOST": os.environ.get("PGHOST", "localhost"),
-        "PORT": os.environ.get("PGPORT", "25432"),
+        "PORT": os.environ.get("PGPORT", "5432"),
         "TEST": {
             "NAME": os.environ.get("PGTESTDATABASE", "test_jamaicadev"),
         },
