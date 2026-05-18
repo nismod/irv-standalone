@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AttributesReadAttributesData, AttributesReadAttributesErrors, AttributesReadAttributesResponses, FeaturesReadFeatureData, FeaturesReadFeatureErrors, FeaturesReadFeatureResponses, FeaturesReadProtectedFeaturesData, FeaturesReadProtectedFeaturesErrors, FeaturesReadProtectedFeaturesResponses, FeaturesReadSortedFeaturesData, FeaturesReadSortedFeaturesErrors, FeaturesReadSortedFeaturesResponses } from './types.gen';
+import type { AdaptationCostBenefitsCreateData, AdaptationCostBenefitsCreateResponses, AdaptationCostBenefitsDestroyData, AdaptationCostBenefitsDestroyResponses, AdaptationCostBenefitsListData, AdaptationCostBenefitsListResponses, AdaptationCostBenefitsPartialUpdateData, AdaptationCostBenefitsPartialUpdateResponses, AdaptationCostBenefitsRetrieveData, AdaptationCostBenefitsRetrieveResponses, AdaptationCostBenefitsUpdateData, AdaptationCostBenefitsUpdateResponses, AttributesCreateData, AttributesCreateResponses, DamagesExpectedCreateData, DamagesExpectedCreateResponses, DamagesExpectedDestroyData, DamagesExpectedDestroyResponses, DamagesExpectedListData, DamagesExpectedListResponses, DamagesExpectedPartialUpdateData, DamagesExpectedPartialUpdateResponses, DamagesExpectedRetrieveData, DamagesExpectedRetrieveResponses, DamagesExpectedUpdateData, DamagesExpectedUpdateResponses, DamagesRpCreateData, DamagesRpCreateResponses, DamagesRpDestroyData, DamagesRpDestroyResponses, DamagesRpListData, DamagesRpListResponses, DamagesRpPartialUpdateData, DamagesRpPartialUpdateResponses, DamagesRpRetrieveData, DamagesRpRetrieveResponses, DamagesRpUpdateData, DamagesRpUpdateResponses, FeaturesCreateData, FeaturesCreateResponses, FeaturesDestroyData, FeaturesDestroyResponses, FeaturesListData, FeaturesListResponses, FeaturesPartialUpdateData, FeaturesPartialUpdateResponses, FeaturesProtectedByListData, FeaturesProtectedByListResponses, FeaturesRetrieveData, FeaturesRetrieveResponses, FeaturesSortedByRetrieveData, FeaturesSortedByRetrieveResponses, FeaturesUpdateData, FeaturesUpdateResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -18,32 +18,333 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
     meta?: Record<string, unknown>;
 };
 
-/**
- * Read Feature
- */
-export const featuresReadFeature = <ThrowOnError extends boolean = false>(options: Options<FeaturesReadFeatureData, ThrowOnError>) => (options.client ?? client).get<FeaturesReadFeatureResponses, FeaturesReadFeatureErrors, ThrowOnError>({ url: '/features/{feature_id}', ...options });
+export const adaptationCostBenefitsList = <ThrowOnError extends boolean = false>(options?: Options<AdaptationCostBenefitsListData, ThrowOnError>) => (options?.client ?? client).get<AdaptationCostBenefitsListResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/adaptation-cost-benefits',
+    ...options
+});
+
+export const adaptationCostBenefitsCreate = <ThrowOnError extends boolean = false>(options: Options<AdaptationCostBenefitsCreateData, ThrowOnError>) => (options.client ?? client).post<AdaptationCostBenefitsCreateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/adaptation-cost-benefits',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const adaptationCostBenefitsDestroy = <ThrowOnError extends boolean = false>(options: Options<AdaptationCostBenefitsDestroyData, ThrowOnError>) => (options.client ?? client).delete<AdaptationCostBenefitsDestroyResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/adaptation-cost-benefits/{pk}',
+    ...options
+});
+
+export const adaptationCostBenefitsRetrieve = <ThrowOnError extends boolean = false>(options: Options<AdaptationCostBenefitsRetrieveData, ThrowOnError>) => (options.client ?? client).get<AdaptationCostBenefitsRetrieveResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/adaptation-cost-benefits/{pk}',
+    ...options
+});
+
+export const adaptationCostBenefitsPartialUpdate = <ThrowOnError extends boolean = false>(options: Options<AdaptationCostBenefitsPartialUpdateData, ThrowOnError>) => (options.client ?? client).patch<AdaptationCostBenefitsPartialUpdateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/adaptation-cost-benefits/{pk}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const adaptationCostBenefitsUpdate = <ThrowOnError extends boolean = false>(options: Options<AdaptationCostBenefitsUpdateData, ThrowOnError>) => (options.client ?? client).put<AdaptationCostBenefitsUpdateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/adaptation-cost-benefits/{pk}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
- * Read Sorted Features
+ * Lookup per-feature values for a field group and variable.
  */
-export const featuresReadSortedFeatures = <ThrowOnError extends boolean = false>(options: Options<FeaturesReadSortedFeaturesData, ThrowOnError>) => (options.client ?? client).get<FeaturesReadSortedFeaturesResponses, FeaturesReadSortedFeaturesErrors, ThrowOnError>({ url: '/features/sorted-by/{field_group}', ...options });
-
-/**
- * Read Protected Features
- *
- * Get all adaptation options, by feature ID and layer, for features
- * protected by a given protector feature.
- */
-export const featuresReadProtectedFeatures = <ThrowOnError extends boolean = false>(options: Options<FeaturesReadProtectedFeaturesData, ThrowOnError>) => (options.client ?? client).get<FeaturesReadProtectedFeaturesResponses, FeaturesReadProtectedFeaturesErrors, ThrowOnError>({ url: '/features/{protector_id}/protected-by', ...options });
-
-/**
- * Read Attributes
- */
-export const attributesReadAttributes = <ThrowOnError extends boolean = false>(options: Options<AttributesReadAttributesData, ThrowOnError>) => (options.client ?? client).post<AttributesReadAttributesResponses, AttributesReadAttributesErrors, ThrowOnError>({
+export const attributesCreate = <ThrowOnError extends boolean = false>(options: Options<AttributesCreateData, ThrowOnError>) => (options.client ?? client).post<AttributesCreateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
     url: '/attributes/{field_group}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+export const damagesExpectedList = <ThrowOnError extends boolean = false>(options?: Options<DamagesExpectedListData, ThrowOnError>) => (options?.client ?? client).get<DamagesExpectedListResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/damages-expected',
+    ...options
+});
+
+export const damagesExpectedCreate = <ThrowOnError extends boolean = false>(options: Options<DamagesExpectedCreateData, ThrowOnError>) => (options.client ?? client).post<DamagesExpectedCreateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/damages-expected',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const damagesExpectedDestroy = <ThrowOnError extends boolean = false>(options: Options<DamagesExpectedDestroyData, ThrowOnError>) => (options.client ?? client).delete<DamagesExpectedDestroyResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/damages-expected/{pk}',
+    ...options
+});
+
+export const damagesExpectedRetrieve = <ThrowOnError extends boolean = false>(options: Options<DamagesExpectedRetrieveData, ThrowOnError>) => (options.client ?? client).get<DamagesExpectedRetrieveResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/damages-expected/{pk}',
+    ...options
+});
+
+export const damagesExpectedPartialUpdate = <ThrowOnError extends boolean = false>(options: Options<DamagesExpectedPartialUpdateData, ThrowOnError>) => (options.client ?? client).patch<DamagesExpectedPartialUpdateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/damages-expected/{pk}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const damagesExpectedUpdate = <ThrowOnError extends boolean = false>(options: Options<DamagesExpectedUpdateData, ThrowOnError>) => (options.client ?? client).put<DamagesExpectedUpdateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/damages-expected/{pk}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const damagesRpList = <ThrowOnError extends boolean = false>(options?: Options<DamagesRpListData, ThrowOnError>) => (options?.client ?? client).get<DamagesRpListResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/damages-rp',
+    ...options
+});
+
+export const damagesRpCreate = <ThrowOnError extends boolean = false>(options: Options<DamagesRpCreateData, ThrowOnError>) => (options.client ?? client).post<DamagesRpCreateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/damages-rp',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const damagesRpDestroy = <ThrowOnError extends boolean = false>(options: Options<DamagesRpDestroyData, ThrowOnError>) => (options.client ?? client).delete<DamagesRpDestroyResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/damages-rp/{pk}',
+    ...options
+});
+
+export const damagesRpRetrieve = <ThrowOnError extends boolean = false>(options: Options<DamagesRpRetrieveData, ThrowOnError>) => (options.client ?? client).get<DamagesRpRetrieveResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/damages-rp/{pk}',
+    ...options
+});
+
+export const damagesRpPartialUpdate = <ThrowOnError extends boolean = false>(options: Options<DamagesRpPartialUpdateData, ThrowOnError>) => (options.client ?? client).patch<DamagesRpPartialUpdateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/damages-rp/{pk}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const damagesRpUpdate = <ThrowOnError extends boolean = false>(options: Options<DamagesRpUpdateData, ThrowOnError>) => (options.client ?? client).put<DamagesRpUpdateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/damages-rp/{pk}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const featuresList = <ThrowOnError extends boolean = false>(options?: Options<FeaturesListData, ThrowOnError>) => (options?.client ?? client).get<FeaturesListResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/features',
+    ...options
+});
+
+export const featuresCreate = <ThrowOnError extends boolean = false>(options: Options<FeaturesCreateData, ThrowOnError>) => (options.client ?? client).post<FeaturesCreateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/features',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const featuresDestroy = <ThrowOnError extends boolean = false>(options: Options<FeaturesDestroyData, ThrowOnError>) => (options.client ?? client).delete<FeaturesDestroyResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/features/{id}',
+    ...options
+});
+
+export const featuresRetrieve = <ThrowOnError extends boolean = false>(options: Options<FeaturesRetrieveData, ThrowOnError>) => (options.client ?? client).get<FeaturesRetrieveResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/features/{id}',
+    ...options
+});
+
+export const featuresPartialUpdate = <ThrowOnError extends boolean = false>(options: Options<FeaturesPartialUpdateData, ThrowOnError>) => (options.client ?? client).patch<FeaturesPartialUpdateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/features/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const featuresUpdate = <ThrowOnError extends boolean = false>(options: Options<FeaturesUpdateData, ThrowOnError>) => (options.client ?? client).put<FeaturesUpdateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/features/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Return adaptation options protected by a given feature.
+ */
+export const featuresProtectedByList = <ThrowOnError extends boolean = false>(options: Options<FeaturesProtectedByListData, ThrowOnError>) => (options.client ?? client).get<FeaturesProtectedByListResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/features/{protector_id}/protected-by',
+    ...options
+});
+
+/**
+ * Return features sorted by a requested attribute value.
+ */
+export const featuresSortedByRetrieve = <ThrowOnError extends boolean = false>(options: Options<FeaturesSortedByRetrieveData, ThrowOnError>) => (options.client ?? client).get<FeaturesSortedByRetrieveResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/features/sorted-by/{field_group}',
+    ...options
 });

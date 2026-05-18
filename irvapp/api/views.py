@@ -4,7 +4,14 @@ from typing import cast
 from django.core.exceptions import FieldError
 from django.contrib.gis.db.models.functions import AsWKT, Envelope
 from django.db.models import ExpressionWrapper, F, FloatField, Sum, Value
-from rest_framework import status, viewsets
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+    inline_serializer,
+)
+from drf_spectacular.types import OpenApiTypes
+from rest_framework import status, viewsets, serializers
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -12,10 +19,13 @@ from rest_framework.views import APIView
 from api.serializers import (
     FeatureSerializer,
     FeatureDetailSerializer,
+    SortedFeatureSerializer,
     AdaptationCostBenefitSerializer,
     DamagesExpectedSerializer,
     DamagesRpSerializer,
+    ProtectedFeatureSerializer,
     AttributeLookupRequestSerializer,
+    AttributeLookupResponseSerializer,
     ExpectedDamagesDimensionsSerializer,
     AdaptationDimensionsSerializer,
     AdaptationCostBenefitRatioParametersSerializer,
@@ -130,6 +140,7 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
     """Return features sorted by a requested attribute value."""
 
     pagination_class = FastAPIPagination
+    serializer_class = SortedFeatureSerializer
 
     def _layer_filters(self, request):
         filters = {}
@@ -157,6 +168,83 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
             for row in rows
         ]
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "field",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                required=True,
+                description="Field name to sort by",
+            ),
+            OpenApiParameter(
+                "dimensions",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                required=True,
+                description="JSON object with dimension filters",
+            ),
+            OpenApiParameter(
+                "parameters",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                required=False,
+                description="JSON object with field parameters",
+            ),
+            OpenApiParameter(
+                "page",
+                OpenApiTypes.INT,
+                OpenApiParameter.QUERY,
+                required=False,
+                description="Page number (default 1)",
+            ),
+            OpenApiParameter(
+                "size",
+                OpenApiTypes.INT,
+                OpenApiParameter.QUERY,
+                required=False,
+                description="Page size (default 50)",
+            ),
+            OpenApiParameter(
+                "layer",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                required=False,
+                description="Filter by layer",
+            ),
+            OpenApiParameter(
+                "sector",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                required=False,
+                description="Filter by sector",
+            ),
+            OpenApiParameter(
+                "subsector",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                required=False,
+                description="Filter by subsector",
+            ),
+            OpenApiParameter(
+                "asset_type",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                required=False,
+                description="Filter by asset type",
+            ),
+        ],
+        responses=inline_serializer(
+            'PaginatedSortedFeatureListResponse',
+            {
+                'items': SortedFeatureSerializer(many=True),
+                'total': serializers.IntegerField(),
+                'page': serializers.IntegerField(),
+                'size': serializers.IntegerField(),
+                'pages': serializers.IntegerField(),
+            }
+        ),
+    )
     def get(self, request, field_group):
         field = request.query_params.get("field")
         if not field:
@@ -292,12 +380,30 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
         page = paginator.paginate_queryset(
             query.order_by("-value"), request, view=self
         )
-        return paginator.get_paginated_response(self._serialize_rows(page))
+        rows = self._serialize_rows(page)
+        serializer = self.serializer_class(rows, many=True)
+        return paginator.get_paginated_response(serializer.data)
 
 
 class ProtectedFeaturesView(APIView):
     """Return adaptation options protected by a given feature."""
 
+    serializer_class = ProtectedFeatureSerializer
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "rcp",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                required=True,
+                description=(
+                    "RCP (Representative Concentration Pathway) value"
+                ),
+            ),
+        ],
+        responses=ProtectedFeatureSerializer(many=True),
+    )
     def get(self, request, protector_id):
         rcp = request.query_params.get("rcp")
         if not rcp:
@@ -343,12 +449,60 @@ class ProtectedFeaturesView(APIView):
             }
             for row in query
         ]
-        return Response(rows)
+        serializer = self.serializer_class(rows, many=True)
+        return Response(serializer.data)
 
 
 class AttributeLookupView(FieldGroupQueryParsingMixin, APIView):
     """Lookup per-feature values for a field group and variable."""
 
+    serializer_class = AttributeLookupResponseSerializer
+
+    @extend_schema(
+        request=AttributeLookupRequestSerializer,
+        parameters=[
+            OpenApiParameter(
+                "layer",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                required=True,
+                description="Asset layer ID",
+            ),
+            OpenApiParameter(
+                "field",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                required=True,
+                description="Field name to look up",
+            ),
+            OpenApiParameter(
+                "dimensions",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                required=True,
+                description="JSON object with dimension filters",
+            ),
+            OpenApiParameter(
+                "parameters",
+                OpenApiTypes.STR,
+                OpenApiParameter.QUERY,
+                required=False,
+                description="JSON object with field parameters",
+            ),
+        ],
+        responses={
+            200: OpenApiResponse(
+                response={
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "number",
+                        "format": "double",
+                        "nullable": True,
+                    },
+                }
+            )
+        },
+    )
     def post(self, request, field_group):
         layer = request.query_params.get("layer")
         field = request.query_params.get("field")
@@ -505,6 +659,8 @@ class AttributeLookupView(FieldGroupQueryParsingMixin, APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        return Response(
-            {feature_id: lookup.get(feature_id, None) for feature_id in ids}
-        )
+        response_data = {
+            feature_id: lookup.get(feature_id, None) for feature_id in ids
+        }
+        serializer = self.serializer_class(response_data)
+        return Response(serializer.data)

@@ -58,7 +58,7 @@ export const AssetListPage = () => {
                 onExpandedChange={(newExpanded) => setSelectedFeature(newExpanded ? feature : null)}
                 expandableContent={
                   <>
-                    <FeatureSidebarContent feature={feature} assetType={feature.layer} />
+                    <FeatureSidebarContent feature={{ id: feature.id }} assetType={feature.layer} />
                   </>
                 }
               >

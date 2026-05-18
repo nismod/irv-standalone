@@ -3,8 +3,8 @@ import { atomFamily } from 'jotai-family';
 import { unwrap } from 'jotai/utils';
 
 import { createClient } from 'lib/api-client/client';
-import { featuresReadProtectedFeatures } from 'lib/api-client/sdk.gen';
-import { ProtectedFeatureListItem } from 'lib/api-client/types.gen';
+import { featuresProtectedByList } from 'lib/api-client/sdk.gen';
+import { ProtectedFeature } from 'lib/api-client/types.gen';
 import { selectionState } from './interactions/interaction-state';
 import { VectorTarget } from 'lib/data-map/types';
 import { dataParamState } from './data-params';
@@ -27,7 +27,7 @@ const protectedFeatureAdaptationOptionsQuery = atomFamily((rcp: string = '2.6') 
     if (!target?.feature?.id) {
       return [];
     }
-    const { data } = await featuresReadProtectedFeatures({
+    const { data } = await featuresProtectedByList({
       client: apiClient,
       path: {
         protector_id: +target.feature.id,
@@ -52,7 +52,7 @@ const protectedFeatureAdaptationOptionsCached = atomFamily((rcp: string = '2.6')
 export const protectedFeatureAdaptationOptionsState = atomFamily((rcp: string = '2.6') =>
   atom((get) => {
     try {
-      const data: ProtectedFeatureListItem[] = get(
+      const data: ProtectedFeature[] = get(
         protectedFeatureAdaptationOptionsCached(rcp ?? '2.6'),
       );
       return { data, error: null };

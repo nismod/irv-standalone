@@ -4,7 +4,7 @@ import { RESET } from 'jotai/utils';
 import { atomFamily } from 'jotai-family';
 
 import { createClient } from 'lib/api-client/client';
-import { featuresReadFeature } from 'lib/api-client/sdk.gen';
+import { featuresRetrieve } from 'lib/api-client/sdk.gen';
 import { InteractionLayer, VectorTarget } from 'lib/data-map/types';
 import { ViewLayer } from 'lib/data-map/view-layers';
 
@@ -93,10 +93,10 @@ const apiClient = createClient({
  */
 export const selectedAssetDetails = atomFamily((featureId: number) =>
   atom(async () => {
-    const { data } = await featuresReadFeature({
+    const { data } = await featuresRetrieve({
       client: apiClient,
       path: {
-        feature_id: featureId,
+        id: featureId,
       },
     });
     return data;

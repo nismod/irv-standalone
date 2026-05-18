@@ -6,8 +6,8 @@ import { atom, useAtomValue } from 'jotai';
 import { atomFamily } from 'jotai-family';
 
 import { createClient } from 'lib/api-client/client';
-import { featuresReadSortedFeatures } from 'lib/api-client/sdk.gen';
-import { FeatureListItemOutFloat } from 'lib/api-client/types.gen';
+import { featuresSortedByRetrieve } from 'lib/api-client/sdk.gen';
+import { SortedFeature } from 'lib/api-client/types.gen';
 import { BoundingBox } from 'lib/bounding-box';
 import { FieldSpec } from 'lib/data-map/view-layers';
 
@@ -47,7 +47,7 @@ const sortedFeaturesState = atomFamily((queryKey: string) => {
           error: null,
         };
       }
-      const { data } = await featuresReadSortedFeatures({
+      const { data } = await featuresSortedByRetrieve({
         client: apiClient,
         path: {
           field_group: fieldGroup,
@@ -61,7 +61,7 @@ const sortedFeaturesState = atomFamily((queryKey: string) => {
           size: pageSize,
         },
       });
-      const features = (data.items as FeatureListItemOutFloat[]).map(processFeature);
+      const features = (data.items as SortedFeature[]).map(processFeature);
       const pageInfo = pick(data, ['page', 'size', 'total']);
       return { features, pageInfo, error: null };
     } catch (error) {
@@ -84,11 +84,11 @@ export interface LayerSpec {
   subsector?: string;
   asset_type?: string;
 }
-export type ListFeature = Omit<FeatureListItemOutFloat, 'bbox_wkt'> & {
+export type ListFeature = Omit<SortedFeature, 'bbox_wkt'> & {
   bbox: BoundingBox;
 };
 
-function processFeature(f: FeatureListItemOutFloat): ListFeature {
+function processFeature(f: SortedFeature): ListFeature {
   const originalBboxGeom = parseSync(f.bbox_wkt, WKTLoader);
   const processedBbox: BoundingBox = bbox(originalBboxGeom) as BoundingBox;
 

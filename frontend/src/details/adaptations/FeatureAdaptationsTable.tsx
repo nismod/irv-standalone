@@ -75,7 +75,7 @@ export const FeatureAdaptationsTable = () => {
             expandableContent={
               <Box py={1}>
                 <FeatureSidebarContent
-                  feature={feature}
+                  feature={{ id: feature.id }}
                   assetType={feature.layer}
                   showRiskSection={false}
                 />
