@@ -1,10 +1,10 @@
 import { createClient } from 'lib/api-client/client';
-import { attributesReadAttributes } from 'lib/api-client/sdk.gen';
+import { attributesCreate } from 'lib/api-client/sdk.gen';
 import { FieldSpec } from 'lib/data-map/view-layers';
 
 export type DataLoaderSubscriber = (loader: DataLoader) => void;
 
-type LayerData = Record<string, number | string>;
+type LayerData = Record<string, string | number | null>;
 
 export type DataFetcher = (
   ids?: number[],
@@ -30,9 +30,9 @@ const defaultDataFetcher: DataFetcher = async (
 ) => {
   if (ids.length === 0) return {};
   const { fieldGroup, field, fieldDimensions, fieldParams } = fieldSpec;
-  const { data } = await attributesReadAttributes({
+  const { data } = await attributesCreate({
     client: apiClient,
-    body: ids,
+    body: { ids },
     path: {
       field_group: fieldGroup,
     },

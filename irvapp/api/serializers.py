@@ -93,3 +93,39 @@ class AdaptationCostBenefitRatioParametersSerializer(serializers.Serializer):
     def validate_eael_days(self, value):
         # Keep parity with FastAPI behavior while upstream data is corrected.
         return value / 15
+
+
+class ProtectedFeatureSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    string_id = serializers.CharField()
+    layer = serializers.CharField()
+    adaptation_name = serializers.CharField()
+    adaptation_protection_level = serializers.FloatField()
+    adaptation_cost = serializers.FloatField(allow_null=True)
+    avoided_ead_mean = serializers.FloatField(allow_null=True)
+    avoided_eael_mean = serializers.FloatField(allow_null=True)
+    hazard = serializers.CharField()
+    rcp = serializers.CharField()
+
+
+class SortedFeatureSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    string_id = serializers.CharField()
+    layer = serializers.CharField()
+    bbox_wkt = serializers.CharField()
+    value = serializers.FloatField(allow_null=True)
+
+
+class AttributeLookupResponseSerializer(serializers.BaseSerializer):
+    """Top-level mapping of feature id to value (or null)."""
+
+    def to_representation(self, instance):
+        value_field = serializers.FloatField(allow_null=True, required=False)
+        return {
+            str(feature_id): (
+                value_field.to_representation(value)
+                if value is not None
+                else None
+            )
+            for feature_id, value in instance.items()
+        }

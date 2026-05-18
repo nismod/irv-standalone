@@ -1,13 +1,13 @@
 import { Box } from '@mui/system';
 import { IconButton, Typography } from '@mui/material';
 
-import { Adaptation } from 'lib/api-client';
+import { AdaptationCostBenefit } from 'lib/api-client';
 import { AdaptationTable } from './AdaptationTable';
 import Download from '@mui/icons-material/Download';
 import { downloadFile, unique } from 'lib/helpers';
 import { Fragment, useMemo } from 'react';
 
-function makeAdaptationCsv(options: Adaptation[]) {
+function makeAdaptationCsv(options: AdaptationCostBenefit[]) {
   const header =
     [
       'adaptation_name',
@@ -46,11 +46,11 @@ function makeAdaptationCsv(options: Adaptation[]) {
 }
 
 export const AdaptationSection = ({ fd }) => {
-  const options: Adaptation[] = useMemo(() => {
+  const options: AdaptationCostBenefit[] = useMemo(() => {
     // TODO: remove factor when data is updated
     const HORRIBLE_HACK_FACTOR = 1 / 15;
     return (
-      fd?.adaptation.map((d: Adaptation) => {
+      fd?.adaptation.map((d: AdaptationCostBenefit) => {
         return {
           adaptation_name: d.adaptation_name,
           hazard: d.hazard,

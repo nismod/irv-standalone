@@ -10,7 +10,7 @@ export const devProxy = {
     rewrite: (path) => path.replace(/^\/vector/, ''),
   },
   '/api': {
-    target: 'http://localhost:8888',
+    target: 'http://localhost:8000',
     changeOrigin: true,
     rewrite: (path) => path.replace(/^\/api/, ''),
   },

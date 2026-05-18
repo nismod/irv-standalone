@@ -2,7 +2,7 @@ import Download from '@mui/icons-material/Download';
 import { FormControl, InputLabel, IconButton, MenuItem, Select, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 import { HAZARD_DOMAINS } from 'data-layers/hazards/domains';
-import { ExpectedDamage, ReturnPeriodDamage } from 'lib/api-client';
+import { DamagesExpected, DamagesRp } from 'lib/api-client';
 import { downloadFile, titleCase, unique } from 'lib/helpers';
 import { useSelect } from 'lib/hooks/use-select';
 import fromPairs from 'lodash/fromPairs';
@@ -66,7 +66,7 @@ interface ExpectedDamageCell {
   eael_amin: number;
   eael_amax: number;
 }
-function getExpectedDamageObject(d: ExpectedDamage): ExpectedDamageCell {
+function getExpectedDamageObject(d: DamagesExpected): ExpectedDamageCell {
   return {
     key: getDamageKey({ hazard: d.hazard, rcp: d.rcp, epoch: d.epoch }),
     hazard: d.hazard,
@@ -96,7 +96,7 @@ interface RPDamageCell {
   loss_amax: number;
 }
 
-function getRPDamageObject(d: ReturnPeriodDamage): RPDamageCell {
+function getRPDamageObject(d: DamagesRp): RPDamageCell {
   return {
     key: getRPDamageKey({ hazard: d.hazard, rcp: d.rcp, epoch: d.epoch, rp: d.rp }),
     hazard: d.hazard,
@@ -113,11 +113,11 @@ function getRPDamageObject(d: ReturnPeriodDamage): RPDamageCell {
   };
 }
 
-function prepareExpectedDamages(expectedDamages: ExpectedDamage[]) {
+function prepareExpectedDamages(expectedDamages: DamagesExpected[]) {
   return expectedDamages.filter((d) => d.protection_standard === 0).map(getExpectedDamageObject);
 }
 
-function prepareRPDamages(rpDamages: ReturnPeriodDamage[]) {
+function prepareRPDamages(rpDamages: DamagesRp[]) {
   return rpDamages.map(getRPDamageObject);
 }
 

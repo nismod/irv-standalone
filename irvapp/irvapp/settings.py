@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.gis',
     'rest_framework',
+    'drf_spectacular',
     'api',
 ]
 
@@ -146,7 +147,18 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': (
         'rest_framework.pagination.LimitOffsetPagination'
     ),
-    'PAGE_SIZE': 100
+    'PAGE_SIZE': 100,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'IRV Standalone',
+    'DESCRIPTION': (
+        'A Django implementation of the NISMOD Infrastructure Risk '
+        'Visualisation tools.'
+    ),
+    'VERSION': '0.4.34',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
 
 APPEND_SLASH = False
@@ -162,4 +174,3 @@ CSRF_TRUSTED_ORIGINS = [
     ).split(',')
     if origin.strip()
 ]
-
