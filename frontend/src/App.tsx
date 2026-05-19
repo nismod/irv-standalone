@@ -1,5 +1,10 @@
 import { Provider } from 'jotai';
-import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import {
+  Route,
+  BrowserRouter as Router,
+  Routes,
+  Navigate,
+} from 'react-router-dom';
 import { Box, CssBaseline, StyledEngineProvider } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -56,6 +61,20 @@ const AuthSessionBootstrap = () => {
   return null;
 };
 
+const AuthenticatedMapRoute = () => {
+  const { data, isPending } = useAuthSessionQuery();
+
+  if (isPending) {
+    return null;
+  }
+
+  if (!data?.authenticated) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <MapPage />;
+};
+
 export const App = () => {
   return (
     <Provider>
@@ -76,7 +95,7 @@ export const App = () => {
               >
                 <Routes>
                   <Route path="/" element={<IntroPage />} />
-                  <Route path="/:view" element={<MapPage />} />
+                  <Route path="/:view" element={<AuthenticatedMapRoute />} />
                   <Route path="/data" element={<DataPage />} />
                   <Route path="/guide" element={<GuidePage />} />
                 </Routes>
