@@ -13,6 +13,7 @@ from drf_spectacular.utils import (
 from drf_spectacular.types import OpenApiTypes
 from rest_framework import status, viewsets, serializers
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -41,6 +42,7 @@ from api.models import (
 class FeatureViewset(viewsets.ModelViewSet):
     queryset = Feature.objects.all()
     serializer_class = FeatureSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -62,16 +64,19 @@ class FeatureViewset(viewsets.ModelViewSet):
 class AdaptationCostBenefitViewset(viewsets.ModelViewSet):
     queryset = AdaptationCostBenefit.objects.all()
     serializer_class = AdaptationCostBenefitSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class DamagesExpectedViewset(viewsets.ModelViewSet):
     queryset = DamagesExpected.objects.all()
     serializer_class = DamagesExpectedSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class DamagesRpViewset(viewsets.ModelViewSet):
     queryset = DamagesRp.objects.all()
     serializer_class = DamagesRpSerializer
+    permission_classes = [IsAuthenticated]
 
 
 class FastAPIPagination(PageNumberPagination):
@@ -141,6 +146,7 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
 
     pagination_class = FastAPIPagination
     serializer_class = SortedFeatureSerializer
+    permission_classes = [IsAuthenticated]
 
     def _layer_filters(self, request):
         filters = {}
@@ -389,6 +395,7 @@ class ProtectedFeaturesView(APIView):
     """Return adaptation options protected by a given feature."""
 
     serializer_class = ProtectedFeatureSerializer
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(
         parameters=[
@@ -457,6 +464,7 @@ class AttributeLookupView(FieldGroupQueryParsingMixin, APIView):
     """Lookup per-feature values for a field group and variable."""
 
     serializer_class = AttributeLookupResponseSerializer
+    permission_classes = [IsAuthenticated]
 
     @extend_schema(
         request=AttributeLookupRequestSerializer,
