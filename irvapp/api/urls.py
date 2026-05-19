@@ -3,6 +3,8 @@ from api.views import (
     AdaptationCostBenefitViewset,
     DamagesExpectedViewset,
     DamagesRpViewset,
+    LoginView,
+    CurrentUserView,
     AttributeLookupView,
     ProtectedFeaturesView,
     SortedFeaturesView,
@@ -23,6 +25,8 @@ router.register(r'damages-rp', DamagesRpViewset)
 
 urlpatterns = [
     *router.urls,
+    path('auth/login', LoginView.as_view()),
+    path('auth/me', CurrentUserView.as_view()),
     path('features/sorted-by/<str:field_group>', SortedFeaturesView.as_view()),
     path(
         'features/<int:protector_id>/protected-by',
@@ -30,6 +34,14 @@ urlpatterns = [
     ),
     path('attributes/<str:field_group>', AttributeLookupView.as_view()),
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('schema/swagger-ui/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('schema/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path(
+        'schema/swagger-ui/',
+        SpectacularSwaggerView.as_view(url_name='schema'),
+        name='swagger-ui',
+    ),
+    path(
+        'schema/redoc/',
+        SpectacularRedocView.as_view(url_name='schema'),
+        name='redoc',
+    ),
 ]

@@ -25,6 +25,16 @@ export type AttributeLookupRequest = {
     ids: Array<number>;
 };
 
+export type CurrentUser = {
+    readonly id: number;
+    /**
+     * Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.
+     */
+    username: string;
+    first_name?: string;
+    last_name?: string;
+};
+
 export type DamagesExpected = {
     readonly pk: string;
     hazard: string;
@@ -88,6 +98,18 @@ export type FeatureDetail = {
     properties: unknown;
     geom: string;
     layer: string;
+};
+
+export type LoginCsrfErrorResponse = {
+    detail: string;
+};
+
+export type LoginErrorResponse = {
+    detail: string;
+};
+
+export type LoginRequest = {
+    username: string;
 };
 
 export type PaginatedAdaptationCostBenefitList = {
@@ -195,6 +217,11 @@ export type ProtectedFeature = {
     rcp: string;
 };
 
+export type SessionState = {
+    authenticated: boolean;
+    user: CurrentUser | null;
+};
+
 export type SortedFeature = {
     id: number;
     string_id: string;
@@ -217,6 +244,15 @@ export type AdaptationCostBenefitWritable = {
     avoided_eael_mean?: number | null;
     avoided_eael_amax?: number | null;
     feature: number;
+};
+
+export type CurrentUserWritable = {
+    /**
+     * Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.
+     */
+    username: string;
+    first_name?: string;
+    last_name?: string;
 };
 
 export type DamagesExpectedWritable = {
@@ -273,6 +309,11 @@ export type FeatureDetailWritable = {
     properties: unknown;
     geom: string;
     layer: string;
+};
+
+export type LoginRequestWritable = {
+    username: string;
+    password: string;
 };
 
 export type PaginatedAdaptationCostBenefitListWritable = {
@@ -353,6 +394,11 @@ export type PatchedFeatureWritable = {
     layer?: string;
     sublayer?: string | null;
     properties?: unknown;
+};
+
+export type SessionStateWritable = {
+    authenticated: boolean;
+    user: CurrentUserWritable | null;
 };
 
 export type AdaptationCostBenefitsListData = {
@@ -498,6 +544,45 @@ export type AttributesCreateResponses = {
 };
 
 export type AttributesCreateResponse = AttributesCreateResponses[keyof AttributesCreateResponses];
+
+export type AuthLoginCreateData = {
+    body: LoginRequestWritable;
+    path?: never;
+    query?: never;
+    url: '/auth/login';
+};
+
+export type AuthLoginCreateErrors = {
+    /**
+     * Invalid credentials.
+     */
+    401: LoginErrorResponse;
+    /**
+     * CSRF validation failed.
+     */
+    403: LoginCsrfErrorResponse;
+};
+
+export type AuthLoginCreateError = AuthLoginCreateErrors[keyof AuthLoginCreateErrors];
+
+export type AuthLoginCreateResponses = {
+    200: SessionState;
+};
+
+export type AuthLoginCreateResponse = AuthLoginCreateResponses[keyof AuthLoginCreateResponses];
+
+export type AuthMeRetrieveData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/auth/me';
+};
+
+export type AuthMeRetrieveResponses = {
+    200: SessionState;
+};
+
+export type AuthMeRetrieveResponse = AuthMeRetrieveResponses[keyof AuthMeRetrieveResponses];
 
 export type DamagesExpectedListData = {
     body?: never;
