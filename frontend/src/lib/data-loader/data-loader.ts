@@ -30,6 +30,8 @@ const defaultDataFetcher: DataFetcher = async (
 ) => {
   if (ids.length === 0) return {};
   const { fieldGroup, field, fieldDimensions, fieldParams } = fieldSpec;
+  const csrfToken = document.cookie.split(';').find((cookie) => cookie.trim().startsWith('csrftoken='));
+  const token = csrfToken ? csrfToken.split('=')[1] : '';
   const { data } = await attributesCreate({
     client: apiClient,
     body: { ids },
@@ -41,6 +43,9 @@ const defaultDataFetcher: DataFetcher = async (
       field,
       dimensions: JSON.stringify(fieldDimensions),
       parameters: JSON.stringify(fieldParams),
+    },
+    headers: {
+      'X-CSRFToken': token,
     },
   });
   return data as LayerData;
