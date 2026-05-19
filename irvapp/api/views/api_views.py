@@ -1,4 +1,3 @@
-import json
 from typing import cast
 
 from django.core.exceptions import FieldError
@@ -11,134 +10,24 @@ from drf_spectacular.utils import (
     inline_serializer,
 )
 from drf_spectacular.types import OpenApiTypes
-from rest_framework import status, viewsets, serializers
-from rest_framework.pagination import PageNumberPagination
+from rest_framework import status, serializers
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from api.serializers import (
-    FeatureSerializer,
-    FeatureDetailSerializer,
     SortedFeatureSerializer,
-    AdaptationCostBenefitSerializer,
-    DamagesExpectedSerializer,
-    DamagesRpSerializer,
     ProtectedFeatureSerializer,
     AttributeLookupRequestSerializer,
     AttributeLookupResponseSerializer,
-    ExpectedDamagesDimensionsSerializer,
-    AdaptationDimensionsSerializer,
-    AdaptationCostBenefitRatioParametersSerializer,
 )
 from api.models import (
     Feature,
     AdaptationCostBenefit,
     DamagesExpected,
-    DamagesRp,
 )
-
-
-class FeatureViewset(viewsets.ModelViewSet):
-    queryset = Feature.objects.all()
-    serializer_class = FeatureSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        queryset = super().get_queryset()
-        if self.action == "retrieve":
-            return queryset.prefetch_related(
-                "adaptationcostbenefit_set",
-                "damagesexpected_set",
-                "damagesrp_set",
-                "damagesnpv_set",
-            )
-        return queryset
-
-    def get_serializer_class(self):  # type: ignore[override]
-        if self.action == "retrieve":
-            return FeatureDetailSerializer
-        return FeatureSerializer
-
-
-class AdaptationCostBenefitViewset(viewsets.ModelViewSet):
-    queryset = AdaptationCostBenefit.objects.all()
-    serializer_class = AdaptationCostBenefitSerializer
-    permission_classes = [IsAuthenticated]
-
-
-class DamagesExpectedViewset(viewsets.ModelViewSet):
-    queryset = DamagesExpected.objects.all()
-    serializer_class = DamagesExpectedSerializer
-    permission_classes = [IsAuthenticated]
-
-
-class DamagesRpViewset(viewsets.ModelViewSet):
-    queryset = DamagesRp.objects.all()
-    serializer_class = DamagesRpSerializer
-    permission_classes = [IsAuthenticated]
-
-
-class FastAPIPagination(PageNumberPagination):
-    page_query_param = "page"
-    page_size_query_param = "size"
-    page_size = 50
-
-    def get_paginated_response(self, data):
-        page_size = (
-            self.get_page_size(self.request)
-            or self.page.paginator.per_page
-        )
-        return Response(
-            {
-                "items": data,
-                "total": self.page.paginator.count,
-                "page": self.page.number,
-                "size": page_size,
-                "pages": self.page.paginator.num_pages,
-            }
-        )
-
-
-class FieldGroupQueryParsingMixin:
-
-    def _parse_json_query_param(self, request, key):
-        raw = request.query_params.get(key)
-        if raw is None:
-            return None, {key: ["This query parameter is required."]}
-        try:
-            return json.loads(raw), None
-        except json.JSONDecodeError:
-            return None, {key: ["Must be valid JSON."]}
-
-    def _parse_dimensions(self, field_group, dimensions_data):
-        serializers_by_group = {
-            "damages_expected": ExpectedDamagesDimensionsSerializer,
-            "adaptation": AdaptationDimensionsSerializer,
-        }
-        dimensions_serializer_class = serializers_by_group.get(field_group)
-        if dimensions_serializer_class is None:
-            return None, {"field_group": ["Invalid field group."]}
-
-        serializer = dimensions_serializer_class(data=dimensions_data)
-        if not serializer.is_valid():
-            return None, serializer.errors
-        return serializer.validated_data, None
-
-    def _parse_parameters(
-        self,
-        field_group,
-        field,
-        parameters_data,
-    ) -> tuple[dict[str, float] | None, object | None]:
-        if field_group == "adaptation" and field == "cost_benefit_ratio":
-            serializer = AdaptationCostBenefitRatioParametersSerializer(
-                data=parameters_data
-            )
-            if not serializer.is_valid():
-                return None, serializer.errors
-            return cast(dict[str, float], serializer.validated_data), None
-        return None, None
+from .pagination import FastAPIPagination
+from .mixins import FieldGroupQueryParsingMixin
 
 
 class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
