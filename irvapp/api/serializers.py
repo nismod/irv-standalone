@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from .models import (
     AdaptationCostBenefit,
@@ -6,6 +7,9 @@ from .models import (
     DamagesRp,
     Feature,
 )
+
+
+User = get_user_model()
 
 
 class AdaptationCostBenefitSerializer(serializers.ModelSerializer):
@@ -129,3 +133,18 @@ class AttributeLookupResponseSerializer(serializers.BaseSerializer):
             )
             for feature_id, value in instance.items()
         }
+
+
+class LoginRequestSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(
+        trim_whitespace=False,
+        write_only=True,
+        style={'input_type': 'password'},
+    )
+
+
+class CurrentUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'first_name', 'last_name']

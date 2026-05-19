@@ -5,6 +5,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { QueryClientProvider } from '@tanstack/react-query';
 
 import { queryClient } from './query-client';
+import { useAuthSessionQuery } from 'lib/auth/use-auth-session';
 
 import { IntroPage } from './app/pages/IntroPage';
 import { MapPage } from './app/pages/map/MapPage';
@@ -50,12 +51,18 @@ export const navItems: NavItemConfig[] = [
   },
 ];
 
+const AuthSessionBootstrap = () => {
+  useAuthSessionQuery();
+  return null;
+};
+
 export const App = () => {
   return (
     <Provider>
       <StyledEngineProvider injectFirst>
         <ThemeProvider theme={theme}>
           <QueryClientProvider client={queryClient}>
+            <AuthSessionBootstrap />
             <Router>
               <CssBaseline />
               <Nav height={globalStyleVariables.navbarHeight} navItems={navItems} />

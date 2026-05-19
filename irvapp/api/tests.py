@@ -229,6 +229,66 @@ class AttributeLookupViewTests(TestCase):
         self.assertIn("field", response.json())
 
 
+class AuthViewTests(TestCase):
+    def setUp(self):
+        self.client = APIClient(enforce_csrf_checks=True)
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass"
+        )
+
+    def test_current_user_returns_anonymous_and_sets_csrf_cookie(self):
+        response = self.client.get("/auth/me")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {"authenticated": False, "user": None},
+        )
+        self.assertIn("csrftoken", response.cookies)
+
+    def test_login_then_current_user_returns_authenticated_user(self):
+        self.client.get("/auth/me")
+        csrf_token = self.client.cookies["csrftoken"].value
+
+        login_response = self.client.post(
+            "/auth/login",
+            data={"username": "testuser", "password": "testpass"},
+            format="json",
+            HTTP_X_CSRFTOKEN=csrf_token,
+        )
+        self.assertEqual(login_response.status_code, 200)
+        self.assertEqual(login_response.json()["authenticated"], True)
+        self.assertEqual(
+            login_response.json()["user"]["username"],
+            "testuser",
+        )
+
+        current_user_response = self.client.get("/auth/me")
+        self.assertEqual(current_user_response.status_code, 200)
+        self.assertEqual(current_user_response.json()["authenticated"], True)
+        self.assertEqual(
+            current_user_response.json()["user"]["username"],
+            "testuser",
+        )
+
+    def test_login_rejects_invalid_credentials(self):
+        self.client.get("/auth/me")
+        csrf_token = self.client.cookies["csrftoken"].value
+
+        response = self.client.post(
+            "/auth/login",
+            data={"username": "testuser", "password": "wrong-password"},
+            format="json",
+            HTTP_X_CSRFTOKEN=csrf_token,
+        )
+
+        self.assertEqual(response.status_code, 401)
+        self.assertEqual(
+            response.json()["detail"],
+            "Invalid username or password.",
+        )
+
+
 class FeatureRouteTests(TestCase):
     def setUp(self):
         self.client = APIClient()
