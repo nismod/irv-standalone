@@ -3,7 +3,6 @@ import {
   Route,
   BrowserRouter as Router,
   Routes,
-  Navigate,
 } from 'react-router-dom';
 import { Box, CssBaseline, StyledEngineProvider } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
@@ -13,6 +12,7 @@ import { queryClient } from './query-client';
 import { useAuthSessionQuery } from 'lib/auth/use-auth-session';
 
 import { IntroPage } from './app/pages/IntroPage';
+import { LoginRequiredPage } from './app/pages/LoginRequiredPage';
 import { MapPage } from './app/pages/map/MapPage';
 import { DataPage } from './app/pages/DataPage';
 import { GuidePage } from './app/pages/GuidePage';
@@ -69,7 +69,7 @@ const AuthenticatedMapRoute = () => {
   }
 
   if (!data?.authenticated) {
-    return <Navigate to="/" replace />;
+    return <LoginRequiredPage />;
   }
 
   return <MapPage />;
