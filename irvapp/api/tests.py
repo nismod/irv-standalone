@@ -1,5 +1,6 @@
 import json
 
+from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
 from django.test import TestCase
 from rest_framework.test import APIClient
@@ -16,6 +17,10 @@ from api.models import (
 class AttributeLookupViewTests(TestCase):
     def setUp(self):
         self.client = APIClient()
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass"
+        )
+        self.client.force_authenticate(user=self.user)
         self.layer = FeatureLayer.objects.create(
             layer_name="roads",
             sector="transport",
@@ -227,6 +232,10 @@ class AttributeLookupViewTests(TestCase):
 class FeatureRouteTests(TestCase):
     def setUp(self):
         self.client = APIClient()
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass"
+        )
+        self.client.force_authenticate(user=self.user)
         self.layer = FeatureLayer.objects.create(
             layer_name="roads",
             sector="transport",
