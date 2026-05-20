@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AdaptationCostBenefitsCreateData, AdaptationCostBenefitsCreateResponses, AdaptationCostBenefitsDestroyData, AdaptationCostBenefitsDestroyResponses, AdaptationCostBenefitsListData, AdaptationCostBenefitsListResponses, AdaptationCostBenefitsPartialUpdateData, AdaptationCostBenefitsPartialUpdateResponses, AdaptationCostBenefitsRetrieveData, AdaptationCostBenefitsRetrieveResponses, AdaptationCostBenefitsUpdateData, AdaptationCostBenefitsUpdateResponses, AttributesCreateData, AttributesCreateResponses, AuthLoginCreateData, AuthLoginCreateErrors, AuthLoginCreateResponses, AuthMeRetrieveData, AuthMeRetrieveResponses, DamagesExpectedCreateData, DamagesExpectedCreateResponses, DamagesExpectedDestroyData, DamagesExpectedDestroyResponses, DamagesExpectedListData, DamagesExpectedListResponses, DamagesExpectedPartialUpdateData, DamagesExpectedPartialUpdateResponses, DamagesExpectedRetrieveData, DamagesExpectedRetrieveResponses, DamagesExpectedUpdateData, DamagesExpectedUpdateResponses, DamagesRpCreateData, DamagesRpCreateResponses, DamagesRpDestroyData, DamagesRpDestroyResponses, DamagesRpListData, DamagesRpListResponses, DamagesRpPartialUpdateData, DamagesRpPartialUpdateResponses, DamagesRpRetrieveData, DamagesRpRetrieveResponses, DamagesRpUpdateData, DamagesRpUpdateResponses, FeaturesCreateData, FeaturesCreateResponses, FeaturesDestroyData, FeaturesDestroyResponses, FeaturesListData, FeaturesListResponses, FeaturesPartialUpdateData, FeaturesPartialUpdateResponses, FeaturesProtectedByListData, FeaturesProtectedByListResponses, FeaturesRetrieveData, FeaturesRetrieveResponses, FeaturesSortedByRetrieveData, FeaturesSortedByRetrieveResponses, FeaturesUpdateData, FeaturesUpdateResponses } from './types.gen';
+import type { AdaptationCostBenefitsCreateData, AdaptationCostBenefitsCreateResponses, AdaptationCostBenefitsDestroyData, AdaptationCostBenefitsDestroyResponses, AdaptationCostBenefitsListData, AdaptationCostBenefitsListResponses, AdaptationCostBenefitsPartialUpdateData, AdaptationCostBenefitsPartialUpdateResponses, AdaptationCostBenefitsRetrieveData, AdaptationCostBenefitsRetrieveResponses, AdaptationCostBenefitsUpdateData, AdaptationCostBenefitsUpdateResponses, AttributesCreateData, AttributesCreateResponses, AuthLoginCreateData, AuthLoginCreateErrors, AuthLoginCreateResponses, AuthLogoutCreateData, AuthLogoutCreateErrors, AuthLogoutCreateResponses, AuthMeRetrieveData, AuthMeRetrieveResponses, DamagesExpectedCreateData, DamagesExpectedCreateResponses, DamagesExpectedDestroyData, DamagesExpectedDestroyResponses, DamagesExpectedListData, DamagesExpectedListResponses, DamagesExpectedPartialUpdateData, DamagesExpectedPartialUpdateResponses, DamagesExpectedRetrieveData, DamagesExpectedRetrieveResponses, DamagesExpectedUpdateData, DamagesExpectedUpdateResponses, DamagesRpCreateData, DamagesRpCreateResponses, DamagesRpDestroyData, DamagesRpDestroyResponses, DamagesRpListData, DamagesRpListResponses, DamagesRpPartialUpdateData, DamagesRpPartialUpdateResponses, DamagesRpRetrieveData, DamagesRpRetrieveResponses, DamagesRpUpdateData, DamagesRpUpdateResponses, FeaturesCreateData, FeaturesCreateResponses, FeaturesDestroyData, FeaturesDestroyResponses, FeaturesListData, FeaturesListResponses, FeaturesPartialUpdateData, FeaturesPartialUpdateResponses, FeaturesProtectedByListData, FeaturesProtectedByListResponses, FeaturesRetrieveData, FeaturesRetrieveResponses, FeaturesSortedByRetrieveData, FeaturesSortedByRetrieveResponses, FeaturesUpdateData, FeaturesUpdateResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -119,6 +119,16 @@ export const authLoginCreate = <ThrowOnError extends boolean = false>(options: O
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+export const authLogoutCreate = <ThrowOnError extends boolean = false>(options?: Options<AuthLogoutCreateData, ThrowOnError>) => (options?.client ?? client).post<AuthLogoutCreateResponses, AuthLogoutCreateErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/auth/logout',
+    ...options
 });
 
 export const authMeRetrieve = <ThrowOnError extends boolean = false>(options?: Options<AuthMeRetrieveData, ThrowOnError>) => (options?.client ?? client).get<AuthMeRetrieveResponses, unknown, ThrowOnError>({

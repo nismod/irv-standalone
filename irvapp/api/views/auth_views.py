@@ -1,4 +1,6 @@
-from django.contrib.auth import authenticate, login
+from typing import cast
+
+from django.contrib.auth import authenticate, login, logout
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from drf_spectacular.utils import (
@@ -63,11 +65,12 @@ class LoginView(APIView):
     def post(self, request):
         serializer = LoginRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        validated_data = cast(dict[str, str], serializer.validated_data)
 
         user = authenticate(
             request,
-            username=serializer.validated_data["username"],
-            password=serializer.validated_data["password"],
+            username=validated_data["username"],
+            password=validated_data["password"],
         )
 
         if user is None:
@@ -89,6 +92,31 @@ class CurrentUserView(APIView):
     @method_decorator(ensure_csrf_cookie)
     @extend_schema(responses=SessionStateSerializer)
     def get(self, request):
+        return Response(
+            _session_payload(request.user),
+            status=status.HTTP_200_OK,
+        )
+
+
+class LogoutView(APIView):
+    permission_classes = [AllowAny]
+
+    @extend_schema(
+        responses={
+            200: SessionStateSerializer,
+            403: OpenApiResponse(
+                response=inline_serializer(
+                    "LogoutCsrfErrorResponse",
+                    {
+                        "detail": serializers.CharField(),
+                    },
+                ),
+                description="CSRF validation failed.",
+            ),
+        }
+    )
+    def post(self, request):
+        logout(request)
         return Response(
             _session_payload(request.user),
             status=status.HTTP_200_OK,

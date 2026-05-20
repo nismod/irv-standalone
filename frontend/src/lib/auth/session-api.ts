@@ -1,5 +1,9 @@
 import { createClient } from 'lib/api-client/client';
-import { authLoginCreate, authMeRetrieve } from 'lib/api-client';
+import {
+  authLoginCreate,
+  authLogoutCreate,
+  authMeRetrieve,
+} from 'lib/api-client';
 import type { LoginErrorResponse, SessionState } from 'lib/api-client';
 
 export type AuthSession = SessionState;
@@ -69,6 +73,23 @@ export async function loginWithPassword(username: string, password: string): Pro
   const { data, error } = await authLoginCreate({
     client: apiClient,
     body: { username, password },
+    headers: {
+      ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
+    },
+  });
+
+  if (error) {
+    throw new Error(parseClientError(error));
+  }
+
+  return data as AuthSession;
+}
+
+export async function logoutCurrentSession(): Promise<AuthSession> {
+  const csrfToken = await ensureCsrfToken();
+
+  const { data, error } = await authLogoutCreate({
+    client: apiClient,
     headers: {
       ...(csrfToken ? { 'X-CSRFToken': csrfToken } : {}),
     },
