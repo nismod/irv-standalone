@@ -9,7 +9,7 @@ from .api_views import (
     ProtectedFeaturesView,
     AttributeLookupView,
 )
-from .auth_views import LoginView, CurrentUserView
+from .auth_views import LoginView, CurrentUserView, LogoutView
 from .pagination import FastAPIPagination
 from .mixins import FieldGroupQueryParsingMixin
 
@@ -23,6 +23,7 @@ __all__ = [
     "AttributeLookupView",
     "LoginView",
     "CurrentUserView",
+    "LogoutView",
     "FastAPIPagination",
     "FieldGroupQueryParsingMixin",
 ]

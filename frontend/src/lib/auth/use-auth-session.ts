@@ -1,6 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
-import { AuthSession, fetchAuthSession, loginWithPassword } from './session-api';
+import {
+  AuthSession,
+  fetchAuthSession,
+  loginWithPassword,
+  logoutCurrentSession,
+} from './session-api';
 
 export const authSessionQueryKey = ['auth', 'session'] as const;
 
@@ -18,6 +23,17 @@ export function useLoginMutation() {
   return useMutation({
     mutationFn: ({ username, password }: { username: string; password: string }) =>
       loginWithPassword(username, password),
+    onSuccess: (session: AuthSession) => {
+      queryClient.setQueryData(authSessionQueryKey, session);
+    },
+  });
+}
+
+export function useLogoutMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => logoutCurrentSession(),
     onSuccess: (session: AuthSession) => {
       queryClient.setQueryData(authSessionQueryKey, session);
     },

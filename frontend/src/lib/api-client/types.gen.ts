@@ -112,6 +112,10 @@ export type LoginRequest = {
     username: string;
 };
 
+export type LogoutCsrfErrorResponse = {
+    detail: string;
+};
+
 export type PaginatedAdaptationCostBenefitList = {
     count: number;
     next?: string | null;
@@ -570,6 +574,28 @@ export type AuthLoginCreateResponses = {
 };
 
 export type AuthLoginCreateResponse = AuthLoginCreateResponses[keyof AuthLoginCreateResponses];
+
+export type AuthLogoutCreateData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/auth/logout';
+};
+
+export type AuthLogoutCreateErrors = {
+    /**
+     * CSRF validation failed.
+     */
+    403: LogoutCsrfErrorResponse;
+};
+
+export type AuthLogoutCreateError = AuthLogoutCreateErrors[keyof AuthLogoutCreateErrors];
+
+export type AuthLogoutCreateResponses = {
+    200: SessionState;
+};
+
+export type AuthLogoutCreateResponse = AuthLogoutCreateResponses[keyof AuthLogoutCreateResponses];
 
 export type AuthMeRetrieveData = {
     body?: never;

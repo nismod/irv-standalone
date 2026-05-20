@@ -288,6 +288,38 @@ class AuthViewTests(TestCase):
             "Invalid username or password.",
         )
 
+    def test_logout_clears_authenticated_session(self):
+        self.client.get("/auth/me")
+        csrf_token = self.client.cookies["csrftoken"].value
+
+        self.client.post(
+            "/auth/login",
+            data={"username": "testuser", "password": "testpass"},
+            format="json",
+            HTTP_X_CSRFTOKEN=csrf_token,
+        )
+
+        # Django rotates the CSRF token on login; use the fresh token.
+        csrf_token = self.client.cookies["csrftoken"].value
+
+        logout_response = self.client.post(
+            "/auth/logout",
+            format="json",
+            HTTP_X_CSRFTOKEN=csrf_token,
+        )
+        self.assertEqual(logout_response.status_code, 200)
+        self.assertEqual(
+            logout_response.json(),
+            {"authenticated": False, "user": None},
+        )
+
+        current_user_response = self.client.get("/auth/me")
+        self.assertEqual(current_user_response.status_code, 200)
+        self.assertEqual(
+            current_user_response.json(),
+            {"authenticated": False, "user": None},
+        )
+
 
 class FeatureRouteTests(TestCase):
     def setUp(self):

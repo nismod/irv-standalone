@@ -1,6 +1,7 @@
 import Menu from '@mui/icons-material/Menu';
 import {
   AppBar,
+  Button,
   Divider,
   Drawer,
   IconButton,
@@ -10,6 +11,7 @@ import {
   LinkProps,
   Toolbar,
   Tooltip,
+  Typography,
   styled,
 } from '@mui/material';
 import { Box } from '@mui/system';
@@ -23,6 +25,10 @@ import { mapLatUrlState, mapLonUrlState, mapZoomUrlState } from 'lib/state/map-v
 import { globalStyleVariables } from 'app/theme';
 import { useAtomValue } from 'jotai';
 import { mapViewConfig } from './config/map-view';
+import {
+  useAuthSessionQuery,
+  useLogoutMutation,
+} from 'lib/auth/use-auth-session';
 
 const Link = styled(MuiLink)({
   color: 'inherit',
@@ -109,6 +115,37 @@ const NavTooltip = withProps(Tooltip, {
   disableInteractive: true,
 });
 
+const UserSessionControls: FC<{ onLogout?: () => void }> = ({ onLogout }) => {
+  const { data } = useAuthSessionQuery();
+  const logoutMutation = useLogoutMutation();
+
+  if (!data?.authenticated || !data.user) {
+    return null;
+  }
+
+  const displayName =
+    [data.user.first_name, data.user.last_name].filter(Boolean).join(' ') ||
+    data.user.username;
+
+  return (
+    <Box alignItems="center" display="flex" gap={1}>
+      <Typography variant="body2">{displayName}</Typography>
+      <Button
+        color="inherit"
+        disabled={logoutMutation.isPending}
+        onClick={() => {
+          logoutMutation.mutate();
+          onLogout?.();
+        }}
+        size="small"
+        variant="outlined"
+      >
+        {logoutMutation.isPending ? 'Logging out...' : 'Log out'}
+      </Button>
+    </Box>
+  );
+};
+
 const MobileNavContent: FC<{ navItems: NavItemConfig[] }> = ({ navItems }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
@@ -127,6 +164,8 @@ const MobileNavContent: FC<{ navItems: NavItemConfig[] }> = ({ navItems }) => {
       </ToolbarNavLink>
 
       <GrowingDivider />
+
+      <UserSessionControls onLogout={closeDrawer} />
 
       <MobileDrawer open={drawerOpen} onClose={closeDrawer}>
         <Toolbar /> {/* Prevents app bar from concealing content*/}
@@ -160,6 +199,9 @@ const DesktopNavContent: FC<{ navItems: NavItemConfig[] }> = ({ navItems }) => (
         <ToolbarNavLink to={to}>{title}</ToolbarNavLink>
       </NavTooltip>
     ))}
+
+    <GrowingDivider />
+    <UserSessionControls />
   </>
 );
 
