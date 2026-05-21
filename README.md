@@ -104,28 +104,29 @@ Run the raster tileserver:
 docker compose -f docker-compose.dev.yml up raster-tileserver -d
 ```
 
-### Run the backend API server and database
+### Run the backend Django app
 
-Two options here.
-
-Without docker, follow the notes in `./backend/README.md` to setup a development
-environment for python.
-
-Set up a postgres database and add connection details in `./backend/.env`.
-
-Run the api server (from the `backend` directory):
+Run `docker-compose` to run the Django app, Postgres database, and tile servers in containers (behind a Traefik proxy.) The Django app runs in development mode, picking up any local changes that you make to the code in the `irvapp/` directory.
 
 ```bash
-python -m uvicorn backend.app.main:app --host localhost --port 8888
+docker compose -f docker-compose.dev.yml up -d
 ```
 
-Alternatively, run `docker-compose` to run the API server in one container and
-postgres in another.
+Run the Django database migrations inside the `django` container, to create the backend database tables (or apply any database changes since you last ran the app):
 
 ```bash
-docker compose -f docker-compose.dev.yml up db -d
+docker compose -f docker-compose.dev.yml exec django python manage.py migrate
 ```
 
+If this is your first time running the Django app, you'll need to create an admin user.
+
+```bash
+docker compose -f docker-compose.dev.yml exec django python manage.py createsuperuser
+```
+
+#### Populating the database
+
+The first time that you run the Django app, the backend database will be empty.
 The next step runs `pg_restore` to load data to the database from a backup.
 This runs `pg_restore` on the host against the database running in
 docker, which is available through `postgresql-client` packages
@@ -137,8 +138,8 @@ PGPORT=5432 \
 PGHOST=localhost \
 PGUSER=docker \
 PGPASSWORD=docker \
-PGDATABASE=jamaica \
-pg_restore -cC -j 8 -d jamaica ./archive/jamaicadev_2023-05-16.dump
+PGDATABASE=jamaicadev \
+pg_restore -cC -j 8 -d jamaicadev ./archive/jamaicadev_2023-05-16.dump
 ```
 
 ### Run the frontend app in development mode
