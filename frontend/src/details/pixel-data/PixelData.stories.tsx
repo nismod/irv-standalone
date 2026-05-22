@@ -30,7 +30,7 @@ export const Default: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get('/pixel/:lat/:lon', ({ params }) => {
+        http.get('/api/pixel/:lat/:lon', ({ params }) => {
           const { lat, lon } = params;
           console.log(lat, lon)
           if (lat !== '18.0000' || lon !== '-78.0000') {

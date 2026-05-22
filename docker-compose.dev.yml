@@ -38,6 +38,8 @@ services:
       - PGDATABASE=jamaicadev
       - PGUSER=docker
       - PGPASSWORD=docker
+      - PIXEL_STACK_DATA_DIR=/data
+      - LAYER_METADATA_PATH=/data/hazard_layers.csv
     ports:
       - 8000:8000
     depends_on:
@@ -45,6 +47,8 @@ services:
         condition: service_healthy
     volumes:
       - ./irvapp:/code
+      - ./tileserver/stacks:/data
+      - ./etl/hazard_layers.csv:/data/hazard_layers.csv
     command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
     labels:
       - "traefik.enable=true"
@@ -90,25 +94,6 @@ services:
       - "traefik.http.routers.raster-tileserver.middlewares=raster-tileserver-stripprefix"
       - "traefik.http.middlewares.raster-tileserver-stripprefix.stripprefix.prefixes=/raster"
       - "traefik.http.services.raster-tileserver.loadbalancer.server.port=5000"
-
-  pixel-driller:
-    build: ./pixel_driller
-    volumes:
-      - ./tileserver/stacks:/data
-      - ./pixel_driller:/code
-      - ./etl/hazard_layers.csv:/data/hazard_layers.csv
-    ports:
-      - 5080:80
-    environment:
-      - PIXEL_STACK_DATA_DIR=/data
-      - LAYER_METADATA_PATH=/data/hazard_layers.csv
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.pixel-driller.rule=Host(`localhost`) && PathPrefix(`/pixel`)"
-      - "traefik.http.routers.pixel-driller.entrypoints=web"
-      - "traefik.http.routers.pixel-driller.middlewares=pixel-driller-stripprefix"
-      - "traefik.http.middlewares.pixel-driller-stripprefix.stripprefix.prefixes=/pixel"
-      - "traefik.http.services.pixel-driller.loadbalancer.server.port=80"
 
   db:
     image: kartoza/postgis:14-3.1
