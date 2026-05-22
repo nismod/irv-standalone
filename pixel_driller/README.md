@@ -1,7 +1,6 @@
 # Pixel driller
 
-This Python fastAPI service listens for requests at /{longitude}/{latitude} and
-responds with the values of available raster layers at that point.
+Ingest raster layers and save their data as Zarr stacks, for use by the Django `pixel` app.
 
 ## Usage
 
@@ -13,30 +12,6 @@ rapid retrieval.
 ```bash
 mkdir -p ../tileserver/stacks
 python ingest.py /path/to/jamaica-infrastructure/processed_data/ ../tileserver/stacks
-```
-
-### Run this service only
-
-The app is dockerised and run with compose.
-
-```bash
-docker compose -f docker-compose.dev.yml up pixel-driller
-```
-
-```bash
-curl http://localhost:5080/-78.0/18.5
-```
-
-### Run the whole app
-
-The app can also be run as part of the larger irv-jamaica risk analysis stack.
-
-```bash
-docker compose -f docker-compose.dev.yml up
-```
-
-```bash
-curl http://localhost/pixel/-78.0/18.5
 ```
 
 ### Backup

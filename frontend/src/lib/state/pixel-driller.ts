@@ -88,7 +88,10 @@ const pixelDrillerQuery: Atom<Promise<PixelData | null>> = atom(async (get) => {
   if (dataCache.has(key)) {
     return dataCache.get(key) ?? null;
   }
-  const response = await fetch(`/pixel/${roundedLon}/${roundedLat}`);
+  const response = await fetch(`/api/pixel/${roundedLon}/${roundedLat}`);
+  if (!response.ok) {
+    return null;
+  }
   const data: PixelData = await response.json();
   dataCache.set(key, data);
   return data;

@@ -36,13 +36,14 @@ def point_query(
     lat: float,
 ) -> dict[str, list]:
     """
-    Query a raster file with multiple bands to extract the values at a specific (x, y) coordinate.
+    Query a raster file with multiple bands to extract the values at a
+    specific (lon, lat) coordinate.
 
     Parameters:
         datasets: Metadata about the grids shared by raster layers
         layer_metadata: Metadata about the individual raster layers
-        x: longitude coordinate
-        y: latitude coordinate
+        lon: longitude coordinate
+        lat: latitude coordinate
 
     Returns:
         dict: A dictionary of column names to lists of values. `band_data`
