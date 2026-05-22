@@ -7,7 +7,7 @@ export function regionBoundariesDeckLayer(level: RegionLevel) {
   return mvtLayer(
     {
       id: `boundaries_${level}`,
-      data: `/vector/data/regions_${level}.json`,
+      data: `/api/tiles/vector/data/regions_${level}.json`,
       binary: true,
       filled: true,
       getFillColor: [255, 255, 255, 0],

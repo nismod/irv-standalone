@@ -32,7 +32,7 @@ export function marineViewLayer({ dataFn, colorFn, filters }): ViewLayer {
         },
         deckProps,
         {
-          data: '/vector/data/natural_marine_combined.json',
+          data: '/api/tiles/vector/data/natural_marine_combined.json',
           binary: false,
           filled: true,
           stroked: true,

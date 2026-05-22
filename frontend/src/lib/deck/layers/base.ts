@@ -5,6 +5,7 @@ import { mergeObjects, mergeValue } from 'lib/nested-config/merge-objects';
 
 const deckPropsMergeStrategies = {
   updateTriggers: mergeValue,
+  loadOptions: mergeValue,
 };
 
 /**
@@ -24,7 +25,19 @@ function wrap(deckClass) {
   return (...props) => new deckClass(mergeDeckProps(props));
 }
 
-export const mvtLayer = wrap(MVTLayer);
+const wrappedMvtLayer = wrap(MVTLayer);
+export function mvtLayer(...props) {
+  return wrappedMvtLayer(
+    {
+      loadOptions: {
+        fetch: {
+          credentials: 'include',
+        },
+      },
+    },
+    props,
+  );
+}
 export const tileLayer = wrap(TileLayer);
 export const bitmapLayer = wrap(BitmapLayer);
 export const geoJsonLayer = wrap(GeoJsonLayer);

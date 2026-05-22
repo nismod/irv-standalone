@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_spectacular',
     'api',
+    'vector_proxy',
     'pixel',
 ]
 
@@ -175,3 +176,8 @@ CSRF_TRUSTED_ORIGINS = [
     ).split(',')
     if origin.strip()
 ]
+
+VECTOR_TILESERVER_INTERNAL_URL = os.environ.get(
+    'VECTOR_TILESERVER_INTERNAL_URL',
+    'http://vector-tileserver:8080',
+)

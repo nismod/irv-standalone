@@ -1,5 +1,5 @@
 export const REGIONS_SOURCE = {
   getDataUrl({ regionLevel }) {
-    return `/vector/data/regions_${regionLevel}.json`;
+    return `/api/tiles/vector/data/regions_${regionLevel}.json`;
   },
 };
