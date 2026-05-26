@@ -19,7 +19,7 @@ from django.urls import include, path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('auth/', include('auth.urls')),
+    path('auth/', include('irv_auth.urls')),
     path('', include('api.urls')),
     path('pixel/', include('pixel.urls')),
     path('tiles/vector/', include('vector_proxy.urls')),
