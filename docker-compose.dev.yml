@@ -64,8 +64,6 @@ services:
     volumes:
       - ./tileserver/vector/data:/data
       - ./tileserver/vector/config.json:/config.json
-    ports:
-      - 8800:8080
 
   raster-tileserver:
     image: ghcr.io/nismod/jsrat-raster-tileserver:0.2
@@ -73,8 +71,6 @@ services:
     volumes:
       - ./tileserver/raster/data:/data
       - ./tileserver/raster/config.toml:/config.toml
-    ports:
-      - 5001:5000
     environment:
       - TC_DRIVER_PATH=/data/terracotta.sqlite
       - TC_RESAMPLING_METHOD=nearest
