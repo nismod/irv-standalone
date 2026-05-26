@@ -22,7 +22,7 @@ export function useRasterColorMapValues(colorScheme: string, stretchRange: [numb
     error,
     data = {},
   } = useQuery({
-    queryKey: ['/raster/colormap', query],
+    queryKey: ['/api/tiles/raster/colormap', query],
     queryFn: fetchColorMapValues,
     staleTime: 1000 * 60 * 60, // 1 hour
   });

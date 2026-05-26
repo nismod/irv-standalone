@@ -22,4 +22,5 @@ urlpatterns = [
     path('', include('api.urls')),
     path('pixel/', include('pixel.urls')),
     path('tiles/vector/', include('vector_proxy.urls')),
+    path('tiles/raster/', include('raster_proxy.urls')),
 ]

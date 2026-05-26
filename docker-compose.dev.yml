@@ -80,13 +80,6 @@ services:
       - TC_RESAMPLING_METHOD=nearest
       - TC_REPROJECTION_METHOD=nearest
       - TC_PNG_COMPRESS_LEVEL=1
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.raster-tileserver.rule=Host(`localhost`) && PathPrefix(`/raster`)"
-      - "traefik.http.routers.raster-tileserver.entrypoints=web"
-      - "traefik.http.routers.raster-tileserver.middlewares=raster-tileserver-stripprefix"
-      - "traefik.http.middlewares.raster-tileserver-stripprefix.stripprefix.prefixes=/raster"
-      - "traefik.http.services.raster-tileserver.loadbalancer.server.port=5000"
 
   db:
     image: kartoza/postgis:14-3.1

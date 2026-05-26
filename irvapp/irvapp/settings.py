@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'api',
     'vector_proxy',
+    'raster_proxy',
     'pixel',
 ]
 
@@ -180,4 +181,9 @@ CSRF_TRUSTED_ORIGINS = [
 VECTOR_TILESERVER_INTERNAL_URL = os.environ.get(
     'VECTOR_TILESERVER_INTERNAL_URL',
     'http://vector-tileserver:8080',
+)
+
+RASTER_TILESERVER_INTERNAL_URL = os.environ.get(
+    'RASTER_TILESERVER_INTERNAL_URL',
+    'http://raster-tileserver:5000',
 )
