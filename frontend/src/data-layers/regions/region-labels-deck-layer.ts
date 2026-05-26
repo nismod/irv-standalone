@@ -14,7 +14,7 @@ export function regionLabelsDeckLayer(level: RegionLevel, background: Background
     config.showLabels &&
     mvtLayer({
       id: `boundaries_${level}-text`,
-      data: `/vector/data/regions_${level}_labels.json`,
+      data: `/api/tiles/vector/data/regions_${level}_labels.json`,
       loadOptions: {
         mvt: {
           layers: ['labels'],

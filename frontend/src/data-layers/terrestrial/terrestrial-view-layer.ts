@@ -89,7 +89,7 @@ export function terrestrialViewLayer({
           deckProps,
           {
             id: `${deckProps.id}@points`,
-            data: '/vector/data/natural_terrestrial_combined_points.json',
+            data: '/api/tiles/vector/data/natural_terrestrial_combined_points.json',
             visible: zoom < switchoverZoom,
             binary: false,
             filled: true,
@@ -114,7 +114,7 @@ export function terrestrialViewLayer({
           },
           deckProps,
           {
-            data: '/vector/data/natural_terrestrial_combined.json',
+            data: '/api/tiles/vector/data/natural_terrestrial_combined.json',
             minZoom: 14,
             visible: zoom >= switchoverZoom,
             binary: false,
