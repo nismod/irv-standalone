@@ -1,7 +1,6 @@
 from django.apps import AppConfig
 
 
-class AuthConfig(AppConfig):
+class IrvAuthConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'auth'
-    label = 'irv_auth'
+    name = 'irv_auth'
