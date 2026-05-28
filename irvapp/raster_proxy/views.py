@@ -1,14 +1,97 @@
+import json
 from urllib.error import HTTPError, URLError
 from urllib.parse import quote, urljoin, urlsplit
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from django.conf import settings
 from django.http import HttpResponse, StreamingHttpResponse
-from drf_spectacular.utils import OpenApiResponse, extend_schema
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    OpenApiResponse,
+    extend_schema,
+)
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from terracotta.handlers.colormap import colormap
+
+
+from .serializers import (
+    ColorMapOptionsSerializer,
+    ColorMapSerializer,
+)
+
+
+def _get_colormap(options):
+    """
+    Retrieve colormap
+    """
+
+    _colormap = colormap(**options)
+    return ColorMapSerializer({
+        "colormap": _colormap
+    })
+
+
+class ColormapView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="colormap",
+                description="Colormap name (e.g. 'viridis', 'plasma', etc.)",
+                required=True,
+                type=str,
+            ),
+            OpenApiParameter(
+                name="stretch_range",
+                description=(
+                    "Optional stretch range as a JSON array of two numbers, "
+                    "e.g. [0, 100]. If not provided, the full data range will be used."
+                ),
+                required=False,
+                type=str,
+            ),
+        ],
+        responses={
+            200: ColorMapSerializer,
+            400: OpenApiResponse(description="Invalid colormap options."),
+            401: OpenApiResponse(description="Authentication required."),
+            403: OpenApiResponse(description="Permission denied."),
+        },
+    )
+    def get(self, request):
+        _colormap = request.query_params.get("colormap")
+        stretch_range = request.query_params.get("stretch_range")
+        try:
+            stretch_range_arg = (
+                json.loads(stretch_range) if stretch_range else [0, 255]
+            )
+        except json.JSONDecodeError:
+            return Response(
+                {
+                    "detail": (
+                        "Invalid stretch_range format. Must be a JSON array "
+                        "of two numbers, e.g. [0, 100]."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        options = ColorMapOptionsSerializer(
+            data={
+                "colormap": _colormap,
+                "stretch_range": stretch_range_arg,
+                "num_values": 255,
+            }
+        )
+        if not options.is_valid():
+            return Response(options.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        res = _get_colormap(options.validated_data)
+        return Response(res.data)
 
 
 class _NoRedirectHandler(HTTPRedirectHandler):
