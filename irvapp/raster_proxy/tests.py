@@ -128,35 +128,50 @@ class RasterTileProxyViewTests(TestCase):
             "Raster tile service is currently unavailable.",
         )
 
-    @patch("raster_proxy.views.build_opener")
-    def test_proxies_colormap_endpoint(self, mock_build_opener):
+    @patch("raster_proxy.views.colormap")
+    def test_colormap_endpoint(self, mock_colormap):
         self.client.force_authenticate(user=self.user)
-        fake_response = _FakeUpstreamResponse(
-            status=200,
-            body=b"{\"0\":[0,0,0,255]}",
-            headers={
-                "Content-Type": "application/json",
-            },
-        )
-        opener = MagicMock()
-        opener.open.return_value = fake_response
-        mock_build_opener.return_value = opener
+        mock_colormap.return_value = [
+            {"value": 0, "rgba": [0, 0, 0, 255]},
+            {"value": 1, "rgba": [1, 1, 1, 255]},
+        ]
 
         response = self.client.get("/tiles/raster/colormap?colormap=viridis")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/json")
-        self.assertEqual(
-            b"".join(response.streaming_content), b'{"0":[0,0,0,255]}'
-        )
-        self.assertTrue(fake_response.closed)
+        self.assertEqual(response.json(), {
+            "colormap": [
+                {"value": 0, "rgba": [0, 0, 0, 255]},
+                {"value": 1, "rgba": [1, 1, 1, 255]},
+            ]
+        })
 
-        forwarded_request = opener.open.call_args.args[0]
-        self.assertEqual(
-            forwarded_request.full_url,
-            "http://raster-tileserver:5000/colormap?colormap=viridis",
+        mock_colormap.assert_called_once_with(
+            colormap="viridis",
+            stretch_range=[0, 255],
+            num_values=255,
         )
-        self.assertEqual(forwarded_request.get_method(), "GET")
+
+    @patch("raster_proxy.views.colormap")
+    def test_colormap_endpoint_passes_through_stretch_range(
+        self,
+        mock_colormap,
+    ):
+        self.client.force_authenticate(user=self.user)
+        mock_colormap.return_value = []
+
+        response = self.client.get(
+            "/tiles/raster/colormap"
+            "?colormap=viridis&stretch_range=[10,20]"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        mock_colormap.assert_called_once_with(
+            colormap="viridis",
+            stretch_range=[10.0, 20.0],
+            num_values=255,
+        )
 
     @patch("raster_proxy.views.build_opener")
     def test_head_does_not_include_response_body(self, mock_build_opener):

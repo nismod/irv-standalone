@@ -4,5 +4,6 @@ drf-spectacular~=0.29.0
 pandas~=3.0.3
 psycopg[binary]~=3.3.4
 pyproj~=3.7.2
+terracotta==0.9.1
 xarray~=2026.4.0
 zarr~=3.2.1
