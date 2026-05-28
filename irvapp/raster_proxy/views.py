@@ -5,6 +5,7 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 from django.conf import settings
 from django.http import HttpResponse, StreamingHttpResponse
+from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiParameter,
     OpenApiResponse,
@@ -38,21 +39,23 @@ class ColormapView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
+        operation_id="raster_colormap",
         parameters=[
             OpenApiParameter(
                 name="colormap",
                 description="Colormap name (e.g. 'viridis', 'plasma', etc.)",
                 required=True,
-                type=str,
+                type=OpenApiTypes.STR,
             ),
             OpenApiParameter(
                 name="stretch_range",
                 description=(
                     "Optional stretch range as a JSON array of two numbers, "
-                    "e.g. [0, 100]. If not provided, the full data range will be used."
+                    "e.g. [0, 100]. If not provided, the full data range "
+                    "will be used."
                 ),
                 required=False,
-                type=str,
+                type=OpenApiTypes.STR,
             ),
         ],
         responses={
