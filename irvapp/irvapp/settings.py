@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'irv_auth',
     'api',
     'vector_proxy',
-    'raster_proxy',
+    'raster',
     'pixel',
 ]
 
