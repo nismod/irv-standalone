@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class RasterProxyConfig(AppConfig):
+class RasterConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'raster_proxy'
+    name = 'raster'

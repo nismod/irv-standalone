@@ -38,8 +38,9 @@ services:
       - PGDATABASE=jamaicadev
       - PGUSER=docker
       - PGPASSWORD=docker
-      - PIXEL_STACK_DATA_DIR=/data
-      - LAYER_METADATA_PATH=/data/hazard_layers.csv
+      - PIXEL_STACK_DATA_DIR=/data/pixel
+      - LAYER_METADATA_PATH=/data/pixel/hazard_layers.csv
+      - TILEDB_URI=/data/raster
     ports:
       - 8000:8000
     depends_on:
@@ -47,8 +48,9 @@ services:
         condition: service_healthy
     volumes:
       - ./irvapp:/code
-      - ./tileserver/stacks:/data
-      - ./etl/hazard_layers.csv:/data/hazard_layers.csv
+      - ./tileserver/stacks:/data/pixel:ro
+      - ./tileserver/raster/data:/data/raster:ro
+      - ./etl/hazard_layers.csv:/data/pixel/hazard_layers.csv:ro
     command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
     labels:
       - "traefik.enable=true"
@@ -64,18 +66,6 @@ services:
     volumes:
       - ./tileserver/vector/data:/data
       - ./tileserver/vector/config.json:/config.json
-
-  raster-tileserver:
-    image: ghcr.io/nismod/jsrat-raster-tileserver:0.2
-    build: ./tileserver/raster
-    volumes:
-      - ./tileserver/raster/data:/data
-      - ./tileserver/raster/config.toml:/config.toml
-    environment:
-      - TC_DRIVER_PATH=/data/terracotta.sqlite
-      - TC_RESAMPLING_METHOD=nearest
-      - TC_REPROJECTION_METHOD=nearest
-      - TC_PNG_COMPRESS_LEVEL=1
 
   db:
     image: kartoza/postgis:14-3.1
@@ -99,17 +89,16 @@ services:
       retries: 5
 
   raster-tile-ingester:
-    image: ghcr.io/nismod/jsrat-raster-tileserver:0.2
-    build: ./tileserver/raster
+    build: ./irvapp
     profiles: ["raster-tile-ingester"]
     volumes:
-      - ./tileserver/raster/data:/data
+      - ./tileserver/raster/data:/data/raster:rw
       - ./tileserver/raster/config.toml:/config.toml
     command:
       [
         "terracotta",
         "ingest",
-        "/data/{type}__rp_{rp}__rcp_{rcp}__epoch_{epoch}__conf_{confidence}.tif",
+        "/data/raster/{type}__rp_{rp}__rcp_{rcp}__epoch_{epoch}__conf_{confidence}.tif",
         "-o",
-        "/data/terracotta.sqlite",
+        "/data/raster/terracotta.sqlite",
       ]
