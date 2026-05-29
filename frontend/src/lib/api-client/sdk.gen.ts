@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AdaptationCostBenefitsCreateData, AdaptationCostBenefitsCreateResponses, AdaptationCostBenefitsDestroyData, AdaptationCostBenefitsDestroyResponses, AdaptationCostBenefitsListData, AdaptationCostBenefitsListResponses, AdaptationCostBenefitsPartialUpdateData, AdaptationCostBenefitsPartialUpdateResponses, AdaptationCostBenefitsRetrieveData, AdaptationCostBenefitsRetrieveResponses, AdaptationCostBenefitsUpdateData, AdaptationCostBenefitsUpdateResponses, AttributesCreateData, AttributesCreateResponses, AuthLoginCreateData, AuthLoginCreateErrors, AuthLoginCreateResponses, AuthLogoutCreateData, AuthLogoutCreateErrors, AuthLogoutCreateResponses, AuthMeRetrieveData, AuthMeRetrieveResponses, DamagesExpectedCreateData, DamagesExpectedCreateResponses, DamagesExpectedDestroyData, DamagesExpectedDestroyResponses, DamagesExpectedListData, DamagesExpectedListResponses, DamagesExpectedPartialUpdateData, DamagesExpectedPartialUpdateResponses, DamagesExpectedRetrieveData, DamagesExpectedRetrieveResponses, DamagesExpectedUpdateData, DamagesExpectedUpdateResponses, DamagesRpCreateData, DamagesRpCreateResponses, DamagesRpDestroyData, DamagesRpDestroyResponses, DamagesRpListData, DamagesRpListResponses, DamagesRpPartialUpdateData, DamagesRpPartialUpdateResponses, DamagesRpRetrieveData, DamagesRpRetrieveResponses, DamagesRpUpdateData, DamagesRpUpdateResponses, FeaturesCreateData, FeaturesCreateResponses, FeaturesDestroyData, FeaturesDestroyResponses, FeaturesListData, FeaturesListResponses, FeaturesPartialUpdateData, FeaturesPartialUpdateResponses, FeaturesProtectedByListData, FeaturesProtectedByListResponses, FeaturesRetrieveData, FeaturesRetrieveResponses, FeaturesSortedByRetrieveData, FeaturesSortedByRetrieveResponses, FeaturesUpdateData, FeaturesUpdateResponses } from './types.gen';
+import type { AdaptationCostBenefitsCreateData, AdaptationCostBenefitsCreateResponses, AdaptationCostBenefitsDestroyData, AdaptationCostBenefitsDestroyResponses, AdaptationCostBenefitsListData, AdaptationCostBenefitsListResponses, AdaptationCostBenefitsPartialUpdateData, AdaptationCostBenefitsPartialUpdateResponses, AdaptationCostBenefitsRetrieveData, AdaptationCostBenefitsRetrieveResponses, AdaptationCostBenefitsUpdateData, AdaptationCostBenefitsUpdateResponses, AttributesCreateData, AttributesCreateResponses, AuthLoginCreateData, AuthLoginCreateErrors, AuthLoginCreateResponses, AuthLogoutCreateData, AuthLogoutCreateErrors, AuthLogoutCreateResponses, AuthMeRetrieveData, AuthMeRetrieveResponses, DamagesExpectedCreateData, DamagesExpectedCreateResponses, DamagesExpectedDestroyData, DamagesExpectedDestroyResponses, DamagesExpectedListData, DamagesExpectedListResponses, DamagesExpectedPartialUpdateData, DamagesExpectedPartialUpdateResponses, DamagesExpectedRetrieveData, DamagesExpectedRetrieveResponses, DamagesExpectedUpdateData, DamagesExpectedUpdateResponses, DamagesRpCreateData, DamagesRpCreateResponses, DamagesRpDestroyData, DamagesRpDestroyResponses, DamagesRpListData, DamagesRpListResponses, DamagesRpPartialUpdateData, DamagesRpPartialUpdateResponses, DamagesRpRetrieveData, DamagesRpRetrieveResponses, DamagesRpUpdateData, DamagesRpUpdateResponses, FeaturesCreateData, FeaturesCreateResponses, FeaturesDestroyData, FeaturesDestroyResponses, FeaturesListData, FeaturesListResponses, FeaturesPartialUpdateData, FeaturesPartialUpdateResponses, FeaturesProtectedByListData, FeaturesProtectedByListResponses, FeaturesRetrieveData, FeaturesRetrieveResponses, FeaturesSortedByRetrieveData, FeaturesSortedByRetrieveResponses, FeaturesUpdateData, FeaturesUpdateResponses, PixelRetrieveData, PixelRetrieveResponses, RasterColormapData, RasterColormapErrors, RasterColormapResponses, RasterTileSourceData, RasterTileSourceDomainsData, RasterTileSourceDomainsResponses, RasterTileSourceResponses, RasterTileSourcesData, RasterTileSourcesResponses, TilesRasterPngRetrieveData, TilesRasterPngRetrieveErrors, TilesRasterPngRetrieveResponses, TilesVectorRetrieve2Data, TilesVectorRetrieve2Errors, TilesVectorRetrieve2Responses, TilesVectorRetrieveData, TilesVectorRetrieveErrors, TilesVectorRetrieveResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -380,5 +380,85 @@ export const featuresSortedByRetrieve = <ThrowOnError extends boolean = false>(o
             type: 'apiKey'
         }, { scheme: 'basic', type: 'http' }],
     url: '/features/sorted-by/{field_group}',
+    ...options
+});
+
+export const pixelRetrieve = <ThrowOnError extends boolean = false>(options: Options<PixelRetrieveData, ThrowOnError>) => (options.client ?? client).get<PixelRetrieveResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/pixel/{lon}/{lat}',
+    ...options
+});
+
+export const tilesRasterPngRetrieve = <ThrowOnError extends boolean = false>(options: Options<TilesRasterPngRetrieveData, ThrowOnError>) => (options.client ?? client).get<TilesRasterPngRetrieveResponses, TilesRasterPngRetrieveErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/tiles/raster/{keys}/{tile_z}/{tile_x}/{tile_y}.png',
+    ...options
+});
+
+export const rasterColormap = <ThrowOnError extends boolean = false>(options: Options<RasterColormapData, ThrowOnError>) => (options.client ?? client).get<RasterColormapResponses, RasterColormapErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/tiles/raster/colormap',
+    ...options
+});
+
+export const rasterTileSources = <ThrowOnError extends boolean = false>(options?: Options<RasterTileSourcesData, ThrowOnError>) => (options?.client ?? client).get<RasterTileSourcesResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/tiles/raster/sources',
+    ...options
+});
+
+export const rasterTileSource = <ThrowOnError extends boolean = false>(options: Options<RasterTileSourceData, ThrowOnError>) => (options.client ?? client).get<RasterTileSourceResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/tiles/raster/sources/{source_id}',
+    ...options
+});
+
+export const rasterTileSourceDomains = <ThrowOnError extends boolean = false>(options: Options<RasterTileSourceDomainsData, ThrowOnError>) => (options.client ?? client).get<RasterTileSourceDomainsResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/tiles/raster/sources/{source_id}/domains',
+    ...options
+});
+
+export const tilesVectorRetrieve = <ThrowOnError extends boolean = false>(options?: Options<TilesVectorRetrieveData, ThrowOnError>) => (options?.client ?? client).get<TilesVectorRetrieveResponses, TilesVectorRetrieveErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/tiles/vector/',
+    ...options
+});
+
+export const tilesVectorRetrieve2 = <ThrowOnError extends boolean = false>(options: Options<TilesVectorRetrieve2Data, ThrowOnError>) => (options.client ?? client).get<TilesVectorRetrieve2Responses, TilesVectorRetrieve2Errors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/tiles/vector/{tile_path}',
     ...options
 });

@@ -63,7 +63,7 @@ def all_datasets(tc_driver_path: str) -> dict:
 def singleband(
     tc_driver_path: str,
     keys: Union[Sequence[str], Mapping[str, str]],
-    tile_xyz: Tuple[int, int, int] = None,
+    tile_xyz: Optional[Tuple[int, int, int]] = None,
     *,
     colormap: Union[str, Mapping[Number, RGBA], None] = None,
     stretch_range: Tuple[Number, Number] = None,
@@ -89,7 +89,11 @@ def singleband(
     with driver.connect():
         metadata = driver.get_metadata(keys)
         tile_data = xyz.get_tile_data(
-            driver, keys, tile_xyz, tile_size=tile_size, preserve_values=preserve_values
+            driver,
+            keys,
+            tile_xyz,
+            tile_size=tile_size,
+            preserve_values=preserve_values,
         )
 
     if preserve_values:
