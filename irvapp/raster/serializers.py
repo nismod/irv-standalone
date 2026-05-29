@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from .models import RasterTileSource
+
 
 class ColorMapOptionsSerializer(serializers.Serializer):
     """
@@ -40,4 +42,27 @@ class ColorMapSerializer(serializers.Serializer):
 
     colormap = serializers.ListField(
         child=ColorMapEntrySerializer()
+    )
+
+
+class RasterTileSourceSerializer(serializers.ModelSerializer):
+    # Expose as a typed list so OpenAPI/TS clients don't get `unknown`.
+    keys = serializers.ListField(child=serializers.CharField())
+
+    class Meta:
+        model = RasterTileSource
+        fields = [
+            "id",
+            "domain",
+            "name",
+            "group",
+            "description",
+            "license",
+            "keys",
+        ]
+
+
+class RasterTileSourceDomainsSerializer(serializers.Serializer):
+    domains = serializers.ListField(
+        child=serializers.DictField(child=serializers.CharField())
     )

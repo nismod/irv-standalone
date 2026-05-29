@@ -25,6 +25,26 @@ export type AttributeLookupRequest = {
     ids: Array<number>;
 };
 
+/**
+ * Serializer for colormap data
+ */
+export type ColorMap = {
+    colormap: Array<ColorMapEntry>;
+};
+
+/**
+ * Serializer for a single colormap entry (RGB)
+ */
+export type ColorMapEntry = {
+    value: number;
+    rgba: [
+        number,
+        number,
+        number,
+        number
+    ];
+};
+
 export type CurrentUser = {
     readonly id: number;
     /**
@@ -208,6 +228,21 @@ export type PatchedFeature = {
     properties?: unknown;
 };
 
+/**
+ * Serialize point_query payload: column names to value lists.
+ */
+export type PixelData = {
+    key?: Array<string>;
+    hazard?: Array<string>;
+    rp?: Array<number | null>;
+    rcp?: Array<string>;
+    epoch?: Array<number | null>;
+    confidence?: Array<number | null>;
+    variable?: Array<string>;
+    unit?: Array<string>;
+    band_data?: Array<number | null>;
+};
+
 export type ProtectedFeature = {
     id: number;
     string_id: string;
@@ -219,6 +254,22 @@ export type ProtectedFeature = {
     avoided_eael_mean: number | null;
     hazard: string;
     rcp: string;
+};
+
+export type RasterTileSource = {
+    readonly id: number;
+    domain: string;
+    name: string;
+    group: string;
+    description?: string | null;
+    license?: string | null;
+    keys: unknown;
+};
+
+export type RasterTileSourceDomains = {
+    domains: Array<{
+        [key: string]: string;
+    }>;
 };
 
 export type SessionState = {
@@ -398,6 +449,15 @@ export type PatchedFeatureWritable = {
     layer?: string;
     sublayer?: string | null;
     properties?: unknown;
+};
+
+export type RasterTileSourceWritable = {
+    domain: string;
+    name: string;
+    group: string;
+    description?: string | null;
+    license?: string | null;
+    keys: unknown;
 };
 
 export type SessionStateWritable = {
@@ -1011,3 +1071,216 @@ export type FeaturesSortedByRetrieveResponses = {
 };
 
 export type FeaturesSortedByRetrieveResponse = FeaturesSortedByRetrieveResponses[keyof FeaturesSortedByRetrieveResponses];
+
+export type PixelRetrieveData = {
+    body?: never;
+    path: {
+        /**
+         * Latitude in EPSG:4326.
+         */
+        lat: number;
+        /**
+         * Longitude in EPSG:4326.
+         */
+        lon: number;
+    };
+    query?: never;
+    url: '/pixel/{lon}/{lat}';
+};
+
+export type PixelRetrieveResponses = {
+    200: PixelData;
+};
+
+export type PixelRetrieveResponse = PixelRetrieveResponses[keyof PixelRetrieveResponses];
+
+export type TilesRasterPngRetrieveData = {
+    body?: never;
+    path: {
+        keys: string;
+        tile_x: number;
+        tile_y: number;
+        tile_z: number;
+    };
+    query?: {
+        /**
+         * Colormap name to use for rendering the tile. Set to "explicit" for categorical data.
+         */
+        colormap?: string;
+        /**
+         * JSON categorical map used when colormap=explicit.
+         */
+        explicit_color_map?: string;
+        /**
+         * Optional stretch range as a JSON array, e.g. [0, 10].
+         */
+        stretch_range?: string;
+    };
+    url: '/tiles/raster/{keys}/{tile_z}/{tile_x}/{tile_y}.png';
+};
+
+export type TilesRasterPngRetrieveErrors = {
+    /**
+     * Invalid tile parameters.
+     */
+    400: unknown;
+    /**
+     * Unexpected tile rendering error.
+     */
+    500: unknown;
+};
+
+export type TilesRasterPngRetrieveResponses = {
+    /**
+     * Rendered raster tile response.
+     */
+    200: unknown;
+};
+
+export type RasterColormapData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Colormap name (e.g. 'viridis', 'plasma', etc.)
+         */
+        colormap: string;
+        /**
+         * Optional stretch range as a JSON array of two numbers, e.g. [0, 100]. If not provided, the full data range will be used.
+         */
+        stretch_range?: string;
+    };
+    url: '/tiles/raster/colormap';
+};
+
+export type RasterColormapErrors = {
+    /**
+     * Invalid colormap options.
+     */
+    400: unknown;
+    /**
+     * Authentication required.
+     */
+    401: unknown;
+    /**
+     * Permission denied.
+     */
+    403: unknown;
+};
+
+export type RasterColormapResponses = {
+    200: ColorMap;
+};
+
+export type RasterColormapResponse = RasterColormapResponses[keyof RasterColormapResponses];
+
+export type RasterTileSourcesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/tiles/raster/sources';
+};
+
+export type RasterTileSourcesResponses = {
+    200: Array<RasterTileSource>;
+};
+
+export type RasterTileSourcesResponse = RasterTileSourcesResponses[keyof RasterTileSourcesResponses];
+
+export type RasterTileSourceData = {
+    body?: never;
+    path: {
+        source_id: number;
+    };
+    query?: never;
+    url: '/tiles/raster/sources/{source_id}';
+};
+
+export type RasterTileSourceResponses = {
+    200: RasterTileSource;
+};
+
+export type RasterTileSourceResponse = RasterTileSourceResponses[keyof RasterTileSourceResponses];
+
+export type RasterTileSourceDomainsData = {
+    body?: never;
+    path: {
+        source_id: number;
+    };
+    query?: never;
+    url: '/tiles/raster/sources/{source_id}/domains';
+};
+
+export type RasterTileSourceDomainsResponses = {
+    200: RasterTileSourceDomains;
+};
+
+export type RasterTileSourceDomainsResponse = RasterTileSourceDomainsResponses[keyof RasterTileSourceDomainsResponses];
+
+export type TilesVectorRetrieveData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/tiles/vector/';
+};
+
+export type TilesVectorRetrieveErrors = {
+    /**
+     * Authentication required.
+     */
+    401: unknown;
+    /**
+     * Permission denied.
+     */
+    403: unknown;
+    /**
+     * Invalid upstream redirect target.
+     */
+    502: unknown;
+    /**
+     * Vector tile upstream service unavailable.
+     */
+    503: unknown;
+};
+
+export type TilesVectorRetrieveResponses = {
+    /**
+     * Proxied vector tile response.
+     */
+    200: unknown;
+};
+
+export type TilesVectorRetrieve2Data = {
+    body?: never;
+    path: {
+        tile_path: string;
+    };
+    query?: never;
+    url: '/tiles/vector/{tile_path}';
+};
+
+export type TilesVectorRetrieve2Errors = {
+    /**
+     * Authentication required.
+     */
+    401: unknown;
+    /**
+     * Permission denied.
+     */
+    403: unknown;
+    /**
+     * Invalid upstream redirect target.
+     */
+    502: unknown;
+    /**
+     * Vector tile upstream service unavailable.
+     */
+    503: unknown;
+};
+
+export type TilesVectorRetrieve2Responses = {
+    /**
+     * Proxied vector tile response.
+     */
+    200: unknown;
+};

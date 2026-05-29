@@ -1,4 +1,5 @@
 import io
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from django.contrib.auth.models import User
@@ -34,8 +35,8 @@ class RasterTileImageViewTests(TestCase):
 
         self.assertEqual(response.status_code, 403)
 
-    @patch("raster.views._get_singleband_image")
-    @patch("raster.views._tile_db_from_domain")
+    @patch("raster.views.tiles._get_singleband_image")
+    @patch("raster.views.tiles._tile_db_from_domain")
     def test_renders_tile_with_explicit_internal_colormap(
         self,
         mock_tile_db_from_domain,
@@ -61,7 +62,7 @@ class RasterTileImageViewTests(TestCase):
             {"colormap": CATEGORICAL_COLOR_MAPS["land_cover"]},
         )
 
-    @patch("raster.views._tile_db_from_domain")
+    @patch("raster.views.tiles._tile_db_from_domain")
     def test_requires_explicit_color_map_when_not_builtin(
         self,
         mock_tile_db_from_domain,
@@ -78,3 +79,80 @@ class RasterTileImageViewTests(TestCase):
             response.json()["detail"],
             "colormap=explicit requires explicit_color_map to be included",
         )
+
+
+class RasterTileSourceViewTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username="source-user",
+            password="testpass",
+        )
+
+    def test_sources_requires_authentication(self):
+        response = self.client.get("/tiles/raster/sources")
+
+        self.assertEqual(response.status_code, 403)
+
+    @patch("raster.views.sources.RasterTileSource.objects.all")
+    def test_lists_tile_sources(self, mock_all):
+        self.client.force_authenticate(user=self.user)
+        mock_all.return_value = [
+            SimpleNamespace(
+                id=1,
+                domain="land_cover",
+                name="Land Cover",
+                group="Exposure",
+                description="Land cover tiles",
+                license="CC-BY",
+                keys=["region", "year"],
+            )
+        ]
+
+        response = self.client.get("/tiles/raster/sources")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()[0]["domain"], "land_cover")
+
+    @patch("raster.views.sources.RasterTileSource.objects.get")
+    def test_returns_single_tile_source(self, mock_get):
+        self.client.force_authenticate(user=self.user)
+        mock_get.return_value = SimpleNamespace(
+            id=1,
+            domain="land_cover",
+            name="Land Cover",
+            group="Exposure",
+            description="Land cover tiles",
+            license="CC-BY",
+            keys=["region", "year"],
+        )
+
+        response = self.client.get("/tiles/raster/sources/1")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["id"], 1)
+
+    @patch("raster.views.sources._source_options")
+    @patch("raster.views.sources._tile_db_from_domain")
+    @patch("raster.views.sources.RasterTileSource.objects.get")
+    def test_returns_source_domains(
+        self,
+        mock_get,
+        mock_tile_db_from_domain,
+        mock_source_options,
+    ):
+        self.client.force_authenticate(user=self.user)
+        mock_get.return_value = SimpleNamespace(domain="land_cover")
+        mock_tile_db_from_domain.return_value = "terracotta_land_cover"
+        mock_source_options.return_value = [
+            {"region": "global", "year": "2020"}
+        ]
+
+        response = self.client.get("/tiles/raster/sources/1/domains")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["domains"],
+            [{"region": "global", "year": "2020"}],
+        )
+        mock_source_options.assert_called_once_with("terracotta_land_cover")
