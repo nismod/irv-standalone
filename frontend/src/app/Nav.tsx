@@ -60,9 +60,10 @@ function useMapQueryParams() {
   const rawLat = useAtomValue(mapLatUrlState);
   const rawLon = useAtomValue(mapLonUrlState);
   const rawZoom = useAtomValue(mapZoomUrlState);
-  const safeLat = Number.isFinite(rawLat) ? rawLat : mapViewConfig.initialViewState.latitude;
-  const safeLon = Number.isFinite(rawLon) ? rawLon : mapViewConfig.initialViewState.longitude;
-  const safeZoom = Number.isFinite(rawZoom) ? rawZoom : mapViewConfig.initialViewState.zoom;
+  const mapViewState = useAtomValue(mapViewConfig);
+  const safeLat = Number.isFinite(rawLat) ? rawLat : mapViewState.initialViewState.latitude;
+  const safeLon = Number.isFinite(rawLon) ? rawLon : mapViewState.initialViewState.longitude;
+  const safeZoom = Number.isFinite(rawZoom) ? rawZoom : mapViewState.initialViewState.zoom;
   const lat = safeLat.toFixed(5);
   const lon = safeLon.toFixed(5);
   const zoom = safeZoom.toFixed(2);

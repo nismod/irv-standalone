@@ -8,6 +8,14 @@
 from django.contrib.gis.db import models
 
 
+class MapConfig(models.Model):
+    config_name = models.CharField(primary_key=True)
+    config_value = models.CharField()
+
+    class Meta:
+        db_table = 'map_config'
+
+
 class FeatureLayer(models.Model):
     layer_name = models.CharField(primary_key=True)
     sector = models.CharField()
