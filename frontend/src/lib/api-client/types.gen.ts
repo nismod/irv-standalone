@@ -136,6 +136,11 @@ export type LogoutCsrfErrorResponse = {
     detail: string;
 };
 
+export type MapConfig = {
+    config_name: string;
+    config_value: string;
+};
+
 export type PaginatedAdaptationCostBenefitList = {
     count: number;
     next?: string | null;
@@ -162,6 +167,13 @@ export type PaginatedFeatureList = {
     next?: string | null;
     previous?: string | null;
     results: Array<Feature>;
+};
+
+export type PaginatedMapConfigList = {
+    count: number;
+    next?: string | null;
+    previous?: string | null;
+    results: Array<MapConfig>;
 };
 
 export type PaginatedSortedFeatureListResponse = {
@@ -263,7 +275,7 @@ export type RasterTileSource = {
     group: string;
     description?: string | null;
     license?: string | null;
-    keys: unknown;
+    keys: Array<string>;
 };
 
 export type RasterTileSourceDomains = {
@@ -457,7 +469,7 @@ export type RasterTileSourceWritable = {
     group: string;
     description?: string | null;
     license?: string | null;
-    keys: unknown;
+    keys: Array<string>;
 };
 
 export type SessionStateWritable = {
@@ -1071,6 +1083,46 @@ export type FeaturesSortedByRetrieveResponses = {
 };
 
 export type FeaturesSortedByRetrieveResponse = FeaturesSortedByRetrieveResponses[keyof FeaturesSortedByRetrieveResponses];
+
+export type MapConfigListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Number of results to return per page.
+         */
+        limit?: number;
+        /**
+         * The initial index from which to return the results.
+         */
+        offset?: number;
+    };
+    url: '/map-config';
+};
+
+export type MapConfigListResponses = {
+    200: PaginatedMapConfigList;
+};
+
+export type MapConfigListResponse = MapConfigListResponses[keyof MapConfigListResponses];
+
+export type MapConfigRetrieveData = {
+    body?: never;
+    path: {
+        /**
+         * A unique value identifying this map config.
+         */
+        config_name: string;
+    };
+    query?: never;
+    url: '/map-config/{config_name}';
+};
+
+export type MapConfigRetrieveResponses = {
+    200: MapConfig;
+};
+
+export type MapConfigRetrieveResponse = MapConfigRetrieveResponses[keyof MapConfigRetrieveResponses];
 
 export type PixelRetrieveData = {
     body?: never;

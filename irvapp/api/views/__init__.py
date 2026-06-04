@@ -9,6 +9,7 @@ from .api_views import (
     ProtectedFeaturesView,
     AttributeLookupView,
 )
+from .map_config import MapConfigViewSet
 from .pagination import FastAPIPagination
 from .mixins import FieldGroupQueryParsingMixin
 
@@ -20,6 +21,7 @@ __all__ = [
     "SortedFeaturesView",
     "ProtectedFeaturesView",
     "AttributeLookupView",
+    "MapConfigViewSet",
     "FastAPIPagination",
     "FieldGroupQueryParsingMixin",
 ]

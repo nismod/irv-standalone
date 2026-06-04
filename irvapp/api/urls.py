@@ -6,6 +6,7 @@ from api.views import (
     AttributeLookupView,
     ProtectedFeaturesView,
     SortedFeaturesView,
+    MapConfigViewSet,
 )
 from rest_framework.routers import DefaultRouter
 from django.urls import path
@@ -20,10 +21,14 @@ router.register(r'features', FeatureViewset)
 router.register(r'adaptation-cost-benefits', AdaptationCostBenefitViewset)
 router.register(r'damages-expected', DamagesExpectedViewset)
 router.register(r'damages-rp', DamagesRpViewset)
+router.register(r'map-config', MapConfigViewSet, basename='map-config')
 
 urlpatterns = [
     *router.urls,
-    path('features/sorted-by/<str:field_group>', SortedFeaturesView.as_view()),
+    path(
+        'features/sorted-by/<str:field_group>',
+        SortedFeaturesView.as_view(),
+    ),
     path(
         'features/<int:protector_id>/protected-by',
         ProtectedFeaturesView.as_view(),

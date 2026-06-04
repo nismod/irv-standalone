@@ -1,4 +1,3 @@
-import omit from 'lodash/omit';
 import { FC, ReactNode } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
@@ -13,13 +12,10 @@ export interface BaseMapProps {
   children?: ReactNode;
 }
 
-const INITIAL_VIEW_STATE = {
-  ...mapViewConfig.initialViewState,
-  ...mapViewConfig.viewLimits,
-};
-const INITIAL_NON_COORDS_STATE = omit(INITIAL_VIEW_STATE, ['latitude', 'longitude', 'zoom']);
-
 export const BaseMapContainer: FC<BaseMapProps> = ({ children }) => {
+  const mapConfig = useAtomValue(mapViewConfig);
+  const INITIAL_VIEW_STATE = mapConfig.initialViewState;
+  const INITIAL_NON_COORDS_STATE = mapConfig.viewLimits;
   const background = useAtomValue(backgroundState);
   const showLabels = useAtomValue(showLabelsState);
   const [viewState, setViewState] = useAtom(mapViewStateState);
