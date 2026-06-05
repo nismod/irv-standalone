@@ -4,6 +4,6 @@ function capitalise(string) {
 
 export const RISK_SOURCE = {
   getDataUrl({ riskType, sector }, { scheme, range }) {
-    return `/api/tiles/raster/singleband/${sector}${capitalise(riskType)}/100/baseline/2010/None/{z}/{x}/{y}.png?colormap=${scheme}&stretch_range=[${range[0]},${range[1]}]`;
+    return `/api/tiles/raster/hotspots/${sector}${capitalise(riskType)}/100/baseline/2010/None/{z}/{x}/{y}.png?colormap=${scheme}&stretch_range=[${range[0]},${range[1]}]`;
   },
 };

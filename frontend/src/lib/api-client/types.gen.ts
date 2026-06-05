@@ -1149,6 +1149,7 @@ export type PixelRetrieveResponse = PixelRetrieveResponses[keyof PixelRetrieveRe
 export type TilesRasterPngRetrieveData = {
     body?: never;
     path: {
+        domain: string;
         keys: string;
         tile_x: number;
         tile_y: number;
@@ -1168,7 +1169,7 @@ export type TilesRasterPngRetrieveData = {
          */
         stretch_range?: string;
     };
-    url: '/tiles/raster/{keys}/{tile_z}/{tile_x}/{tile_y}.png';
+    url: '/tiles/raster/{domain}/{keys}/{tile_z}/{tile_x}/{tile_y}.png';
 };
 
 export type TilesRasterPngRetrieveErrors = {

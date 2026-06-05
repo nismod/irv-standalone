@@ -43,9 +43,7 @@ def _parse_keys(keys):
     if not all_keys:
         raise ValueError("Tile keys path is empty")
 
-    domain = all_keys[0]
-    parsed_keys = all_keys[1:]
-    return domain, parsed_keys
+    return all_keys
 
 
 def _get_singleband_image(
@@ -78,8 +76,8 @@ def _tile_db_from_domain(domain):
     """
 
     domain_to_db = {
-        "default": "terracotta.sqlite",
-        "singleband": "terracotta.sqlite",
+        "hazards": "terracotta.sqlite",
+        "hotspots": "terracotta.sqlite",
     }
 
     try:

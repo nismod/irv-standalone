@@ -17,7 +17,7 @@ urlpatterns = [
         RasterTileSourceDomainsView.as_view(),
     ),
     path(
-        '<path:keys>/<int:tile_z>/<int:tile_x>/<int:tile_y>.png',
+        '<slug:domain>/<path:keys>/<int:tile_z>/<int:tile_x>/<int:tile_y>.png',
         RasterTileImageView.as_view(),
     ),
 ]

@@ -419,7 +419,7 @@ export const tilesRasterPngRetrieve = <ThrowOnError extends boolean = false>(opt
             name: 'sessionid',
             type: 'apiKey'
         }, { scheme: 'basic', type: 'http' }],
-    url: '/tiles/raster/{keys}/{tile_z}/{tile_x}/{tile_y}.png',
+    url: '/tiles/raster/{domain}/{keys}/{tile_z}/{tile_x}/{tile_y}.png',
     ...options
 });
 
