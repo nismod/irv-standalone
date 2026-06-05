@@ -17,6 +17,6 @@ export const HAZARD_SOURCE = {
     const sanitisedRcp = String(rcp).replace('.', 'x');
     const sanitisedType = hazardType === 'storm' ? `storm${speed}` : hazardType;
 
-    return `/api/tiles/raster/singleband/${sanitisedType}/${returnPeriod}/${sanitisedRcp}/${epoch}/${confidence}/{z}/{x}/{y}.png?colormap=${scheme}&stretch_range=[${range[0]},${range[1]}]`;
+    return `/api/tiles/raster/hazards/${sanitisedType}/${returnPeriod}/${sanitisedRcp}/${epoch}/${confidence}/{z}/{x}/{y}.png?colormap=${scheme}&stretch_range=[${range[0]},${range[1]}]`;
   },
 };

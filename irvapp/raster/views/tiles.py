@@ -67,7 +67,7 @@ class RasterTileImageView(APIView):
             ),
         },
     )
-    def get(self, request, keys="", tile_z=0, tile_x=0, tile_y=0):
+    def get(self, request, domain="", keys="", tile_z=0, tile_x=0, tile_y=0):
         parsed_keys = []
         source_db = "unknown"
 
@@ -94,7 +94,7 @@ class RasterTileImageView(APIView):
         )
 
         try:
-            domain, parsed_keys = _parse_keys(keys)
+            parsed_keys = _parse_keys(keys)
             source_db = _tile_db_from_domain(domain)
             logger.debug("source DB for tile path: %s", source_db)
 
