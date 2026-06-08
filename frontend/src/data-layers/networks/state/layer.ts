@@ -19,7 +19,7 @@ import {
   networksStyleState,
   networkSelectionState,
   networkTreeCheckboxState,
-  networkTreeConfig,
+  networkTreeConfigState,
 } from './data-selection';
 import { AdaptationOptionParams } from '../domains';
 import { networkViewLayer } from '../network-view-layer';
@@ -54,6 +54,7 @@ export const adaptationDataParamsStateEffect: StateEffect<AdaptationOptionParams
   adaptationParams,
 ) => {
   const { sector, subsector, asset_type } = adaptationParams;
+  const networkTreeConfig = get(networkTreeConfigState);
 
   const layers = uniq(
     adaptationSectorLayers

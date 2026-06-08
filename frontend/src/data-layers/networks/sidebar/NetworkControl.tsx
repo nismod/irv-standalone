@@ -9,12 +9,12 @@ import { useUpdateDataParam } from 'lib/state/data-params';
 import { LayerLabel } from 'lib/sidebar/ui/LayerLabel';
 
 import {
+  networkTreeHierarchyState,
   networkSelectionState,
   networkTreeCheckboxState,
-  networkTreeConfig,
+  networkTreeConfigState,
   networkTreeExpandedState,
 } from '../state/data-selection';
-import { NETWORK_LAYERS_HIERARCHY } from './hierarchy';
 import { NETWORKS_METADATA } from '../metadata';
 import { showAdaptationsState, showProtectorFeaturesState } from '../state/layer';
 import adaptationSectorLayers from '../adaptation-sector-layers.json';
@@ -25,6 +25,7 @@ import { protectedFeatureLayersState } from 'lib/state/protected-features';
  * @param checkBoxState network checkbox tree state.
  */
 function useSyncProtectedFeatureLayers() {
+  const networkTreeConfig = useAtomValue(networkTreeConfigState);
   const prevLayers = new Set(useAtomValue(networkSelectionState));
   const allLayers = new Set(
     Object.values(networkTreeConfig.nodes)
@@ -69,6 +70,7 @@ function useSyncProtectedFeatureLayers() {
  * @param checkboxState infrastructure checkbox tree state.
  */
 function useSyncAdaptationParameters(checkboxState) {
+  const networkTreeConfig = useAtomValue(networkTreeConfigState);
   const updateSector = useUpdateDataParam('adaptation', 'sector');
   const updateSubsector = useUpdateDataParam('adaptation', 'subsector');
   const updateAssetType = useUpdateDataParam('adaptation', 'asset_type');
@@ -96,6 +98,8 @@ function getLabel(node, checked) {
 }
 
 export const NetworkControl: FC = () => {
+  const networkHierarchy = useAtomValue(networkTreeHierarchyState);
+  const networkTreeConfig = useAtomValue(networkTreeConfigState);
   const [checkboxState, setCheckboxState] = useAtom(networkTreeCheckboxState);
   const [expanded, setExpanded] = useAtom(networkTreeExpandedState);
 
@@ -117,7 +121,7 @@ export const NetworkControl: FC = () => {
         </Box>
       ) : null}
       <CheckboxTree
-        nodes={NETWORK_LAYERS_HIERARCHY}
+        nodes={networkHierarchy}
         config={networkTreeConfig}
         getLabel={getLabel}
         checkboxState={checkboxState}
