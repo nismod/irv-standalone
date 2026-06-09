@@ -14,7 +14,7 @@ import { sectionStyleOptionsState, sectionStyleValueState } from 'lib/state/sect
 import { InputSection } from 'lib/sidebar/ui/InputSection';
 import { DataParam } from 'lib/sidebar/ui/params/DataParam';
 
-import { sectorRiskTypes } from '../domains';
+import { sectorRiskTypes } from 'app/config/sidebar/RISK_DOMAINS';
 import { dataParamState } from 'lib/state/data-params';
 
 function capitalise(string) {

@@ -11,7 +11,7 @@ interface TotalDamagesParams {
   epoch: number;
 }
 
-export const totalDamagesConfig: DataParamGroupConfig<TotalDamagesParams> = {
+const totalDamagesConfig: DataParamGroupConfig<TotalDamagesParams> = {
   paramDefaults: {
     rcp: 'baseline',
     epoch: 2010,
@@ -38,7 +38,7 @@ export interface AdaptationOptionParams {
   adaptation_protection_level: number;
 }
 
-export const adaptationDomainsConfig: DataParamGroupConfig<AdaptationOptionParams> = {
+const adaptationDomainsConfig: DataParamGroupConfig<AdaptationOptionParams> = {
   paramDefaults: {
     sector: 'power',
     subsector: 'transmission',

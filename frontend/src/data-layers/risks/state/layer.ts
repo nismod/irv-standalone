@@ -5,7 +5,7 @@ import { dataParamState } from 'lib/state/data-params';
 
 import { sectionVisibilityState, sectionStyleValueState } from 'lib/state/sections';
 
-import { RiskParams } from '../domains';
+import { type RiskParams } from 'app/config/sidebar/RISK_DOMAINS';
 import { riskViewLayer } from '../risk-view-layer';
 
 export const risksLayerState = atom<ViewLayer[]>((get) => {

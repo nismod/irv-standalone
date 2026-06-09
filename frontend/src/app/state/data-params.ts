@@ -1,7 +1,7 @@
 import { atom, useAtom, useAtomValue } from 'jotai';
 
-import { NETWORK_DOMAINS } from 'data-layers/networks/domains';
-import { RISK_DOMAINS } from 'data-layers/risks/domains';
+import { NETWORK_DOMAINS } from 'app/config/sidebar/NETWORK_DOMAINS';
+import { RISK_DOMAINS } from 'app/config/sidebar/RISK_DOMAINS';
 
 import { DataParamGroupConfig } from 'lib/controls/data-params';
 import { syncExternalConfigState } from 'lib/state/data-params';

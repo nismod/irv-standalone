@@ -1,5 +1,5 @@
 import { createElement } from 'react';
-import { RiskParams } from './domains';
+import { type RiskParams } from 'app/config/sidebar/RISK_DOMAINS';
 
 import { rasterTileLayer } from 'lib/deck/layers/raster-tile-layer';
 import { ViewLayer } from 'lib/data-map/view-layers';
