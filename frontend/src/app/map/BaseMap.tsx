@@ -1,7 +1,7 @@
 import { FC, ReactNode } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
-import { mapViewConfig } from 'app/config/map-view';
+import { mapViewConfig } from 'lib/state/map-view/map-view-config';
 import { mapViewStateState, nonCoordsMapViewStateState } from 'lib/state/map-view/map-view-state';
 import { BaseMap } from 'lib/data-map/BaseMap';
 

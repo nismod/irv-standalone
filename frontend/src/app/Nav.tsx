@@ -24,7 +24,7 @@ import { withProps } from 'lib/react/with-props';
 import { mapLatUrlState, mapLonUrlState, mapZoomUrlState } from 'lib/state/map-view/map-url';
 import { globalStyleVariables } from 'app/theme';
 import { useAtomValue } from 'jotai';
-import { mapViewConfig } from './config/map-view';
+import { mapViewConfig } from 'lib/state/map-view/map-view-config';
 import {
   useAuthSessionQuery,
   useLogoutMutation,
