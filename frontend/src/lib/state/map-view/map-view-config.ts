@@ -1,6 +1,7 @@
 import { atom } from 'jotai';
 
-import { MapConfig, mapConfigList } from 'lib/api-client';
+import { MapConfig, mapConfigList } from '../../api-client';
+
 interface MapViewConfig {
   initialViewState: {
     latitude: number;
