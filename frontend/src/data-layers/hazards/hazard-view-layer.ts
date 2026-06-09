@@ -1,6 +1,6 @@
 import { createElement } from 'react';
-import { HazardParams } from './domains';
 
+import { HazardParams } from 'app/config/sidebar/HAZARD_DOMAINS';
 import { rasterTileLayer } from 'lib/deck/layers/raster-tile-layer';
 import { ViewLayer } from 'lib/data-map/view-layers';
 import { RasterTarget } from 'lib/data-map/types';

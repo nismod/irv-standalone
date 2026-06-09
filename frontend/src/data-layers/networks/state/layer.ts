@@ -12,8 +12,8 @@ import { sectionVisibilityState } from 'lib/state/sections';
 
 import { LayerSpec } from 'lib/asset-list/use-sorted-features';
 import { damageMapStyleParamsState } from 'app/state/damage-mapping/damage-style-params';
+import adaptationSectorLayers from 'app/config/sidebar/adaptation-sector-layers.json';
 
-import adaptationSectorLayers from '../adaptation-sector-layers.json';
 import * as networkColorMaps from '../color-maps';
 import {
   networksStyleState,

@@ -4,7 +4,7 @@ import {
   inferDomainsFromData,
 } from 'lib/controls/data-params';
 
-import adaptationOptions from './adaptation-options.json';
+import adaptationOptions from 'app/config/sidebar/adaptation-options.json';
 
 interface TotalDamagesParams {
   rcp: string;

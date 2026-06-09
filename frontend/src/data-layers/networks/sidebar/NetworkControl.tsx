@@ -17,7 +17,8 @@ import {
 } from '../state/data-selection';
 import { NETWORKS_METADATA } from '../metadata';
 import { showAdaptationsState, showProtectorFeaturesState } from '../state/layer';
-import adaptationSectorLayers from '../adaptation-sector-layers.json';
+
+import adaptationSectorLayers from 'app/config/sidebar/adaptation-sector-layers.json';
 import { protectedFeatureLayersState } from 'lib/state/protected-features';
 
 /**
