@@ -21,7 +21,7 @@ import {
   networkTreeCheckboxState,
   networkTreeConfigState,
 } from './data-selection';
-import { AdaptationOptionParams } from '../domains';
+import { type AdaptationOptionParams } from 'app/config/sidebar/NETWORK_DOMAINS';
 import { networkViewLayer } from '../network-view-layer';
 
 export const networksLayerState = atom<ViewLayer[]>((get) =>
