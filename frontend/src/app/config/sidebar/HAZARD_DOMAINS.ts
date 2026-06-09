@@ -8,6 +8,7 @@ export interface HazardParams {
   speed?: number;
 }
 
+
 export const HAZARD_DOMAINS: Record<string, DataParamGroupConfig<HazardParams>> = {
   fluvial: {
     paramDomains: {

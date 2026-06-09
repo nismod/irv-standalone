@@ -9,7 +9,7 @@ import {
 import { sectionStyleValueState } from 'lib/state/sections';
 import { STORAGE_PREFIX, atomWithQueryParams, setUrlParam } from 'lib/state/map-view/map-url';
 
-import { NETWORK_LAYERS_HIERARCHY } from '../sidebar/hierarchy';
+import { NETWORK_LAYERS_HIERARCHY } from 'app/config/sidebar/NETWORK_LAYERS_HIERARCHY';
 
 export const networkTreeExpandedState = atom<string[]>([]);
 

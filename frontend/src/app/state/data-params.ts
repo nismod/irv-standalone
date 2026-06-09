@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 
-import { HAZARD_DOMAINS } from 'data-layers/hazards/domains';
+import { HAZARD_DOMAINS } from 'app/config/sidebar/HAZARD_DOMAINS';
 import { NETWORK_DOMAINS } from 'data-layers/networks/domains';
 import { RISK_DOMAINS } from 'data-layers/risks/domains';
 
