@@ -1,7 +1,9 @@
 import Download from '@mui/icons-material/Download';
 import { FormControl, InputLabel, IconButton, MenuItem, Select, Typography } from '@mui/material';
 import { Box } from '@mui/system';
-import { HAZARD_DOMAINS } from 'app/config/sidebar/HAZARD_DOMAINS';
+import { useAtomValue } from 'jotai';
+
+import { type HazardDomains, hazardDomainState } from 'data-layers/hazards/state/data-selection';
 import { DamagesExpected, DamagesRp } from 'lib/api-client';
 import { downloadFile, titleCase, unique } from 'lib/helpers';
 import { useSelect } from 'lib/hooks/use-select';
@@ -12,9 +14,10 @@ import { RPDamageTable } from './RPDamageTable';
 import { ExpectedDamageChart } from './ExpectedDamageChart';
 import { ReturnPeriodDamageChart } from './ReturnPeriodDamageChart';
 
-const DAMAGES_ORDERING = (() => {
+
+const damageOrdering = (hazardDomains: HazardDomains) => {
   const ordering = [];
-  for (const [hazard, hazardDomain] of Object.entries(HAZARD_DOMAINS)) {
+  for (const [hazard, hazardDomain] of Object.entries(hazardDomains)) {
     for (const rcp of hazardDomain.paramDomains.rcp) {
       for (const epoch of hazardDomain.paramDomains.epoch) {
         ordering.push({
@@ -26,11 +29,11 @@ const DAMAGES_ORDERING = (() => {
     }
   }
   return ordering;
-})();
+};
 
-const RP_ORDERING = (() => {
+const rpOrdering = (hazardDomains: HazardDomains) => {
   const ordering = [];
-  for (const [hazard, hazardDomain] of Object.entries(HAZARD_DOMAINS)) {
+  for (const [hazard, hazardDomain] of Object.entries(hazardDomains)) {
     for (const rp of hazardDomain.paramDomains.returnPeriod) {
       for (const rcp of hazardDomain.paramDomains.rcp) {
         for (const epoch of hazardDomain.paramDomains.epoch) {
@@ -45,7 +48,7 @@ const RP_ORDERING = (() => {
     }
   }
   return ordering;
-})();
+};
 
 function getDamageKey({ hazard, rcp, epoch }) {
   return `${hazard}__rcp_${rcp}__epoch_${epoch}__conf_None`;
@@ -121,20 +124,24 @@ function prepareRPDamages(rpDamages: DamagesRp[]) {
   return rpDamages.map(getRPDamageObject);
 }
 
-function orderDamages(damages: ExpectedDamageCell[]) {
+function useOrderedDamages(damages: ExpectedDamageCell[]) {
+  const hazardDomains = useAtomValue(hazardDomainState);
   const lookup = fromPairs(damages.map((d) => [d.key, d]));
 
-  return DAMAGES_ORDERING.map(getDamageKey)
+  return useMemo(() => damageOrdering(hazardDomains)
+    .map(getDamageKey)
     .map((key) => lookup[key])
-    .filter(Boolean);
+    .filter(Boolean), [hazardDomains, lookup]);
 }
 
-function orderRPDamages(damages: RPDamageCell[]) {
+function useOrderedRPDamages(damages: RPDamageCell[]) {
+  const hazardDomains = useAtomValue(hazardDomainState);
   const lookup = fromPairs(damages.map((d) => [d.key, d]));
 
-  return RP_ORDERING.map(getRPDamageKey)
+  return useMemo(() => rpOrdering(hazardDomains)
+    .map(getRPDamageKey)
     .map((key) => lookup[key])
-    .filter(Boolean);
+    .filter(Boolean), [hazardDomains, lookup]);
 }
 
 function makeDamagesCsv(damages: ExpectedDamageCell[]) {
@@ -162,8 +169,8 @@ function makeRPDamagesCsv(damages: RPDamageCell[]) {
 }
 
 export const DamagesSection = ({ fd }) => {
-  const damagesData = orderDamages(prepareExpectedDamages(fd?.damages_expected ?? []));
-  const returnPeriodDamagesData = orderRPDamages(prepareRPDamages(fd?.damages_return_period ?? []));
+  const damagesData = useOrderedDamages(prepareExpectedDamages(fd?.damages_expected ?? []));
+  const returnPeriodDamagesData = useOrderedRPDamages(prepareRPDamages(fd?.damages_return_period ?? []));
 
   const hazards = useMemo(() => unique(damagesData.map((d) => d.hazard)), [damagesData]);
   const epochs = useMemo(() => unique(damagesData.map((d) => d.epoch)).sort(), [damagesData]);

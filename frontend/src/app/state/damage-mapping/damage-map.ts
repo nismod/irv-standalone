@@ -3,14 +3,14 @@ import { atom } from 'jotai';
 
 import { setParamToTopValue } from 'lib/state/data-params';
 
-import { HAZARD_DOMAINS } from 'app/config/sidebar/HAZARD_DOMAINS';
-import { hazardSelectionState } from 'data-layers/hazards/state/data-selection';
+import { hazardDomainState, hazardSelectionState } from 'data-layers/hazards/state/data-selection';
 import { networksStyleState } from 'data-layers/networks/state/data-selection';
 
 export const showDamagesState = atom((get) => get(networksStyleState) === 'damages');
 
 export const damageSourceStateEffect = ({ get, set }, damageSource) => {
-  forEach(HAZARD_DOMAINS, (groupConfig, group) => {
+  const hazardDomains = get(hazardDomainState);
+  forEach(hazardDomains, (groupConfig, group) => {
     set(hazardSelectionState(group), group === damageSource);
   });
 
