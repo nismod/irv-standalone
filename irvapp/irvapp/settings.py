@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.gis',
     'rest_framework',
     'drf_spectacular',
+    'tree_queries',
     'irv_auth',
     'api',
     'vector_proxy',

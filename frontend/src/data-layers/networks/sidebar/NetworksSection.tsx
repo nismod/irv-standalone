@@ -1,4 +1,4 @@
-import { FC } from 'react';
+import { FC, Suspense } from 'react';
 import { useAtomValue } from 'jotai';
 import { Collapse } from '@mui/material';
 import { TransitionGroup } from 'react-transition-group';
@@ -37,7 +37,9 @@ export const NetworksSection: FC = () => {
           effect={networksStyleStateEffect}
         />
         <SidebarPanelSection>
-          <NetworkControl />
+          <Suspense fallback={null}>
+            <NetworkControl />
+          </Suspense>
         </SidebarPanelSection>
         <SidebarPanelSection variant="style">
           <StyleSelection id="assets" />

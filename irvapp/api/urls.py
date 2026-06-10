@@ -7,6 +7,7 @@ from api.views import (
     ProtectedFeaturesView,
     SortedFeaturesView,
     MapConfigViewSet,
+    InfrastructureNodeViewSet,
 )
 from rest_framework.routers import DefaultRouter
 from django.urls import path
@@ -22,6 +23,11 @@ router.register(r'adaptation-cost-benefits', AdaptationCostBenefitViewset)
 router.register(r'damages-expected', DamagesExpectedViewset)
 router.register(r'damages-rp', DamagesRpViewset)
 router.register(r'map-config', MapConfigViewSet, basename='map-config')
+router.register(
+    r'infrastructure-tree',
+    InfrastructureNodeViewSet,
+    basename='infrastructure-tree',
+)
 
 urlpatterns = [
     *router.urls,

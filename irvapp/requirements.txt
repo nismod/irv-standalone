@@ -1,4 +1,5 @@
 django~=6.0.5
+django-tree-queries[admin]~=0.24.0
 djangorestframework~=3.17.1
 drf-spectacular~=0.29.0
 pandas~=3.0.3

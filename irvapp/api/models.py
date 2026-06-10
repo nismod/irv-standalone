@@ -6,6 +6,7 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.contrib.gis.db import models
+from tree_queries.models import OrderableTreeNode, TreeQuerySet
 
 
 class MapConfig(models.Model):
@@ -14,6 +15,15 @@ class MapConfig(models.Model):
 
     class Meta:
         db_table = 'map_config'
+
+
+class InfrastructureNode(OrderableTreeNode):
+    node_id = models.CharField(primary_key=True)
+    node_name = models.CharField()
+    objects = TreeQuerySet.as_manager(with_tree_fields=True)
+
+    class Meta:
+        db_table = 'infrastructure_nodes'
 
 
 class FeatureLayer(models.Model):

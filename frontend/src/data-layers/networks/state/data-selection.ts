@@ -1,5 +1,6 @@
 import mapValues from 'lodash/mapValues';
 import { atom } from 'jotai';
+import { unwrap } from 'jotai/utils';
 
 import {
   buildTreeConfig,
@@ -9,13 +10,67 @@ import {
 import { sectionStyleValueState } from 'lib/state/sections';
 import { STORAGE_PREFIX, atomWithQueryParams, setUrlParam } from 'lib/state/map-view/map-url';
 
-import { NETWORK_LAYERS_HIERARCHY } from 'app/config/sidebar/NETWORK_LAYERS_HIERARCHY';
+import { type InfrastructureNode, infrastructureTreeList } from 'lib/api-client';
+import { TreeNode } from 'lib/controls/checkbox-tree/tree-node';
+
+interface NetworkLayerData {
+  label: string;
+  url?: string;
+}
+
+
+async function fetchInfrastructureNodes(): Promise<InfrastructureNode[]> {
+  try {
+    const { data, error } = await infrastructureTreeList({
+      baseUrl: '/api',
+      credentials: 'include',
+    });
+    if (error) {
+      throw new Error(`Failed to fetch infrastructure tree: ${JSON.stringify(error)}`);
+    }
+    if (!data?.results) {
+      throw new Error('No results in infrastructure tree response');
+    }
+    return data.results;
+  } catch (error) {
+    console.error('Error fetching infrastructure tree:', error);
+    return [];
+  }
+}
+
+let leafIndex = 0;
+function buildHierarchyFromNodes(nodes: InfrastructureNode[]): TreeNode<NetworkLayerData>[] {
+  return nodes.map((node) => {
+    const treeNode: TreeNode<NetworkLayerData> = {
+      id: node.node_id,
+      label: node.node_name,
+    };
+    if (node.children.length > 0) {
+      treeNode.children = buildHierarchyFromNodes(node.children);
+    } else {
+      leafIndex++;
+      const nodeUrl = leafIndex.toString(16).padStart(2, '0'); // 2-digit hex string.
+      treeNode.url = nodeUrl;
+    }
+    return treeNode;
+  });
+}
 
 export const networkTreeExpandedState = atom<string[]>([]);
 
-export const networkTreeHierarchyState = atom(NETWORK_LAYERS_HIERARCHY);
+const networkTreeHierarchyQuery = atom(async () => {
+  const networkTreeNodes = await fetchInfrastructureNodes();
+  return buildHierarchyFromNodes(networkTreeNodes);
+});
+
+export const networkTreeHierarchyState = unwrap(
+  networkTreeHierarchyQuery,
+  (prev) => prev ?? [],
+);
+
 export const networkTreeConfigState = atom((get) => {
   const networkTreeHierarchy = get(networkTreeHierarchyState);
+  console.log(networkTreeHierarchy);
   return buildTreeConfig(networkTreeHierarchy);
 });
 const networkTreeUrlState = atom((get) => {
