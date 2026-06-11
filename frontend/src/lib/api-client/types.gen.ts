@@ -120,6 +120,13 @@ export type FeatureDetail = {
     layer: string;
 };
 
+export type InfrastructureNode = {
+    node_id: string;
+    node_name: string;
+    parent?: string | null;
+    readonly children: Array<InfrastructureNode>;
+};
+
 export type LoginCsrfErrorResponse = {
     detail: string;
 };
@@ -167,6 +174,13 @@ export type PaginatedFeatureList = {
     next?: string | null;
     previous?: string | null;
     results: Array<Feature>;
+};
+
+export type PaginatedInfrastructureNodeList = {
+    count: number;
+    next?: string | null;
+    previous?: string | null;
+    results: Array<InfrastructureNode>;
 };
 
 export type PaginatedMapConfigList = {
@@ -378,6 +392,12 @@ export type FeatureDetailWritable = {
     layer: string;
 };
 
+export type InfrastructureNodeWritable = {
+    node_id: string;
+    node_name: string;
+    parent?: string | null;
+};
+
 export type LoginRequestWritable = {
     username: string;
     password: string;
@@ -409,6 +429,13 @@ export type PaginatedFeatureListWritable = {
     next?: string | null;
     previous?: string | null;
     results: Array<FeatureWritable>;
+};
+
+export type PaginatedInfrastructureNodeListWritable = {
+    count: number;
+    next?: string | null;
+    previous?: string | null;
+    results: Array<InfrastructureNodeWritable>;
 };
 
 export type PatchedAdaptationCostBenefitWritable = {
@@ -1083,6 +1110,43 @@ export type FeaturesSortedByRetrieveResponses = {
 };
 
 export type FeaturesSortedByRetrieveResponse = FeaturesSortedByRetrieveResponses[keyof FeaturesSortedByRetrieveResponses];
+
+export type InfrastructureTreeListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Number of results to return per page.
+         */
+        limit?: number;
+        /**
+         * The initial index from which to return the results.
+         */
+        offset?: number;
+    };
+    url: '/infrastructure-tree';
+};
+
+export type InfrastructureTreeListResponses = {
+    200: PaginatedInfrastructureNodeList;
+};
+
+export type InfrastructureTreeListResponse = InfrastructureTreeListResponses[keyof InfrastructureTreeListResponses];
+
+export type InfrastructureTreeRetrieveData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/infrastructure-tree/{id}';
+};
+
+export type InfrastructureTreeRetrieveResponses = {
+    200: InfrastructureNode;
+};
+
+export type InfrastructureTreeRetrieveResponse = InfrastructureTreeRetrieveResponses[keyof InfrastructureTreeRetrieveResponses];
 
 export type MapConfigListData = {
     body?: never;
