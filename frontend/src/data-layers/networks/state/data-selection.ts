@@ -70,7 +70,6 @@ export const networkTreeHierarchyState = unwrap(
 
 export const networkTreeConfigState = atom((get) => {
   const networkTreeHierarchy = get(networkTreeHierarchyState);
-  console.log(networkTreeHierarchy);
   return buildTreeConfig(networkTreeHierarchy);
 });
 const networkTreeUrlState = atom((get) => {
