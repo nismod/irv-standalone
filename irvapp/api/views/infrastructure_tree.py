@@ -14,10 +14,10 @@ class InfrastructureNodeSerializer(serializers.ModelSerializer):
             context=self.context,
         )
         return fields
+
     class Meta:
         model = InfrastructureNode
         fields = ['node_id', 'node_name', 'parent', 'children']
-
 
 
 class InfrastructureNodeViewSet(viewsets.ReadOnlyModelViewSet):
