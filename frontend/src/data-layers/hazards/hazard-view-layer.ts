@@ -1,6 +1,5 @@
 import { createElement } from 'react';
 
-import { HazardParams } from 'app/config/sidebar/HAZARD_DOMAINS';
 import { rasterTileLayer } from 'lib/deck/layers/raster-tile-layer';
 import { ViewLayer } from 'lib/data-map/view-layers';
 import { RasterTarget } from 'lib/data-map/types';
@@ -9,6 +8,7 @@ import { HazardLegend } from './HazardLegend';
 import { HazardHoverDescription } from './HazardHoverDescription';
 import * as HAZARD_COLOR_MAPS from './color-maps';
 import { HAZARD_SOURCE } from './source';
+import { type HazardParams } from './state/data-selection';
 
 export function getHazardId<
   F extends string, //'fluvial' | 'surface' | 'coastal' | 'cyclone',

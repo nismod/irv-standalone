@@ -15,35 +15,11 @@ export const sectorRiskTypes = {
   transport: ['exposureValue', 'EAD', 'lossGdpIsolation', 'lossGdpRerouting'],
 };
 
-/*
-  Default parameter ranges for each hazard type.
-  These are used to define ranges for input controls in the sidebar.
-*/
-const sectorParamDomains = {
-  all: {
-    returnPeriod: [0],
-    epoch: [2010],
-    rcp: ['baseline'],
-    confidence: ['None'],
-  },
-  power: {
-    returnPeriod: [0],
-    epoch: [2010],
-    rcp: ['baseline'],
-    confidence: ['None'],
-  },
-  transport: {
-    returnPeriod: [0],
-    epoch: [2010],
-    rcp: ['baseline'],
-    confidence: ['None'],
-  },
-  water: {
-    returnPeriod: [0],
-    epoch: [2010],
-    rcp: ['baseline'],
-    confidence: ['None'],
-  },
+const defaultSectorDomains = {
+  returnPeriod: [0],
+  epoch: [2010],
+  rcp: ['baseline'],
+  confidence: ['None'],
 };
 
 export const RISK_DOMAINS: DataParamGroupConfig<RiskParams> = {
@@ -52,10 +28,7 @@ export const RISK_DOMAINS: DataParamGroupConfig<RiskParams> = {
   */
   paramDomains: {
     sector: ['all', 'power', 'transport', 'water'],
-    returnPeriod: [0],
-    epoch: [2010],
-    rcp: ['baseline'],
-    confidence: ['None'],
+    ...defaultSectorDomains,
   },
   /*
     Default parameter values for each risk type.
@@ -71,9 +44,9 @@ export const RISK_DOMAINS: DataParamGroupConfig<RiskParams> = {
     Callback functions to define custom parameter ranges based on selected hazard etc.
   */
   paramDependencies: {
-    rcp: ({ sector }) => sectorParamDomains[sector].rcp,
-    epoch: ({ sector }) => sectorParamDomains[sector].epoch,
-    returnPeriod: ({ sector }) => sectorParamDomains[sector].returnPeriod,
-    confidence: ({ sector }) => sectorParamDomains[sector].confidence,
+    rcp: () => defaultSectorDomains.rcp,
+    epoch: () => defaultSectorDomains.epoch,
+    returnPeriod: () => defaultSectorDomains.returnPeriod,
+    confidence: () => defaultSectorDomains.confidence,
   },
 };

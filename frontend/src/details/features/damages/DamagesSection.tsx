@@ -17,6 +17,9 @@ import { ReturnPeriodDamageChart } from './ReturnPeriodDamageChart';
 
 const damageOrdering = (hazardDomains: HazardDomains) => {
   const ordering = [];
+  if (!hazardDomains) {
+    return ordering;
+  }
   for (const [hazard, hazardDomain] of Object.entries(hazardDomains)) {
     for (const rcp of hazardDomain.paramDomains.rcp) {
       for (const epoch of hazardDomain.paramDomains.epoch) {
@@ -33,6 +36,9 @@ const damageOrdering = (hazardDomains: HazardDomains) => {
 
 const rpOrdering = (hazardDomains: HazardDomains) => {
   const ordering = [];
+  if (!hazardDomains) {
+    return ordering;
+  }
   for (const [hazard, hazardDomain] of Object.entries(hazardDomains)) {
     for (const rp of hazardDomain.paramDomains.returnPeriod) {
       for (const rcp of hazardDomain.paramDomains.rcp) {
