@@ -1,4 +1,4 @@
-import { HazardParams } from 'app/config/sidebar/HAZARD_DOMAINS';
+import { type HazardParams } from './state/data-selection';
 
 export const HAZARD_SOURCE = {
   getDataUrl(
