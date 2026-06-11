@@ -22,7 +22,7 @@ class InfrastructureNode(OrderableTreeNode):
     node_name = models.CharField()
     objects = TreeQuerySet.as_manager(with_tree_fields=True)
 
-    class Meta:
+    class Meta(OrderableTreeNode.Meta):
         db_table = 'infrastructure_nodes'
 
 
