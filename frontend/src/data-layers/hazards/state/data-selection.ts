@@ -1,10 +1,8 @@
-import { atom, type Atom } from 'jotai';
-import { unwrap } from 'jotai/utils';
+import { type Atom } from 'jotai';
 import { atomFamily } from 'jotai-family';
 import fromPairs from 'lodash/fromPairs';
 
 import { atomWithStoredBool } from 'lib/state/map-view/map-url';
-import { DataParamGroupConfig } from 'lib/controls/data-params';
 
 export interface HazardParams {
   returnPeriod: number;
@@ -13,18 +11,6 @@ export interface HazardParams {
   confidence: string | number;
   speed?: number;
 }
-
-async function fetchHazardDomains() {
-  //TODO: move this into the Django app.
-  const  module = await import('app/config/sidebar/HAZARD_DOMAINS');
-  return module.HAZARD_DOMAINS;
-}
-
-export type HazardDomains = Record<string, DataParamGroupConfig<HazardParams>>;
-export const hazardDomainState = unwrap(
-  atom(fetchHazardDomains),
-  prev => prev || null,
-);
 
 export const hazardSelectionState = atomFamily((id: string) => atomWithStoredBool(id, false));
 

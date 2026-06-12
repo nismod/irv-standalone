@@ -90,6 +90,9 @@ export function inferDependenciesFromData<T extends object>(
 
 export function inferDomainsFromData<T extends object>(data: T[]): ParamGroupDomains<T> {
   const domains = {} as ParamGroupDomains<T>;
+  if (data.length === 0) {
+    return null;
+  }
   const keys = Object.keys(data[0]);
   for (const key of keys) {
     const typedKey = key as keyof T;

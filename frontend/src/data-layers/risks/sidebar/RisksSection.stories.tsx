@@ -1,7 +1,9 @@
 import { StoryObj, Meta } from '@storybook/react-vite';
 import { expect, within } from 'storybook/test';
+import { HttpResponse, http } from 'msw';
 
 import { RisksSection } from './RisksSection';
+import rasterSourceDomains from 'mocks/raster_source_domains.json';
 
 function fixedWidthDecorator(Story) {
   return (
@@ -15,6 +17,15 @@ const meta = {
   title: 'Sidebar/RisksSection',
   component: RisksSection,
   decorators: [fixedWidthDecorator],
+  parameters: {
+    msw: {
+      handlers: [
+        http.get('/api/tiles/raster/sources/1/domains', () => {
+          return HttpResponse.json(rasterSourceDomains);
+        }),
+      ],
+    },
+  },
 } as Meta;
 
 export default meta;

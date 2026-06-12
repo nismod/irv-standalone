@@ -37,8 +37,7 @@ export const syncExternalConfigState = atom(
   (_get, set, newConfig: Record<string, DataParamGroupConfig>) => {
     set(dataParamConfigState, newConfig);
 
-    Object.keys(newConfig).forEach((group) => {
-      const groupConfig = newConfig[group];
+    Object.entries(newConfig).forEach(([group, groupConfig]) => {
       const paramNames = Object.keys(groupConfig.paramDefaults);
       const [defaultValues, options] = resolveParamDependencies(
         groupConfig.paramDefaults,

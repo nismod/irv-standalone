@@ -3,7 +3,7 @@ import { FormControl, InputLabel, IconButton, MenuItem, Select, Typography } fro
 import { Box } from '@mui/system';
 import { useAtomValue } from 'jotai';
 
-import { type HazardDomains, hazardDomainState } from 'data-layers/hazards/state/data-selection';
+import { type HazardDomains, hazardDomainState } from 'data-layers/hazards/state/domains';
 import { DamagesExpected, DamagesRp } from 'lib/api-client';
 import { downloadFile, titleCase, unique } from 'lib/helpers';
 import { useSelect } from 'lib/hooks/use-select';
@@ -21,6 +21,9 @@ const damageOrdering = (hazardDomains: HazardDomains) => {
     return ordering;
   }
   for (const [hazard, hazardDomain] of Object.entries(hazardDomains)) {
+    if (!hazardDomain) {
+      continue;
+    }
     for (const rcp of hazardDomain.paramDomains.rcp) {
       for (const epoch of hazardDomain.paramDomains.epoch) {
         ordering.push({
@@ -40,6 +43,9 @@ const rpOrdering = (hazardDomains: HazardDomains) => {
     return ordering;
   }
   for (const [hazard, hazardDomain] of Object.entries(hazardDomains)) {
+    if (!hazardDomain) {
+      continue;
+    }
     for (const rp of hazardDomain.paramDomains.returnPeriod) {
       for (const rcp of hazardDomain.paramDomains.rcp) {
         for (const epoch of hazardDomain.paramDomains.epoch) {
