@@ -1,30 +1,10 @@
 import { atom, useAtom, useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
 
 import { DataParamGroupConfig } from 'lib/controls/data-params';
 import { syncExternalConfigState } from 'lib/state/data-params';
 import { hazardDomainState } from 'data-layers/hazards/state/domains';
-
-async function fetchNetworkDomains() {
-  //TODO: move this into the Django app.
-  const module = await import('app/config/sidebar/NETWORK_DOMAINS');
-  return module.NETWORK_DOMAINS;
-}
-
-async function fetchRiskDomains() {
-  //TODO: move this into the Django app.
-  const module = await import('app/config/sidebar/RISK_DOMAINS');
-  return module.RISK_DOMAINS;
-}
-
-const networkDomainState = unwrap(
-  atom(fetchNetworkDomains),
-  prev => prev || null,
-);
-const riskDomainState = unwrap(
-  atom(fetchRiskDomains),
-  prev => prev || null,
-);
+import { networkDomainState } from 'data-layers/networks/state/domains';
+import { riskDomainState } from 'data-layers/risks/state/domains';
 
 const dataParamConfigState =
   atom<Record<string, DataParamGroupConfig>>((get) => {
