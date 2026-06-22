@@ -3,7 +3,7 @@ import { unwrap } from 'jotai/utils';
 
 import { DataParamGroupConfig } from 'lib/controls/data-params';
 import { syncExternalConfigState } from 'lib/state/data-params';
-import { hazardDomainState } from 'data-layers/hazards/state/data-selection';
+import { hazardDomainState } from 'data-layers/hazards/state/domains';
 
 async function fetchNetworkDomains() {
   //TODO: move this into the Django app.
@@ -45,6 +45,7 @@ const dataParamConfigState =
 export function useSyncConfigState() {
   const [config, setConfig] = useAtom(syncExternalConfigState);
   const dataParamConfig = useAtomValue(dataParamConfigState);
+  console.log('Syncing config state with data param config:', dataParamConfig);
   if (config !== dataParamConfig) {
     setConfig(dataParamConfig);
   }

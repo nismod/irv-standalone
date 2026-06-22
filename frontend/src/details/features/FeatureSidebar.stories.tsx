@@ -7,6 +7,7 @@ import { useAtom } from 'jotai';
 import { selectionState } from 'lib/state/interactions/interaction-state';
 import mockFeature from 'mocks/details/features/mockFeature.json';
 import mockFeatureDetails from 'mocks/details/features/mockFeatureDetails.json';
+import rasterSourceDomains from 'mocks/raster_source_domains.json';
 import { FeatureSidebar } from './FeatureSidebar';
 import { Layer } from 'deck.gl';
 
@@ -60,6 +61,9 @@ export const Default: Story = {
       handlers: [
         http.get('/api/features/1000036526', () => {
           return HttpResponse.json(mockFeatureDetails);
+        }),
+        http.get('/api/tiles/raster/sources/1/domains', () => {
+          return HttpResponse.json(rasterSourceDomains);
         }),
       ],
     },

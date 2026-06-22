@@ -4,6 +4,7 @@ import { AdaptationsSidebar } from './AdaptationsSidebar';
 import { http, HttpResponse } from 'msw';
 import mockItemSearch from 'mocks/details/adaptations/mockItemSearch.json';
 import mockItem from 'mocks/details/adaptations/mockItem.json';
+import rasterSourceDomains from 'mocks/raster_source_domains.json';
 
 const API_SEARCH_PATH =
   location.hostname === 'nismod.github.io'
@@ -37,6 +38,9 @@ export const Default: Story = {
         }),
         http.get(/\/api\/features\/\d+/, () => {
           return HttpResponse.json(mockItem);
+        }),
+        http.get('/api/tiles/raster/sources/1/domains', () => {
+          return HttpResponse.json(rasterSourceDomains);
         }),
       ],
     },

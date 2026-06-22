@@ -3,6 +3,7 @@ import { expect, waitFor, within } from 'storybook/test';
 import { HttpResponse, http } from 'msw';
 
 import { NetworksSection } from './NetworksSection';
+import rasterSourceDomains from 'mocks/raster_source_domains.json';
 
 const mockInfrastructureTree = {
   count: 2,
@@ -96,6 +97,9 @@ const meta = {
       handlers: [
         http.get('/api/infrastructure-tree', () => {
           return HttpResponse.json(mockInfrastructureTree);
+        }),
+        http.get('/api/tiles/raster/sources/1/domains', () => {
+          return HttpResponse.json(rasterSourceDomains);
         }),
       ],
     },
