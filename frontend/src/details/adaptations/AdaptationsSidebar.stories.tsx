@@ -8,8 +8,8 @@ import rasterSourceDomains from 'mocks/raster_source_domains.json';
 
 const API_SEARCH_PATH =
   location.hostname === 'nismod.github.io'
-    ? '/irv-jamaica/api/features/sorted-by/adaptation'
-    : '/api/features/sorted-by/adaptation';
+    ? '/irv-jamaica/api/map/features/sorted-by/adaptation'
+    : '/api/map/features/sorted-by/adaptation';
 
 const meta = {
   title: 'Details/AdaptationsSidebar',
@@ -36,7 +36,7 @@ export const Default: Story = {
           }
           return new HttpResponse(null, { status: 404 });
         }),
-        http.get(/\/api\/features\/\d+/, () => {
+        http.get(/\/api\/map\/features\/\d+/, () => {
           return HttpResponse.json(mockItem);
         }),
         http.get('/api/tiles/raster/sources/1/domains', () => {

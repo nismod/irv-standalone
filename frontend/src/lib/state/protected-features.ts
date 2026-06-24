@@ -3,7 +3,7 @@ import { atomFamily } from 'jotai-family';
 import { unwrap } from 'jotai/utils';
 
 import { createClient } from 'lib/api-client/client';
-import { featuresProtectedByList } from 'lib/api-client/sdk.gen';
+import { mapFeaturesProtectedByList } from 'lib/api-client/sdk.gen';
 import { ProtectedFeature } from 'lib/api-client/types.gen';
 import { selectionState } from './interactions/interaction-state';
 import { VectorTarget } from 'lib/data-map/types';
@@ -27,7 +27,7 @@ const protectedFeatureAdaptationOptionsQuery = atomFamily((rcp: string = '2.6') 
     if (!target?.feature?.id) {
       return [];
     }
-    const { data } = await featuresProtectedByList({
+    const { data } = await mapFeaturesProtectedByList({
       client: apiClient,
       path: {
         protector_id: +target.feature.id,

@@ -1,5 +1,5 @@
 import { createClient } from 'lib/api-client/client';
-import { attributesCreate } from 'lib/api-client/sdk.gen';
+import { mapAttributesCreate } from 'lib/api-client/sdk.gen';
 import { FieldSpec } from 'lib/data-map/view-layers';
 
 export type DataLoaderSubscriber = (loader: DataLoader) => void;
@@ -32,7 +32,7 @@ const defaultDataFetcher: DataFetcher = async (
   const { fieldGroup, field, fieldDimensions, fieldParams } = fieldSpec;
   const csrfToken = document.cookie.split(';').find((cookie) => cookie.trim().startsWith('csrftoken='));
   const token = csrfToken ? csrfToken.split('=')[1] : '';
-  const { data } = await attributesCreate({
+  const { data } = await mapAttributesCreate({
     client: apiClient,
     body: { ids },
     path: {

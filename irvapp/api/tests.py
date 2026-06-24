@@ -67,7 +67,7 @@ class AttributeLookupViewTests(TestCase):
         )
 
         response = self.client.post(
-            "/attributes/damages_expected",
+            "/map/attributes/damages_expected",
             data={"ids": [self.feature_1.id, self.feature_2.id, 999999]},
             format="json",
             QUERY_STRING=(
@@ -101,7 +101,7 @@ class AttributeLookupViewTests(TestCase):
         )
 
         response = self.client.post(
-            "/attributes/damages_expected",
+            "/map/attributes/damages_expected",
             data=[self.feature_1.id],
             format="json",
             QUERY_STRING=(
@@ -135,7 +135,7 @@ class AttributeLookupViewTests(TestCase):
         )
 
         response = self.client.post(
-            "/attributes/adaptation",
+            "/map/attributes/adaptation",
             data={"ids": [self.feature_1.id]},
             format="json",
             QUERY_STRING=(
@@ -160,7 +160,7 @@ class AttributeLookupViewTests(TestCase):
 
     def test_returns_400_for_invalid_field_group(self):
         response = self.client.post(
-            "/attributes/not-a-group",
+            "/map/attributes/not-a-group",
             data={"ids": [self.feature_1.id]},
             format="json",
             QUERY_STRING=(
@@ -183,7 +183,7 @@ class AttributeLookupViewTests(TestCase):
 
     def test_returns_400_for_invalid_parameters_json(self):
         response = self.client.post(
-            "/attributes/adaptation",
+            "/map/attributes/adaptation",
             data={"ids": [self.feature_1.id]},
             format="json",
             QUERY_STRING=(
@@ -207,7 +207,7 @@ class AttributeLookupViewTests(TestCase):
 
     def test_returns_400_for_invalid_field_name(self):
         response = self.client.post(
-            "/attributes/damages_expected",
+            "/map/attributes/damages_expected",
             data={"ids": [self.feature_1.id]},
             format="json",
             QUERY_STRING=(
@@ -374,7 +374,7 @@ class FeatureRouteTests(TestCase):
         )
 
         response = self.client.get(
-            "/features/sorted-by/damages_expected",
+            "/map/features/sorted-by/damages_expected",
             {
                 "layer": "roads",
                 "field": "ead_mean",
@@ -413,7 +413,7 @@ class FeatureRouteTests(TestCase):
         )
 
         response = self.client.get(
-            "/features/123/protected-by",
+            "/map/features/123/protected-by",
             {"rcp": "8.5"},
         )
 
@@ -452,7 +452,7 @@ class FeatureRouteTests(TestCase):
             damage_mean=2.5,
         )
 
-        response = self.client.get(f"/features/{self.feature_1.id}")
+        response = self.client.get(f"/map/features/{self.feature_1.id}")
 
         self.assertEqual(response.status_code, 200)
         payload = response.json()

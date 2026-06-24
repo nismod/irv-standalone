@@ -10,7 +10,7 @@ import {
 import { sectionStyleValueState } from 'lib/state/sections';
 import { STORAGE_PREFIX, atomWithQueryParams, setUrlParam } from 'lib/state/map-view/map-url';
 
-import { type InfrastructureNode, infrastructureTreeList } from 'lib/api-client';
+import { type InfrastructureNode, mapInfrastructureTreeList } from 'lib/api-client';
 import { TreeNode } from 'lib/controls/checkbox-tree/tree-node';
 
 interface NetworkLayerData {
@@ -21,7 +21,7 @@ interface NetworkLayerData {
 
 async function fetchInfrastructureNodes(): Promise<InfrastructureNode[]> {
   try {
-    const { data, error } = await infrastructureTreeList({
+    const { data, error } = await mapInfrastructureTreeList({
       baseUrl: '/api',
       credentials: 'include',
     });

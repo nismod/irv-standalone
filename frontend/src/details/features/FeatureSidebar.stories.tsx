@@ -59,7 +59,7 @@ export const Default: Story = {
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/features/1000036526', () => {
+        http.get('/api/map/features/1000036526', () => {
           return HttpResponse.json(mockFeatureDetails);
         }),
         http.get('/api/tiles/raster/sources/1/domains', () => {
