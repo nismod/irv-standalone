@@ -95,7 +95,7 @@ const meta = {
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/infrastructure-tree', () => {
+        http.get('/api/map/infrastructure-tree', () => {
           return HttpResponse.json(mockInfrastructureTree);
         }),
         http.get('/api/tiles/raster/sources/1/domains', () => {

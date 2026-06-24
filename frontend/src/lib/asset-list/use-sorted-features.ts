@@ -6,7 +6,7 @@ import { atom, useAtomValue } from 'jotai';
 import { atomFamily } from 'jotai-family';
 
 import { createClient } from 'lib/api-client/client';
-import { featuresSortedByRetrieve } from 'lib/api-client/sdk.gen';
+import { mapFeaturesSortedByRetrieve } from 'lib/api-client/sdk.gen';
 import { SortedFeature } from 'lib/api-client/types.gen';
 import { BoundingBox } from 'lib/bounding-box';
 import { FieldSpec } from 'lib/data-map/view-layers';
@@ -47,7 +47,7 @@ const sortedFeaturesState = atomFamily((queryKey: string) => {
           error: null,
         };
       }
-      const { data } = await featuresSortedByRetrieve({
+      const { data } = await mapFeaturesSortedByRetrieve({
         client: apiClient,
         path: {
           field_group: fieldGroup,
