@@ -2,7 +2,7 @@ import { truthyKeys } from 'lib/helpers';
 import { StateEffect } from 'lib/recoil/state-effects/types';
 import { damageSourceState } from 'lib/state/damage-map';
 import { getHazardSelectionAggregate } from 'data-layers/hazards/state/data-selection';
-import { HAZARDS_UI_ORDER } from 'data-layers/hazards/metadata';
+import { HAZARDS_UI_ORDER } from 'data-layers/hazards/state/metadata';
 
 export const networksStyleStateEffect: StateEffect<string> = ({ get, set }, style) => {
   if (style === 'damages') {

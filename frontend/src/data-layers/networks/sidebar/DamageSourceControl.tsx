@@ -8,7 +8,7 @@ import {
   Select,
 } from '@mui/material';
 import { useId } from 'react';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue } from 'jotai';
 
 import { StateEffectRoot } from 'lib/recoil/state-effects/StateEffectRoot';
 import { InputSection } from 'lib/sidebar/ui/InputSection';
@@ -19,9 +19,10 @@ import { damageSourceState, damageTypeState } from 'lib/state/damage-map';
 import { damageSourceStateEffect } from 'app/state/damage-mapping/damage-map';
 import { LayerStylePanel } from 'lib/sidebar/ui/LayerStylePanel';
 
-import { HAZARDS_METADATA, HAZARDS_UI_ORDER } from 'data-layers/hazards/metadata';
+import { HAZARDS_UI_ORDER, hazardsMetadataState } from 'data-layers/hazards/state/metadata';
 
 export const DamageSourceControl = () => {
+  const HAZARDS_METADATA = useAtomValue(hazardsMetadataState);
   const [damageSource, setDamageSource] = useAtom(damageSourceState);
   const [damageType, setDamageType] = useAtom(damageTypeState);
   const id = useId();

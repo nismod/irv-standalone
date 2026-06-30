@@ -3,7 +3,7 @@ import { atom } from 'jotai';
 import { damageSourceState } from 'lib/state/damage-map';
 import { showDamagesState } from 'app/state/damage-mapping/damage-map';
 
-import { HAZARDS_MAP_ORDER } from '../metadata';
+import { HAZARDS_MAP_ORDER } from './metadata';
 import { getHazardSelectionAggregate } from './data-selection';
 
 export const hazardVisibilityState = atom((get) => {

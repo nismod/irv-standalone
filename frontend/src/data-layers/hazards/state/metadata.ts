@@ -1,4 +1,6 @@
-export const HAZARDS_METADATA = {
+import { atom } from 'jotai';
+
+const HAZARDS_METADATA = {
   cyclone: {
     label: 'Tropical cyclone wind speed',
     dataUnit: 'm/s',
@@ -20,6 +22,8 @@ export const HAZARDS_METADATA = {
     dataUnit: 'yrs',
   },
 };
+
+export const hazardsMetadataState = atom(HAZARDS_METADATA);
 
 export const HAZARDS_MAP_ORDER = ['storm', 'cyclone', 'fluvial', 'surface', 'coastal'];
 export const HAZARDS_UI_ORDER = ['fluvial', 'surface', 'coastal', 'cyclone', 'storm'];

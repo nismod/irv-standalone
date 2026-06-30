@@ -18,6 +18,7 @@ import {
   adaptationFieldSpecState,
   adaptationLayerSpecState,
 } from 'data-layers/networks/state/layer';
+import { hazardsMetadataState } from 'data-layers/hazards/state/metadata';
 
 import './asset-table.css';
 
@@ -31,6 +32,7 @@ export const FeatureAdaptationsTable = () => {
   const layerSpec = useAtomValue(adaptationLayerSpecState);
   const fieldSpec = useAtomValue(adaptationFieldSpecState);
   const colorSpec = useAtomValue(adaptationColorSpecState);
+  const hazardsMetadata = useAtomValue(hazardsMetadataState);
 
   const setHoveredFeature = useSetAtom(hoveredAdaptationFeatureState);
   const [selectedFeature, setSelectedFeature] = useAtom(selectedAdaptationFeatureState);
@@ -47,7 +49,7 @@ export const FeatureAdaptationsTable = () => {
   );
 
   const colorFn = useMemo(() => colorMap(colorSpec), [colorSpec]);
-  const { getDataLabel, getValueFormatted } = getAssetDataFormats(fieldSpec);
+  const { getDataLabel, getValueFormatted } = getAssetDataFormats(fieldSpec, hazardsMetadata);
 
   return (
     <>

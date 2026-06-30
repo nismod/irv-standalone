@@ -5,19 +5,21 @@ import { DataItem } from '../detail-components';
 import { VectorTarget } from 'lib/data-map/types';
 import { DataDescription } from '../DataDescription';
 import { ColorBox } from './ColorBox';
-import { ViewLayer } from 'lib/data-map/view-layers';
+import { LayerMetadata, ViewLayer } from 'lib/data-map/view-layers';
 
 type VectorHoverDescriptionProps = {
   viewLayer: ViewLayer;
   feature: VectorTarget['feature'];
   title: string;
   color: string;
+  metadata?: LayerMetadata;
 };
 export const VectorHoverDescription: FC<VectorHoverDescriptionProps> = ({
   title,
   color = '#ccc',
   viewLayer,
   feature,
+  metadata,
 }) => {
   const { colorMap } = viewLayer.styleParams ?? {};
 
@@ -31,7 +33,14 @@ export const VectorHoverDescription: FC<VectorHoverDescriptionProps> = ({
       </Typography>
 
       <DataItem label="ID" value={`${feature.properties.asset_id}`} />
-      {colorMap && <DataDescription viewLayer={viewLayer} feature={feature} colorMap={colorMap} />}
+      {colorMap && (
+        <DataDescription
+          viewLayer={viewLayer}
+          feature={feature}
+          colorMap={colorMap}
+          metadata={metadata}
+        />
+      )}
     </>
   );
 };

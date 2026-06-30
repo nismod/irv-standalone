@@ -1,6 +1,6 @@
 import { DataItem } from './detail-components';
 import { colorMap } from 'lib/color-map';
-import { ColorMap, ViewLayer } from 'lib/data-map/view-layers';
+import { ColorMap, LayerMetadata, ViewLayer } from 'lib/data-map/view-layers';
 import { FC, useMemo } from 'react';
 import { ColorBox } from './content/ColorBox';
 import { GeoJSONFeature } from 'maplibre-gl';
@@ -9,7 +9,8 @@ export const DataDescription: FC<{
   viewLayer: ViewLayer;
   feature: GeoJSONFeature;
   colorMap: ColorMap;
-}> = ({ viewLayer, feature, colorMap: { fieldSpec: colorField, colorSpec } }) => {
+  metadata?: LayerMetadata;
+}> = ({ viewLayer, feature, colorMap: { fieldSpec: colorField, colorSpec }, metadata }) => {
   const accessor = useMemo(() => viewLayer.dataAccessFn?.(colorField), [viewLayer, colorField]);
 
   const value = accessor?.(feature);
@@ -18,7 +19,7 @@ export const DataDescription: FC<{
 
   const color = colorFn(value);
 
-  const { getDataLabel, getValueFormatted } = viewLayer.dataFormatsFn(colorField);
+  const { getDataLabel, getValueFormatted } = viewLayer.dataFormatsFn(colorField, metadata);
 
   const dataLabel = getDataLabel(colorField);
   const formattedValue = getValueFormatted(value, colorField);
