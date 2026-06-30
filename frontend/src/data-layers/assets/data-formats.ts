@@ -1,12 +1,13 @@
-import { HAZARDS_METADATA } from 'data-layers/hazards/metadata';
 import { FieldSpec, FormatConfig } from 'lib/data-map/view-layers';
 import { isNullish, numFormat, numFormatMoney, paren } from 'lib/helpers';
 import startCase from 'lodash/startCase';
 
-function getSourceLabel(eadSource: string) {
+type HazardsMetadata = Record<string, { label: string }>;
+
+function getSourceLabel(eadSource: string, hazardsMetadata) {
   if (eadSource === 'all') return 'All Hazards';
 
-  return HAZARDS_METADATA[eadSource].label;
+  return hazardsMetadata[eadSource].label;
 }
 
 function getDamageTypeLabel(field: string) {
@@ -19,14 +20,6 @@ function formatDamageValue(value: number) {
 
   return numFormatMoney(value);
 }
-const DAMAGES_EXPECTED_DEFAULT_FORMAT: FormatConfig = {
-  getDataLabel: (colorField) => {
-    const variableLabel = getDamageTypeLabel(colorField.field);
-    const sourceLabel = getSourceLabel(String(colorField.fieldDimensions.hazard));
-    return `${variableLabel} (${sourceLabel})`;
-  },
-  getValueFormatted: formatDamageValue,
-};
 
 const DAMAGES_EXPECTED_LEGEND_FORMAT: FormatConfig = {
   getDataLabel: ({ field }) => getDamageTypeLabel(field),
@@ -74,21 +67,38 @@ const ADAPTATION_LEGEND_FORMAT: FormatConfig = {
 
 type FormatTarget = 'legend' | 'default';
 
-const DATA_FORMATS: Record<string, Record<FormatTarget, FormatConfig>> = {
-  damages_expected: {
-    default: DAMAGES_EXPECTED_DEFAULT_FORMAT,
-    legend: DAMAGES_EXPECTED_LEGEND_FORMAT,
-  },
-  adaptation: {
-    default: ADAPTATION_DEFAULT_FORMAT,
-    legend: ADAPTATION_LEGEND_FORMAT,
-  },
-};
+export function createAssetDataFormats(
+  hazardsMetadata: HazardsMetadata,
+): Record<string, Record<FormatTarget, FormatConfig>> {
+  return {
+    damages_expected: {
+      default: {
+        getDataLabel: (colorField) => {
+          const variableLabel = getDamageTypeLabel(colorField.field);
+          const sourceLabel = getSourceLabel(
+            String(colorField.fieldDimensions.hazard),
+            hazardsMetadata,
+          );
 
-export function getAssetDataFormats(fieldSpec: FieldSpec): FormatConfig {
-  return DATA_FORMATS[fieldSpec.fieldGroup].default;
+          return `${variableLabel} (${sourceLabel})`;
+        },
+        getValueFormatted: formatDamageValue,
+      },
+      legend: DAMAGES_EXPECTED_LEGEND_FORMAT,
+    },
+    adaptation: {
+      default: ADAPTATION_DEFAULT_FORMAT,
+      legend: ADAPTATION_LEGEND_FORMAT,
+    },
+  };
 }
 
-export function getAssetLegendDataFormats(fieldSpec: FieldSpec): FormatConfig {
-  return DATA_FORMATS[fieldSpec.fieldGroup].legend;
+export function getAssetDataFormats(fieldSpec: FieldSpec, hazardsMetadata: HazardsMetadata): FormatConfig {
+  const dataFormats = createAssetDataFormats(hazardsMetadata);
+  return dataFormats[fieldSpec.fieldGroup].default;
+}
+
+export function getAssetLegendDataFormats(fieldSpec: FieldSpec, hazardsMetadata: HazardsMetadata): FormatConfig {
+  const dataFormats = createAssetDataFormats(hazardsMetadata);
+  return dataFormats[fieldSpec.fieldGroup].legend;
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Box, Stack, TableCell, Typography } from '@mui/material';
+import { useAtomValue } from 'jotai';
 
 import { FieldSpec } from 'lib/data-map/view-layers';
 
@@ -9,8 +10,10 @@ import { ListFeature } from 'lib/asset-list/use-sorted-features';
 import { ExpandableRow } from 'lib/asset-list/ExpandableRow';
 import { FeatureSidebarContent } from 'details/features/FeatureSidebarContent';
 import { getAssetDataFormats } from 'data-layers/assets/data-formats';
+import { hazardsMetadataState } from 'data-layers/hazards/state/metadata';
 
 export const AssetListPage = () => {
+  const hazardsMetadata = useAtomValue(hazardsMetadataState);
   const [layerSpec] = useState({
     layer: 'elec_edges_high', // TODO: enable filtering by sector/subsector/asset type
   });
@@ -29,7 +32,7 @@ export const AssetListPage = () => {
 
   const [selectedFeature, setSelectedFeature] = useState<ListFeature>(null);
 
-  const { getDataLabel, getValueFormatted } = getAssetDataFormats(fieldSpec);
+  const { getDataLabel, getValueFormatted } = getAssetDataFormats(fieldSpec, hazardsMetadata);
 
   return (
     <>
