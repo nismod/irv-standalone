@@ -7,6 +7,7 @@ import { sectionVisibilityState, sectionStyleValueState } from 'lib/state/sectio
 
 import { type RiskParams } from 'app/config/sidebar/RISK_DOMAINS';
 import { riskViewLayer } from '../risk-view-layer';
+import { risksMetadataState } from './metadata';
 
 export const risksLayerState = atom<ViewLayer[]>((get) => {
   const riskVisibility = get(sectionVisibilityState('risks'));
@@ -15,6 +16,7 @@ export const risksLayerState = atom<ViewLayer[]>((get) => {
   }
 
   const riskType = get(sectionStyleValueState('risks'));
+  const risksMetadata = get(risksMetadataState);
 
   const sectorParam = get(dataParamState({ group: 'risks', param: 'sector' }));
   const returnPeriodParam = get(dataParamState({ group: 'risks', param: 'returnPeriod' }));
@@ -37,5 +39,5 @@ export const risksLayerState = atom<ViewLayer[]>((get) => {
     rcp: String(rcpParam),
     confidence: confidenceParam,
   };
-  return [riskViewLayer(riskType, dataParams)];
+  return [riskViewLayer(riskType, dataParams, risksMetadata)];
 });

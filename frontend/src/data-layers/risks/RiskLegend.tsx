@@ -1,12 +1,14 @@
 import { FC } from 'react';
+import { useAtomValue } from 'jotai';
 
 import { RasterLegend } from 'lib/map/legend/RasterLegend';
 import { ViewLayer } from 'lib/data-map/view-layers';
 
 import * as RISKS_COLOR_MAPS from './color-maps';
-import { RISKS_METADATA } from './metadata';
+import { risksMetadataState } from './state/metadata';
 
 export const RiskLegend: FC<{ viewLayer: ViewLayer }> = ({ viewLayer }) => {
+  const RISKS_METADATA = useAtomValue(risksMetadataState);
   const { id } = viewLayer;
   const { label, dataUnit, format } = RISKS_METADATA[id];
   const { scheme, range } = RISKS_COLOR_MAPS[id];

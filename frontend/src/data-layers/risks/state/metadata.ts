@@ -1,4 +1,6 @@
-export const RISKS_METADATA = {
+import { atom } from 'jotai';
+
+const RISKS_METADATA = {
   exposureValue: {
     label: 'Exposure value',
     dataUnit: 'JMD',
@@ -45,5 +47,9 @@ export const RISKS_METADATA = {
     format: 'financial',
   },
 };
+
+export const risksMetadataState = atom(RISKS_METADATA);
+
+export type RisksMetadata = typeof RISKS_METADATA;
 
 export const RISKS = Object.keys(RISKS_METADATA);
