@@ -1,3 +1,6 @@
+import { atom } from 'jotai';
+import { unwrap } from 'jotai/utils';
+
 export interface ViewSectionConfig {
   expanded: boolean;
   visible: boolean;
@@ -5,109 +8,16 @@ export interface ViewSectionConfig {
   defaultStyle?: string;
 }
 
-export const VIEW_SECTIONS: Record<string, Record<string, ViewSectionConfig>> = {
-  exposure: {
-    assets: {
-      expanded: true,
-      visible: true,
-      styles: ['type'],
-      defaultStyle: 'type',
-    },
-    hazards: {
-      expanded: true,
-      visible: true,
-    },
-    buildings: {
-      expanded: false,
-      visible: false,
+export type ViewSectionsConfig = Record<string, Record<string, ViewSectionConfig>>;
 
-      styles: ['type'],
-      defaultStyle: 'type',
-    },
-    regions: {
-      expanded: false,
-      visible: false,
+async function fetchViewSectionsConfig() {
+  const module = await import('./view-sections.json');
+  return module.default as ViewSectionsConfig;
+}
 
-      styles: ['boundaries', 'population'],
-      defaultStyle: 'boundaries',
-    },
-  },
-  risk: {
-    assets: {
-      expanded: true,
-      visible: true,
+const viewSectionsQuery = atom(fetchViewSectionsConfig);
 
-      styles: ['type', 'damages'],
-      defaultStyle: 'damages',
-    },
-    risks: {
-      expanded: false,
-      visible: false,
-    },
-    hazards: {
-      expanded: false,
-      visible: true,
-    },
-    buildings: {
-      expanded: false,
-      visible: false,
-
-      styles: ['type'],
-      defaultStyle: 'type',
-    },
-    regions: {
-      expanded: false,
-      visible: false,
-
-      styles: ['boundaries', 'population'],
-      defaultStyle: 'boundaries',
-    },
-  },
-  adaptation: {
-    assets: {
-      expanded: true,
-      visible: true,
-
-      styles: ['type', 'damages', 'adaptation', 'protectedFeatures'],
-      defaultStyle: 'adaptation',
-    },
-    drought: {
-      expanded: true,
-      visible: false,
-      styles: ['adaptation'],
-      defaultStyle: 'adaptation',
-    },
-    hazards: {
-      expanded: false,
-      visible: false,
-    },
-    buildings: {
-      expanded: false,
-      visible: false,
-
-      styles: ['type'],
-      defaultStyle: 'type',
-    },
-    regions: {
-      expanded: false,
-      visible: false,
-
-      styles: ['boundaries', 'population'],
-      defaultStyle: 'boundaries',
-    },
-  },
-  'nature-based-solutions': {
-    terrestrial: {
-      expanded: true,
-      visible: true,
-      styles: ['landuse', 'slope', 'elevation'],
-      defaultStyle: 'landuse',
-    },
-    marine: {
-      expanded: true,
-      visible: false,
-      styles: ['habitat'],
-      defaultStyle: 'habitat',
-    },
-  },
-};
+export const viewSectionsState = unwrap(
+  viewSectionsQuery,
+  (prev) => prev ?? {},
+);
