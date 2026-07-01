@@ -1,0 +1,27 @@
+[
+  {
+    "id": "cyclone",
+    "label": "Tropical cyclone wind speed",
+    "unit": "m/s"
+  },
+  {
+    "id": "fluvial",
+    "label": "River Flooding",
+    "unit": "m"
+  },
+  {
+    "id": "surface",
+    "label": "Surface Flooding",
+    "unit": "m"
+  },
+  {
+    "id": "coastal",
+    "label": "Coastal Flooding",
+    "unit": "m"
+  },
+  {
+    "id": "storm",
+    "label": "Tropical cyclone return period",
+    "unit": "yrs"
+  }
+]

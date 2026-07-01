@@ -9,13 +9,16 @@ import { hazardsMetadataState } from './state/metadata';
 
 export const HazardHoverDescription: FC<RasterHoverDescription> = ({ target, viewLayer }) => {
   const HAZARDS_METADATA = useAtomValue(hazardsMetadataState);
-  const { label, dataUnit } = HAZARDS_METADATA[viewLayer.id];
+  if (!HAZARDS_METADATA[viewLayer.id]) {
+    return null;
+  }
+  const { label, unit } = HAZARDS_METADATA[viewLayer.id];
   const { scheme, range } = HAZARD_COLOR_MAPS[viewLayer.id];
   return (
     <RasterTooltip
       color={target.color}
       label={label}
-      dataUnit={dataUnit}
+      dataUnit={unit}
       scheme={scheme}
       range={range}
       type={viewLayer.id === 'storm' ? 'years' : undefined}
