@@ -43,6 +43,9 @@ function SpeedSlider({ value, onChange, options }) {
 
 function HazardToggleSection({ hazard, disabled }) {
   const HAZARDS_METADATA = useAtomValue(hazardsMetadataState);
+  if (!HAZARDS_METADATA[hazard]) {
+    return null;
+  }
   const otherProps =
     hazard === 'cyclone'
       ? {
