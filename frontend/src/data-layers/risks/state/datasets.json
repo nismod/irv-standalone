@@ -1,0 +1,56 @@
+[
+  {
+    "id": "exposureValue",
+    "label": "Exposure value",
+    "dataUnit": "JMD",
+    "format": "financial"
+  },
+  {
+    "id": "EAD",
+    "label": "Expected Annual Damages",
+    "dataUnit": "JMD/year",
+    "format": "financial"
+  },
+  {
+    "id": "EADflood",
+    "label": "Expected Annual Damages (flooding)",
+    "dataUnit": "JMD/year",
+    "format": "financial"
+  },
+  {
+    "id": "EADcyclone",
+    "label": "Expected Annual Damages (cyclone)",
+    "dataUnit": "JMD/year",
+    "format": "financial"
+  },
+  {
+    "id": "populationAffected",
+    "label": "Population affected",
+    "dataUnit": "",
+    "format": "population"
+  },
+  {
+    "id": "demandAffected",
+    "label": "Demand affected",
+    "dataUnit": "",
+    "format": "integer"
+  },
+  {
+    "id": "lossGdp",
+    "label": "Loss GDP",
+    "dataUnit": "JMD/day",
+    "format": "financial"
+  },
+  {
+    "id": "lossGdpIsolation",
+    "label": "Loss GDP (isolation)",
+    "dataUnit": "JMD/day",
+    "format": "financial"
+  },
+  {
+    "id": "lossGdpRerouting",
+    "label": "Loss GDP (rerouting)",
+    "dataUnit": "JMD/day",
+    "format": "financial"
+  }
+]

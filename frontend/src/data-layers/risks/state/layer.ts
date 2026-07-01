@@ -8,6 +8,7 @@ import { sectionVisibilityState, sectionStyleValueState } from 'lib/state/sectio
 import { type RiskParams } from 'app/config/sidebar/RISK_DOMAINS';
 import { riskViewLayer } from '../risk-view-layer';
 import { risksMetadataState } from './metadata';
+import * as RISKS_COLOR_MAPS from '../color-maps';
 
 export const risksLayerState = atom<ViewLayer[]>((get) => {
   const riskVisibility = get(sectionVisibilityState('risks'));
@@ -17,6 +18,9 @@ export const risksLayerState = atom<ViewLayer[]>((get) => {
 
   const riskType = get(sectionStyleValueState('risks'));
   const risksMetadata = get(risksMetadataState);
+  if (!risksMetadata[riskType] || !RISKS_COLOR_MAPS[riskType]) {
+    return [];
+  }
 
   const sectorParam = get(dataParamState({ group: 'risks', param: 'sector' }));
   const returnPeriodParam = get(dataParamState({ group: 'risks', param: 'returnPeriod' }));
