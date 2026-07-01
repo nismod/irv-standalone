@@ -8,7 +8,7 @@ import { RasterTarget } from 'lib/data-map/types';
 import { RiskLegend } from './RiskLegend';
 import { RiskHoverDescription } from './RiskHoverDescription';
 import * as RISKS_COLOR_MAPS from './color-maps';
-import { RISKS_METADATA } from './metadata';
+import { type RisksMetadata } from './state/metadata';
 import { RISK_SOURCE } from './source';
 
 export function getRiskId<
@@ -35,7 +35,11 @@ export function getRiskId<
   return `${riskType}__${sector}__rp_${returnPeriod}__rcp_${rcp}__epoch_${epoch}__conf_${confidence}` as const;
 }
 
-export function riskViewLayer(riskType: string, riskParams: RiskParams): ViewLayer {
+export function riskViewLayer(
+  riskType: string,
+  riskParams: RiskParams,
+  risksMetadata: RisksMetadata,
+): ViewLayer {
   const { sector, returnPeriod, rcp, epoch, confidence } = riskParams;
 
   const deckId = getRiskId({ riskType, sector, returnPeriod, rcp, epoch, confidence });
@@ -58,7 +62,7 @@ export function riskViewLayer(riskType: string, riskParams: RiskParams): ViewLay
 
       // Set layer opacity
       let opacity: number;
-      if (riskType in RISKS_METADATA) {
+      if (riskType in risksMetadata) {
         // Reduced opacity for hotspot raster layers
         opacity = 0.4;
       } else if (riskType === 'cyclone') {
