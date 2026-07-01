@@ -1,55 +1,29 @@
 import { atom } from 'jotai';
+import { unwrap } from 'jotai/utils';
 
-const RISKS_METADATA = {
-  exposureValue: {
-    label: 'Exposure value',
-    dataUnit: 'JMD',
-    format: 'financial',
-  },
-  EAD: {
-    label: 'Expected Annual Damages',
-    dataUnit: 'JMD/year',
-    format: 'financial',
-  },
-  EADflood: {
-    label: 'Expected Annual Damages (flooding)',
-    dataUnit: 'JMD/year',
-    format: 'financial',
-  },
-  EADcyclone: {
-    label: 'Expected Annual Damages (cyclone)',
-    dataUnit: 'JMD/year',
-    format: 'financial',
-  },
-  populationAffected: {
-    label: 'Population affected',
-    dataUnit: '',
-    format: 'population',
-  },
-  demandAffected: {
-    label: 'Demand affected',
-    dataUnit: '',
-    format: 'integer',
-  },
-  lossGdp: {
-    label: 'Loss GDP',
-    dataUnit: 'JMD/day',
-    format: 'financial',
-  },
-  lossGdpIsolation: {
-    label: 'Loss GDP (isolation)',
-    dataUnit: 'JMD/day',
-    format: 'financial',
-  },
-  lossGdpRerouting: {
-    label: 'Loss GDP (rerouting)',
-    dataUnit: 'JMD/day',
-    format: 'financial',
-  },
+async function fetchRisksMetadata() {
+  const module = await import('./datasets.json');
+  return module.default;
+}
+
+export type RiskMetadata = {
+  id: string;
+  label: string;
+  dataUnit: string;
+  format: string;
 };
 
-export const risksMetadataState = atom(RISKS_METADATA);
+export type RisksMetadata = Record<string, RiskMetadata>;
 
-export type RisksMetadata = typeof RISKS_METADATA;
+const risksMetadataQuery = atom(async () => {
+  const metadata: RisksMetadata = {};
+  const datasets = await fetchRisksMetadata();
+  datasets.forEach((dataset) => {
+    metadata[dataset.id] = dataset;
+  });
+  return metadata;
+});
 
-export const RISKS = Object.keys(RISKS_METADATA);
+export const risksMetadataState = unwrap(risksMetadataQuery, (prev) => prev ?? {});
+
+export const riskIdsState = atom((get) => Object.keys(get(risksMetadataState)));

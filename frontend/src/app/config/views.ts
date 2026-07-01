@@ -1,5 +1,3 @@
-import { RISKS } from 'data-layers/risks/state/metadata';
-
 export interface ViewSectionConfig {
   expanded: boolean;
   visible: boolean;
@@ -45,9 +43,6 @@ export const VIEW_SECTIONS: Record<string, Record<string, ViewSectionConfig>> = 
     risks: {
       expanded: false,
       visible: false,
-
-      styles: RISKS,
-      defaultStyle: RISKS[0],
     },
     hazards: {
       expanded: false,

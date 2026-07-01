@@ -9,6 +9,9 @@ import { risksMetadataState } from './state/metadata';
 
 export const RiskHoverDescription: FC<RasterHoverDescription> = ({ target, viewLayer }) => {
   const RISKS_METADATA = useAtomValue(risksMetadataState);
+  if (!RISKS_METADATA[viewLayer.id]) {
+    return null;
+  }
   const { label, dataUnit, format } = RISKS_METADATA[viewLayer.id];
   const { scheme, range } = RISKS_COLOR_MAPS[viewLayer.id];
   return (
