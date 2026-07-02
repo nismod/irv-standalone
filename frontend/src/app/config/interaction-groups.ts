@@ -1,59 +1,19 @@
-import { InteractionGroupConfig } from 'lib/data-map/types';
+import { atom } from 'jotai';
+import { unwrap } from 'jotai/utils';
 
-export const INTERACTION_GROUPS = new Map<string, InteractionGroupConfig>([
-  [
-    'assets',
-    {
-      id: 'assets',
-      type: 'vector',
-      pickingRadius: 8,
-      pickMultiple: false,
-      usesAutoHighlight: true,
-    },
-  ],
-  [
-    'hazards',
-    {
-      id: 'hazards',
-      type: 'raster',
-      pickMultiple: true,
-    },
-  ],
-  [
-    'risks',
-    {
-      id: 'risks',
-      type: 'raster',
-      pickMultiple: false,
-    },
-  ],
-  [
-    'regions',
-    {
-      id: 'regions',
-      type: 'vector',
-      pickingRadius: 8,
-      pickMultiple: false,
-    },
-  ],
-  [
-    'solutions',
-    {
-      id: 'solutions',
-      type: 'vector',
-      pickingRadius: 8,
-      usesAutoHighlight: true,
-      pickMultiple: false,
-    },
-  ],
-  [
-    'drought',
-    {
-      id: 'drought',
-      type: 'vector',
-      pickingRadius: 8,
-      usesAutoHighlight: true,
-      pickMultiple: false,
-    },
-  ],
-]);
+import type { InteractionGroupConfig } from 'lib/data-map/types';
+
+type InteractionGroupsConfig = Record<string, InteractionGroupConfig>;
+
+async function fetchInteractionGroupsConfig() {
+  const module = await import('./interaction-groups.json');
+  const config = module.default as InteractionGroupsConfig;
+  return new Map<string, InteractionGroupConfig>(Object.entries(config));
+}
+
+const interactionGroupsQuery = atom(fetchInteractionGroupsConfig);
+
+export const interactionGroupsConfigState = unwrap(
+  interactionGroupsQuery,
+  (prev) => prev ?? new Map<string, InteractionGroupConfig>(),
+);

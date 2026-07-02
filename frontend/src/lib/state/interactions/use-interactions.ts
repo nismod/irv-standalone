@@ -170,7 +170,9 @@ export function useInteractions(
   const interactionMode = useAtomValue(mapInteractionModeState);
 
   const [primaryGroup] = [...interactionGroups.keys()];
-  const primaryGroupPickingRadius = interactionGroups.get(primaryGroup).pickingRadius;
+  const primaryGroupPickingRadius = primaryGroup
+    ? interactionGroups.get(primaryGroup).pickingRadius
+    : 0;
 
   const activeGroups = useActiveGroups(viewLayers);
   useSyncAllowedLayers(viewLayers);
