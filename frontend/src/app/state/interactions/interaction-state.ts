@@ -1,14 +1,12 @@
 import { atom } from 'jotai';
 
-import { INTERACTION_GROUPS } from 'app/config/interaction-groups';
+import { interactionGroupsConfigState } from 'app/config/interaction-groups';
 import { InteractionTarget, RasterTarget, VectorTarget } from 'lib/data-map/types';
 import { hoverState, hasHover } from 'lib/state/interactions/interaction-state';
 import { showPopulationState } from 'data-layers/regions/state/data-selection';
 
 type InteractionLayer = InteractionTarget<VectorTarget> | InteractionTarget<RasterTarget>;
 type IT = InteractionLayer | InteractionLayer[];
-
-const interactionGroupEntries = [...INTERACTION_GROUPS.entries()];
 
 type LayerHoverState = {
   isHovered: boolean;
@@ -17,6 +15,7 @@ type LayerHoverState = {
 
 export const layerHoverStates = atom((get) => {
   const regionDataShown = get(showPopulationState);
+  const interactionGroupEntries = [...get(interactionGroupsConfigState).entries()];
   const mapEntries = interactionGroupEntries.map(([groupId]) => {
     const hoverTarget = get(hoverState(groupId));
     const isHovered =
