@@ -18,7 +18,7 @@ import { Box } from '@mui/system';
 import { FC, forwardRef, useCallback, useState } from 'react';
 import { NavLink as RouterNavLink, LinkProps as RouterLinkProps } from 'react-router-dom';
 
-import { VIEW_SECTIONS } from 'app/config/views';
+import { viewSectionsState } from 'app/config/views';
 import { useIsMobile } from './use-is-mobile';
 import { withProps } from 'lib/react/with-props';
 import { mapLatUrlState, mapLonUrlState, mapZoomUrlState } from 'lib/state/map-view/map-url';
@@ -80,11 +80,15 @@ function useMapQueryParams() {
   return url.searchParams;
 }
 
-const mapPages = Object.keys(VIEW_SECTIONS).map((view) => `/${view}`);
-
 const ToolbarLinkWithRef = (props, ref) => {
+  const viewSections = useAtomValue(viewSectionsState);
   const mapParams = useMapQueryParams();
   const { to, ...rest } = props;
+  const views = Object.keys(viewSections);
+  if (views.length === 0) {
+    return <ToolbarLink component={RouterNavLink} ref={ref} to={to} {...rest} />;
+  }
+  const mapPages = views.map((view) => `/${view}`);
   const pageLink = mapPages.includes(to) ? `${to}?${mapParams}` : to;
   return <ToolbarLink component={RouterNavLink} ref={ref} to={pageLink} {...rest} />;
 };
@@ -93,8 +97,14 @@ const ToolbarNavLink = forwardRef<HTMLAnchorElement, LinkProps & RouterLinkProps
 );
 
 const DrawerLinkWithRef = (props, ref) => {
+  const viewSections = useAtomValue(viewSectionsState);
   const mapParams = useMapQueryParams();
   const { to, ...rest } = props;
+  const views = Object.keys(viewSections);
+  if (views.length === 0) {
+    return <DrawerLink component={RouterNavLink} ref={ref} to={to} {...rest} />;
+  }
+  const mapPages = views.map((view) => `/${view}`);
   const pageLink = mapPages.includes(to) ? `${to}?${mapParams}` : to;
   return <DrawerLink component={RouterNavLink} ref={ref} to={pageLink} {...rest} />;
 };

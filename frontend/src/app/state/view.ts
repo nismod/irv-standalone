@@ -12,13 +12,23 @@ import {
 } from 'lib/state/sections';
 
 import { SECTIONS_CONFIG } from 'app/config/sections';
-import { VIEW_SECTIONS, ViewSectionConfig } from 'app/config/views';
+import { ViewSectionConfig, ViewSectionsConfig, viewSectionsState } from 'app/config/views';
 
 type SectionKey = string;
 
 // Initialised from the current pathname so the first render has the correct
 // value synchronously.  MapPage keeps it in sync via useSyncRecoilState.
 export const viewState = atom<string>(window.location.pathname.split('/').find(Boolean) ?? '');
+
+type ViewStateEffectValue = {
+  view: string;
+  viewSections: ViewSectionsConfig;
+};
+
+export const viewStateEffectState = atom<ViewStateEffectValue>((get) => ({
+  view: get(viewState),
+  viewSections: get(viewSectionsState) ?? {},
+}));
 
 function sectionVisibility(section: SectionKey, sectionConfig: ViewSectionConfig) {
   if (section === 'assets') {
@@ -41,9 +51,16 @@ function sectionStyle(section: SectionKey, sectionConfig: ViewSectionConfig) {
   }
 }
 
-export const viewStateEffect: StateEffect<string> = ({ set }, view, previousView) => {
-  const viewSectionsConfig = VIEW_SECTIONS[view];
-  const previousViewSectionsConfig = VIEW_SECTIONS[previousView];
+export const viewStateEffect: StateEffect<ViewStateEffectValue> = (
+  { set },
+  { view, viewSections } = { view: '', viewSections: {} },
+  previousValue,
+) => {
+  const currentViewSections = viewSections ?? {};
+  const previousView = previousValue?.view;
+  const previousViewSections = previousValue?.viewSections ?? {};
+  const viewSectionsConfig = currentViewSections[view] ?? {};
+  const previousViewSectionsConfig = previousViewSections[previousView] ?? {};
 
   const removedSections = difference(keys(previousViewSectionsConfig), keys(viewSectionsConfig));
 
