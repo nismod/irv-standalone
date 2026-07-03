@@ -21,19 +21,29 @@ import {
   networkTreeCheckboxState,
   networkTreeConfigState,
 } from './data-selection';
+import { networksMetadataState } from './metadata';
 import { type AdaptationOptionParams } from 'app/config/sidebar/NETWORK_DOMAINS';
 import { networkViewLayer } from '../network-view-layer';
+import { getInfrastructureViewLayers } from '../view-layers';
 
-export const networksLayerState = atom<ViewLayer[]>((get) =>
-  get(sectionVisibilityState('assets'))
-    ? get(networkSelectionState).map((network) => {
-        return networkViewLayer({
-          network,
-          styleParams: get(networkStyleParamsState(network)),
-        });
-      })
-    : [],
-);
+ const infrastructureViewLayersState = atom((get) =>
+   getInfrastructureViewLayers(get(networksMetadataState)),
+ );
+
+export const networksLayerState = atom<ViewLayer[]>((get) => {
+  if (!get(sectionVisibilityState('assets'))) {
+    return [];
+  }
+
+  const infrastructureViewLayers = get(infrastructureViewLayersState);
+  return get(networkSelectionState).map((network) => {
+    return networkViewLayer({
+      network,
+      styleParams: get(networkStyleParamsState(network)),
+      infrastructureViewLayers,
+    });
+  });
+});
 
 export const showAdaptationsState = atom<boolean>(
   (get) => get(networksStyleState) === 'adaptation',

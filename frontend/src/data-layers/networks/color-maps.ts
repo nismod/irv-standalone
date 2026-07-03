@@ -1,7 +1,7 @@
 import * as d3ScaleChromatic from 'd3-scale-chromatic';
 import * as d3Scale from 'd3-scale';
 import { ColorSpec } from 'lib/data-map/view-layers';
-import { COLORS } from './colors';
+import { COLORS } from './state/colors';
 
 function invertColorScale<T>(colorScale: (t: number) => T) {
   return (i: number) => colorScale(1 - i);

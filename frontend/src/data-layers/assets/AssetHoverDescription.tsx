@@ -3,13 +3,14 @@ import { useAtomValue } from 'jotai';
 
 import { VectorHoverDescription } from 'lib/data-map/types';
 import { VectorHoverDescription as VectorTooltip } from 'lib/map/tooltip/content/VectorHoverDescription';
-import { NETWORKS_METADATA } from 'data-layers/networks/metadata';
+import { networksMetadataState } from 'data-layers/networks/state/metadata';
 import { hazardsMetadataState } from 'data-layers/hazards/state/metadata';
 
 export const AssetHoverDescription: FC<VectorHoverDescription> = ({ target, viewLayer }) => {
   const hazardsMetadata = useAtomValue(hazardsMetadataState);
+  const networksMetadata = useAtomValue(networksMetadataState);
   const { assetId } = (viewLayer.params ?? {}) as { assetId: string };
-  const { label: title, color = '#ccc' } = NETWORKS_METADATA[assetId];
+  const { label: title, color = '#ccc' } = networksMetadata[assetId];
   return (
     <VectorTooltip
       viewLayer={viewLayer}

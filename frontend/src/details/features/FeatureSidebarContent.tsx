@@ -21,7 +21,6 @@ import {
   WaterPipelineDetails,
   WaterSupplyNodeDetails,
 } from 'lib/map/tooltip/detail-components';
-import { NETWORKS_METADATA } from 'data-layers/networks/metadata';
 import { ColorBox } from 'lib/map/tooltip/content/ColorBox';
 import { DamagesSection } from './damages/DamagesSection';
 import { AdaptationSection } from './adaptation/AdaptationSection';
@@ -29,8 +28,9 @@ import Download from '@mui/icons-material/Download';
 import { downloadFile } from 'lib/helpers';
 import { useAtomValue } from 'jotai';
 import { selectedAssetDetails } from 'lib/state/interactions/interaction-state';
+import { networksMetadataState } from 'data-layers/networks/state/metadata';
 
-const componentMapping: Record<keyof typeof NETWORKS_METADATA, DetailsComponent> = {
+const componentMapping: Partial<Record<string, DetailsComponent>> = {
   airport_terminals: AirportDetails,
   airport_runways: AirportDetails,
 
@@ -112,6 +112,10 @@ const FeatureDetails = ({ assetType, feature, showRiskSection }) => {
   const DetailsComponent = componentMapping[assetType] ?? DefaultDetails;
   const featureDetails = useAtomValue(selectedAssetDetails(feature.id));
   const f = feature.properties;
+  const featureDetailsProperties = featureDetails.properties as Record<
+    string,
+    string | number | boolean
+  >;
   return (
     <>
       <pre style={{ display: 'none' }}>
@@ -122,7 +126,7 @@ const FeatureDetails = ({ assetType, feature, showRiskSection }) => {
           </code>
         )}
       </pre>
-      <DetailsComponent f={featureDetails.properties} />
+      <DetailsComponent f={featureDetailsProperties} />
       {showRiskSection && (
         <>
           <IconButton
@@ -151,7 +155,8 @@ export const FeatureSidebarContent: FC<FeatureSidebarContentProps> = ({
   assetType,
   showRiskSection = true,
 }) => {
-  const { color, label } = NETWORKS_METADATA[assetType];
+  const networksMetadata = useAtomValue(networksMetadataState);
+  const { color, label } = networksMetadata[assetType];
 
   return (
     <Box position="relative">

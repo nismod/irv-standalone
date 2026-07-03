@@ -1,3 +1,5 @@
+import { atom } from 'jotai';
+
 import { COLORS } from './colors';
 import { makeConfig } from 'lib/helpers';
 
@@ -45,7 +47,7 @@ stops: [
 
 */
 
-export const NETWORKS_METADATA = makeConfig([
+const NETWORKS_METADATA = makeConfig([
   {
     id: 'elec_edges_high',
     type: 'line',
@@ -408,3 +410,7 @@ export const NETWORKS_METADATA = makeConfig([
     color: COLORS.coast_nodes_cpf.css,
   },
 ]);
+
+export type NetworksMetadata = typeof NETWORKS_METADATA;
+
+export const networksMetadataState = atom(NETWORKS_METADATA);
