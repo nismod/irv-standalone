@@ -23,7 +23,6 @@ import {
 } from './data-selection';
 import { networksMetadataState } from './metadata';
 import { type AdaptationOptionParams } from 'app/config/sidebar/NETWORK_DOMAINS';
-import { networkViewLayer } from '../network-view-layer';
 import { getInfrastructureViewLayers } from '../view-layers';
 
  const infrastructureViewLayersState = atom((get) =>
@@ -37,11 +36,11 @@ export const networksLayerState = atom<ViewLayer[]>((get) => {
 
   const infrastructureViewLayers = get(infrastructureViewLayersState);
   return get(networkSelectionState).map((network) => {
-    return networkViewLayer({
-      network,
+    const baseLayer = infrastructureViewLayers[network];
+    return {
+      ...baseLayer,
       styleParams: get(networkStyleParamsState(network)),
-      infrastructureViewLayers,
-    });
+    };
   });
 });
 
