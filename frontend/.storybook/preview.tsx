@@ -11,6 +11,7 @@ import { useSyncRecoilState } from '../src/lib/recoil/sync-state';
 import { viewStateEffect } from '../src/app/state/view';
 import { useStateEffect } from '../src/lib/recoil/state-effects/use-state-effect';
 import { viewSectionsState } from '../src/app/config/views';
+import { sectionsConfigState } from '../src/app/config/sections';
 
 /*
  * Initializes MSW
@@ -26,6 +27,7 @@ initialize({
 const mockViewState = atom('exposure');
 const mockViewStateEffectState = atom((get) => ({
   view: get(mockViewState),
+  sectionsConfig: get(sectionsConfigState),
   viewSections: get(viewSectionsState) ?? {},
 }));
 
