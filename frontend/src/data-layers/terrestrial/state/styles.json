@@ -1,0 +1,14 @@
+[
+  {
+    "id": "landuse",
+    "label": "Land Use"
+  },
+  {
+    "id": "slope",
+    "label": "Slope"
+  },
+  {
+    "id": "elevation",
+    "label": "Elevation"
+  }
+]

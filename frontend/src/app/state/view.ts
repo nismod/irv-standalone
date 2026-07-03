@@ -11,7 +11,7 @@ import {
   sidebarSectionExpandedState,
 } from 'lib/state/sections';
 
-import { SECTIONS_CONFIG } from 'app/config/sections';
+import { SectionsConfig, sectionsConfigState } from 'app/config/sections';
 import { ViewSectionConfig, ViewSectionsConfig, viewSectionsState } from 'app/config/views';
 
 type SectionKey = string;
@@ -22,11 +22,13 @@ export const viewState = atom<string>(window.location.pathname.split('/').find(B
 
 type ViewStateEffectValue = {
   view: string;
+  sectionsConfig: SectionsConfig;
   viewSections: ViewSectionsConfig;
 };
 
 export const viewStateEffectState = atom<ViewStateEffectValue>((get) => ({
   view: get(viewState),
+  sectionsConfig: get(sectionsConfigState),
   viewSections: get(viewSectionsState) ?? {},
 }));
 
@@ -53,7 +55,7 @@ function sectionStyle(section: SectionKey, sectionConfig: ViewSectionConfig) {
 
 export const viewStateEffect: StateEffect<ViewStateEffectValue> = (
   { set },
-  { view, viewSections } = { view: '', viewSections: {} },
+  { view, sectionsConfig, viewSections } = { view: '', sectionsConfig: {}, viewSections: {} },
   previousValue,
 ) => {
   const currentViewSections = viewSections ?? {};
@@ -71,9 +73,16 @@ export const viewStateEffect: StateEffect<ViewStateEffectValue> = (
   forEach(viewSectionsConfig, (sectionConfig: ViewSectionConfig, section: SectionKey) => {
     set(sectionVisibilityState(section), sectionVisibility(section, sectionConfig));
     set(sidebarSectionExpandedState(section), sectionConfig.expanded);
-    const styleOptions = sectionConfig.styles?.map(
-      (style) => SECTIONS_CONFIG[section].styles[style],
-    );
+
+    if (!sectionsConfig?.[section]) {
+      set(sectionStyleOptionsState(section), []);
+      return;
+    }
+
+    const styleOptions =
+      sectionConfig.styles
+        ?.map((style) => sectionsConfig[section]?.styles?.[style])
+        .filter((x): x is NonNullable<typeof x> => Boolean(x)) ?? [];
     set(sectionStyleOptionsState(section), styleOptions);
     set(sectionStyleValueState(section), sectionStyle(section, sectionConfig));
   });

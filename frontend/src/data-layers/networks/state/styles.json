@@ -1,0 +1,18 @@
+[
+  {
+    "id": "type",
+    "label": "Asset type"
+  },
+  {
+    "id": "damages",
+    "label": "Damages"
+  },
+  {
+    "id": "adaptation",
+    "label": "Adaptation Options"
+  },
+  {
+    "id": "protectedFeatures",
+    "label": "Protected Features"
+  }
+]
