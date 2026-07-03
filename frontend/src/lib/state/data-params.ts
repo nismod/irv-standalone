@@ -38,6 +38,10 @@ export const syncExternalConfigState = atom(
     set(dataParamConfigState, newConfig);
 
     Object.entries(newConfig).forEach(([group, groupConfig]) => {
+      if (!groupConfig) {
+        // group config is still loading.
+        return;
+      }
       const paramNames = Object.keys(groupConfig.paramDefaults);
       const [defaultValues, options] = resolveParamDependencies(
         groupConfig.paramDefaults,
@@ -62,6 +66,10 @@ export function useUpdateDataParam(group: string, paramId: string) {
           return;
         }
         const groupConfig = dataParamConfig[group];
+        if (!groupConfig) {
+          // group config is still loading.
+          return;
+        }
         const paramNames = Object.keys(groupConfig.paramDefaults);
         const groupParams = toDictionary(
           paramNames,
