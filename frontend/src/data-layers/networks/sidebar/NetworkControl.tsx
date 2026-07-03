@@ -1,6 +1,6 @@
 import { Box } from '@mui/system';
 import { Alert } from '@mui/material';
-import { FC } from 'react';
+import { FC, type ComponentProps } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import { CheckboxTree, recalculateCheckboxStates } from 'lib/controls/checkbox-tree/CheckboxTree';
@@ -15,7 +15,7 @@ import {
   networkTreeConfigState,
   networkTreeExpandedState,
 } from '../state/data-selection';
-import { NETWORKS_METADATA } from '../metadata';
+import { networksMetadataState } from '../state/metadata';
 import { showAdaptationsState, showProtectorFeaturesState } from '../state/layer';
 
 import adaptationSectorLayers from 'app/config/sidebar/adaptation-sector-layers.json';
@@ -90,11 +90,19 @@ function useSyncAdaptationParameters(checkboxState) {
   }
 }
 
-function getLabel(node, checked) {
+function NodeLabel({
+  node,
+  checked,
+  layerLabelProps,
+}: {
+  node;
+  checked: boolean;
+  layerLabelProps: Omit<ComponentProps<typeof LayerLabel>, 'label' | 'visible'>;
+}) {
   return node.children ? (
     node.label
   ) : (
-    <LayerLabel {...NETWORKS_METADATA[node.id]} label={node.label} visible={checked} />
+    <LayerLabel {...layerLabelProps} label={node.label} visible={checked} />
   );
 }
 
@@ -103,6 +111,7 @@ export const NetworkControl: FC = () => {
   const networkTreeConfig = useAtomValue(networkTreeConfigState);
   const [checkboxState, setCheckboxState] = useAtom(networkTreeCheckboxState);
   const [expanded, setExpanded] = useAtom(networkTreeExpandedState);
+  const networksMetadata = useAtomValue(networksMetadataState);
 
   const showAdaptations = useAtomValue(showAdaptationsState);
   const showProtectorFeatureLayers = useAtomValue(showProtectorFeaturesState);
@@ -124,7 +133,9 @@ export const NetworkControl: FC = () => {
       <CheckboxTree
         nodes={networkHierarchy}
         config={networkTreeConfig}
-        getLabel={getLabel}
+        getLabel={(node, checked) => (
+          <NodeLabel node={node} checked={checked} layerLabelProps={networksMetadata[node.id]} />
+        )}
         checkboxState={checkboxState}
         onCheckboxState={setCheckboxState}
         expanded={expanded}
