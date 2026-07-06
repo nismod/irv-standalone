@@ -19,10 +19,11 @@ import { damageSourceState, damageTypeState } from 'lib/state/damage-map';
 import { damageSourceStateEffect } from 'app/state/damage-mapping/damage-map';
 import { LayerStylePanel } from 'lib/sidebar/ui/LayerStylePanel';
 
-import { HAZARDS_UI_ORDER, hazardsMetadataState } from 'data-layers/hazards/state/metadata';
+import { hazardsUIOrderState, hazardsMetadataState } from 'data-layers/hazards/state/metadata';
 
 export const DamageSourceControl = () => {
   const HAZARDS_METADATA = useAtomValue(hazardsMetadataState);
+  const hazardsUIOrder = useAtomValue(hazardsUIOrderState);
   const [damageSource, setDamageSource] = useAtom(damageSourceState);
   const [damageType, setDamageType] = useAtom(damageTypeState);
   const id = useId();
@@ -50,7 +51,7 @@ export const DamageSourceControl = () => {
             <FormLabel component="legend">Hazard</FormLabel>
             <RadioGroup value={damageSource} onChange={(e, value) => setDamageSource(value)}>
               <FormControlLabel label="All Hazards" control={<Radio value="all" />} />
-              {HAZARDS_UI_ORDER.filter((h) => !!HAZARDS_METADATA[h] && h !== 'storm').map(
+              {hazardsUIOrder.filter((h) => !!HAZARDS_METADATA[h] && h !== 'storm').map(
                 (hazard) => (
                   <FormControlLabel
                     key={hazard}
