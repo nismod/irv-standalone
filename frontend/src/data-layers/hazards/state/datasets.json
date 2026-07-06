@@ -2,26 +2,36 @@
   {
     "id": "cyclone",
     "label": "Tropical cyclone wind speed",
-    "unit": "m/s"
+    "unit": "m/s",
+    "displayOrder": 3,
+    "stackingOrder": 1
   },
   {
     "id": "fluvial",
     "label": "River Flooding",
-    "unit": "m"
+    "unit": "m",
+    "displayOrder": 0,
+    "stackingOrder": 2
   },
   {
     "id": "surface",
     "label": "Surface Flooding",
-    "unit": "m"
+    "unit": "m",
+    "displayOrder": 1,
+    "stackingOrder": 3
   },
   {
     "id": "coastal",
     "label": "Coastal Flooding",
-    "unit": "m"
+    "unit": "m",
+    "displayOrder": 2,
+    "stackingOrder": 4
   },
   {
     "id": "storm",
     "label": "Tropical cyclone return period",
-    "unit": "yrs"
+    "unit": "yrs",
+    "displayOrder": 4,
+    "stackingOrder": 0
   }
 ]

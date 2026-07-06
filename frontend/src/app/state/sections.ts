@@ -2,11 +2,12 @@ import { truthyKeys } from 'lib/helpers';
 import { StateEffect } from 'lib/recoil/state-effects/types';
 import { damageSourceState } from 'lib/state/damage-map';
 import { getHazardSelectionAggregate } from 'data-layers/hazards/state/data-selection';
-import { HAZARDS_UI_ORDER } from 'data-layers/hazards/state/metadata';
+import { hazardsUIOrderState } from 'data-layers/hazards/state/metadata';
 
 export const networksStyleStateEffect: StateEffect<string> = ({ get, set }, style) => {
   if (style === 'damages') {
-    const hazardSelection = getHazardSelectionAggregate({ get }, HAZARDS_UI_ORDER);
+    const hazardsUIOrder = get(hazardsUIOrderState);
+    const hazardSelection = getHazardSelectionAggregate({ get }, hazardsUIOrder);
     const visibleHazards = truthyKeys(hazardSelection);
     const defaultDamageSource = visibleHazards[0] ?? 'all';
 

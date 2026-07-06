@@ -10,7 +10,7 @@ import { showDamagesState } from 'app/state/damage-mapping/damage-map';
 import { Alert, Box, FormControl, FormLabel } from '@mui/material';
 
 import { hazardSelectionState } from '../state/data-selection';
-import { HAZARDS_UI_ORDER, hazardsMetadataState } from '../state/metadata';
+import { hazardsUIOrderState, hazardsMetadataState } from '../state/metadata';
 import { CustomNumberSlider } from 'lib/controls/CustomSlider';
 import { DataParam } from 'lib/sidebar/ui/params/DataParam';
 
@@ -86,6 +86,7 @@ function HazardToggleSection({ hazard, disabled }) {
 
 export const HazardsControl = () => {
   const showDirectDamages = useAtomValue(showDamagesState);
+  const hazardsUIOrder = useAtomValue(hazardsUIOrderState);
   const disabled = showDirectDamages;
 
   return (
@@ -98,7 +99,7 @@ export const HazardsControl = () => {
         </Box>
       ) : null}
       <ToggleSectionGroup toggleState={hazardSelectionState}>
-        {HAZARDS_UI_ORDER.map((hazard) => (
+        {hazardsUIOrder.map((hazard) => (
           <HazardToggleSection key={hazard} hazard={hazard} disabled={disabled} />
         ))}
       </ToggleSectionGroup>
