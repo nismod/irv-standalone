@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.5"
+  required_version = ">= 1.10" # `use_lockfile` in the backend needs 1.10+
 
   required_providers {
     aws = {
@@ -8,15 +8,15 @@ terraform {
     }
   }
 
-  # Recommended: keep state in a shared, versioned, encrypted S3 bucket rather
-  # than on one person's machine. Create the bucket (with versioning enabled)
-  # once, then uncomment this block and run `terraform init -migrate-state`.
-  #
-  # backend "s3" {
-  #   bucket       = "<your-terraform-state-bucket>"
-  #   key          = "irv-standalone/deploy/terraform.tfstate"
-  #   region       = "eu-west-2"
-  #   encrypt      = true
-  #   use_lockfile = true # S3-native state locking, requires Terraform >= 1.10
-  # }
+  # Shared remote state, so state is not tied to (or lost with) one person's
+  # machine. The bucket is created by the one-off configuration in
+  # state-bootstrap/ - apply that first, then run `terraform init` here (or
+  # `terraform init -migrate-state` if you have existing local state to move).
+  backend "s3" {
+    bucket       = "nismod-irv-terraform-state"
+    key          = "irv-standalone/deploy/terraform.tfstate"
+    region       = "eu-west-2"
+    encrypt      = true
+    use_lockfile = true # S3-native state locking
+  }
 }

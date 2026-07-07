@@ -96,6 +96,16 @@ resource "aws_instance" "jamaica" {
   key_name               = aws_key_pair.deployer.key_name
   vpc_security_group_ids = [aws_security_group.access_http_ssh.id]
 
+  # Encrypted root volume. NB: enabling encryption on an instance that was
+  # created without it forces the instance to be destroyed and recreated -
+  # check `terraform plan` and be ready to re-run provisioning and deployment
+  # (provision.sh, deploy.sh) before applying.
+  root_block_device {
+    encrypted   = true
+    volume_type = "gp3"
+    volume_size = var.root_volume_size_gb
+  }
+
   # Require IMDSv2 for instance metadata requests
   metadata_options {
     http_endpoint = "enabled"

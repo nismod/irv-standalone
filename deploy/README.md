@@ -43,48 +43,70 @@ then run:
 aws configure   # one-off to set your AWS credentials
 ```
 
-Install [terraform](https://www.terraform.io/) (>= 1.5) then, from this
-`deploy` directory, run:
+Install [terraform](https://www.terraform.io/) (>= 1.10).
+
+Terraform state is stored in a shared S3 bucket, which must exist before the
+main configuration can be initialised. If the bucket does not exist yet
+(one-off, first person only):
 
 ```bash
-terraform init  # one-off to fetch provider from terraform registry
+cd state-bootstrap
+terraform init
+terraform apply  # creates the versioned, encrypted state bucket
+cd ..
+```
+
+Then, from this `deploy` directory:
+
+```bash
+terraform init  # one-off; add -migrate-state if you have existing local state
 terraform plan  # to see what actions will be taken in detail
 terraform apply # rerun after any change to the *.tf files
 ```
 
 The configuration is split across several files:
 
-- `versions.tf` - required terraform and provider versions, and a commented-out
-  S3 remote state backend
+- `versions.tf` - required terraform and provider versions, and the S3 remote
+  state backend
 - `variables.tf` - input variables (site domain name, instance type, SSH key
-  and allowed SSH source ranges, AMI filter)
-- `main.tf` - the resources: EC2 instance, key pair, security group, DNS record
-- `outputs.tf` - outputs (server public IP, site URL)
+  and allowed SSH source ranges, AMI filter, database sizing)
+- `main.tf` - the application server: EC2 instance, key pair, security group,
+  DNS record
+- `database.tf` - RDS PostgreSQL database and its security group
+- `outputs.tf` - outputs (server public IP, site URL, database address and
+  credentials secret)
+- `state-bootstrap/` - separate one-off configuration that creates the state
+  bucket
 
 All variables have working defaults. To override them, pass `-var` flags or
-create a `terraform.tfvars` file (git-ignored, as it may hold
-environment-specific or sensitive values). For example, to restrict SSH access
-to a trusted network - strongly recommended - and use a larger instance:
+copy `terraform.tfvars.example` to `terraform.tfvars` (git-ignored, as it may
+hold environment-specific or sensitive values) and edit. In particular,
+consider restricting SSH access to a trusted network range - strongly
+recommended:
 
 ```conf
 # terraform.tfvars
 ssh_ingress_cidr_blocks = ["192.0.2.0/24"]
-instance_type           = "t3.small"
 ```
 
 Operational notes:
 
-- Commit the `.terraform.lock.hcl` file that `terraform init` creates, so that
-  everyone applies with the same provider version.
-- By default terraform state is stored locally in `terraform.tfstate`, which
-  must not be committed (it can contain sensitive values) and is easy to lose.
-  If more than one person applies this configuration, move state to a shared
-  S3 backend: see the commented block in `versions.tf`.
+- `.terraform.lock.hcl` pins the exact provider version and is committed. It
+  currently holds hashes for `linux_amd64` only: if you work on another
+  platform, run e.g.
+  `terraform providers lock -platform=linux_amd64 -platform=darwin_arm64`
+  and commit the result.
+- The root volume is configured with encryption. Applying this to an instance
+  originally created without encryption **destroys and recreates the
+  server** - check `terraform plan`, and be ready to re-run `provision.sh`
+  and `deploy.sh` and restore data afterwards.
 - The AMI lookup tracks the latest Ubuntu LTS image but the running instance
   is not replaced when a new image is released (`ignore_changes = [ami]`). To
   rebuild the server on a fresh image, run
   `terraform apply -replace=aws_instance.jamaica` - note this destroys the
-  server and its disk.
+  server and its disk. If a planned rebuild shows the *old* AMI id being
+  reused, temporarily comment out the `ignore_changes` line in `main.tf` for
+  that apply to pick up the latest image.
 
 ## On-premises (optional)
 
@@ -113,7 +135,26 @@ install docker and docker-compose.
 `provision-database-server.sh` contains installation instructions for an Ubuntu
 20.04 server to install a PostgreSQL database server with the PostGIS extension.
 
-> If running on AWS, this should be handled by terraform as an RDS database.
+> This is only relevant on-premises. On AWS, terraform provisions an RDS
+> PostgreSQL database instead (see `database.tf`) - do not run the script.
+
+On AWS, the database master password is generated and stored by RDS in AWS
+Secrets Manager; it is not in terraform configuration or state. To retrieve
+it:
+
+```bash
+aws secretsmanager get-secret-value \
+  --secret-id "$(terraform output -raw database_master_user_secret_arn)" \
+  --query SecretString --output text
+```
+
+The database only accepts connections from the application server's security
+group, so connect from the application server (over SSH), with `PGHOST` set to
+the `database_address` terraform output. Enable PostGIS once per database:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS postgis;
+```
 
 ## Basic authentication
 

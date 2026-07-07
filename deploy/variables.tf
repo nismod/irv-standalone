@@ -38,6 +38,42 @@ variable "deployer_public_key" {
   default     = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAjX5yhc7GWROTVOM8r92rO6MEUyKt/JfTCQzCY/lNi9 opsis-aws-jamaica"
 }
 
+variable "root_volume_size_gb" {
+  description = "Size of the application server root EBS volume in GB"
+  type        = number
+  default     = 20
+}
+
+variable "db_instance_class" {
+  description = "RDS instance class for the PostgreSQL database"
+  type        = string
+  default     = "db.t3.micro"
+}
+
+variable "db_allocated_storage" {
+  description = "Initial RDS storage in GB (autoscales up to db_max_allocated_storage)"
+  type        = number
+  default     = 20
+}
+
+variable "db_max_allocated_storage" {
+  description = "Upper limit in GB for RDS storage autoscaling"
+  type        = number
+  default     = 100
+}
+
+variable "db_name" {
+  description = "Name of the initial database created on the RDS instance"
+  type        = string
+  default     = "jamaica"
+}
+
+variable "db_username" {
+  description = "Master username for the RDS instance"
+  type        = string
+  default     = "postgres"
+}
+
 variable "ssh_ingress_cidr_blocks" {
   description = <<-EOT
     CIDR blocks allowed to reach SSH (port 22). Strongly recommended to
