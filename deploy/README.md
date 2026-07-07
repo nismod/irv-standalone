@@ -125,10 +125,37 @@ The service requires two virtual machines with similar specifications:
 
 ## VM provisioning
 
-`provision.sh` contains installation instructions for an Ubuntu 20.04 server to
-install docker and docker-compose.
+`provision.sh` sets up an Ubuntu LTS server to run the application:
+
+- docker and the docker compose plugin, to run the app containers (started on
+  boot; the compose services are marked `restart: unless-stopped` so they come
+  back after a reboot)
+- nginx as a reverse proxy terminating incoming connections, with HTTP basic
+  authentication (installed from `etc/nginx/sites-available/site.conf.template`)
+- Let's Encrypt ([certbot](https://certbot.eff.org/)) to acquire an SSL
+  certificate and renew it automatically (via the `certbot.timer` systemd
+  timer, which reloads nginx on renewal)
 
 > This is relevant in either AWS or on-premises setup.
+
+Copy the `deploy` directory to the server (or clone this repository there),
+then run:
+
+```bash
+SITE_DOMAIN=jamaica.infrastructureresilience.org \
+CERTBOT_EMAIL=you@example.org \
+  ./provision.sh
+```
+
+Notes:
+
+- DNS for `SITE_DOMAIN` must already resolve to the server, or the Let's
+  Encrypt HTTP challenge fails. On AWS, run `terraform apply` first - it
+  creates the DNS record. If DNS is not ready, leave `CERTBOT_EMAIL` unset and
+  the script prints the `certbot` command to run later.
+- The script is idempotent: rerunning it is safe.
+- docker group membership takes effect at next login, so log out and in (or
+  `newgrp docker`) before running `docker compose` as your own user.
 
 ## Database provisioning
 
@@ -169,11 +196,12 @@ to the other app services. See the
 [Nginx docs](https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-http-basic-authentication/)
 for more on this configuration.
 
-Create a password file for HTTP Basic Authentication if it doesn't already
+The password file lives at `/etc/nginx/.htpasswd` (referenced by the site
+config, and created empty by `provision.sh`). Create it if it doesn't already
 exist:
 
 ```bash
-sudo touch /var/www/auth/.htpasswd
+sudo touch /etc/nginx/.htpasswd
 ```
 
 ### Add a user account
@@ -186,7 +214,7 @@ passwords. E.g. run the following to generate three 16-character passwords:
 To add or update a user in the password file (will prompt for password):
 
 ```bash
-sudo htpasswd -B /var/www/auth/.htpasswd new-username
+sudo htpasswd -B /etc/nginx/.htpasswd new-username
 ```
 
 Test that it worked by visiting the site in a private tab, and entering the new
@@ -203,17 +231,27 @@ the old username and password when prompted, which should fail to authenticate.
 
 ### Certificate renewal
 
-The server can be configured to manage its own SSL certificate, and should
-auto-renew every 90 days, but this may fail. If the certificate is outdated,
-users will see a security warning in the browser when they visit the site.
+Certificates are renewed automatically: `provision.sh` sets up certbot with
+the nginx plugin, and the `certbot.timer` systemd timer renews the certificate
+before its 90-day expiry and reloads nginx, with no downtime. If the
+certificate is outdated, users will see a security warning in the browser when
+they visit the site.
 
-To renew:
+To check that auto-renewal is working (over SSH on the server):
 
-1. Log in to the J-SRAT server via SSH
-2. Stop the NGINX server process: `service nginx stop`
-3. Renew the certificate: `sudo certbot renew`
-4. Start NGINX again: `service nginx start`
-5. Visit the site (hard browser refresh) to check the certificate comes through.
+```bash
+systemctl list-timers certbot.timer   # next scheduled run
+sudo certbot renew --dry-run          # test a renewal without changing anything
+```
+
+To renew manually (nginx does not need to be stopped):
+
+```bash
+sudo certbot renew
+```
+
+Then visit the site (hard browser refresh) to check the certificate comes
+through.
 
 ## Database connection
 
@@ -247,7 +285,8 @@ pg_restore -cC -d postgres /path/to/backup.dump
 
 ## Deployment
 
-Run `deploy.sh` to upload data and docker-compose config.
+Run `deploy.sh` to upload data and docker-compose config, pull the published
+images and (re)start the services.
 
 ### Manage production
 
@@ -315,14 +354,16 @@ docker compose -f docker-compose.prod.yml build frontend
 docker push ghcr.io/nismod/jsrat-frontend:0.1
 ```
 
-Run `deploy.sh` to update the docker-compose config on the server.
+Run `deploy.sh` to update the docker-compose config on the server, pull
+images and restart services.
 
-On the remote server, pull the image, then restart the specific service:
+Alternatively, on the remote server, pull the image, then restart the
+specific service:
 
 ```bash
 # Pull image
 docker pull ghcr.io/nismod/jsrat-frontend:0.1
 
 # Restart service
-docker compose up -d frontend
+docker compose -f docker-compose.prod.yml up -d frontend
 ```

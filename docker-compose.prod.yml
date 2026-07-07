@@ -3,14 +3,16 @@ services:
   frontend:
     image: ghcr.io/nismod/jsrat-frontend:0.1
     build: ./frontend
+    restart: unless-stopped
     ports:
-      - "3000:80"
+      - "127.0.0.1:3000:80"
 
   backend:
     image: ghcr.io/nismod/jsrat-backend:0.2
     build: ./backend
+    restart: unless-stopped
     ports:
-      - "3001:80"
+      - "127.0.0.1:3001:80"
     env_file:
       - ./envs/prod/.backend.env
 
@@ -18,6 +20,7 @@ services:
     image: ghcr.io/nismod/jsrat-vector-tileserver:0.1
     build:
       context: ./tileserver/vector
+    restart: unless-stopped
     command:
       [
         "tileserver-gl-light",
@@ -30,7 +33,7 @@ services:
         "https://jsrat.licj.org.jm:9443/vector", #this matches the URL of the hosting server
       ]
     ports:
-      - "3002:8080"
+      - "127.0.0.1:3002:8080"
     volumes:
       - ./tileserver/vector/data:/data
       - ./tileserver/vector/config.json:/config.json
@@ -38,8 +41,9 @@ services:
   raster-tileserver:
     image: ghcr.io/nismod/jsrat-raster-tileserver:0.2
     build: ./tileserver/raster
+    restart: unless-stopped
     ports:
-      - "3003:5000"
+      - "127.0.0.1:3003:5000"
     volumes:
       - ./tileserver/raster/data:/data
       - ./tileserver/raster/config.toml:/config.toml

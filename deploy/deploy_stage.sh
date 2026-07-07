@@ -26,4 +26,7 @@ rsync -ravz tileserver/raster/config.toml "$host:/var/www/tileserver/raster"
 rsync -avz docker-compose.stage.yml "$host:/var/www/"
 rsync -avz envs/stage/ "$host:/var/www/envs"
 
+# pull updated images and (re)start services
+ssh "$host" "cd /var/www && docker compose -f docker-compose.stage.yml pull && docker compose -f docker-compose.stage.yml up -d"
+
 popd
