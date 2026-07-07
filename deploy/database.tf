@@ -10,7 +10,7 @@
 resource "aws_security_group" "database" {
   name        = "access_database"
   description = "Allow PostgreSQL access from the application server"
-  vpc_id      = aws_default_vpc.jamaica.id
+  vpc_id      = aws_default_vpc.standalone.id
 
   ingress {
     description     = "PostgreSQL from application server"
@@ -22,7 +22,7 @@ resource "aws_security_group" "database" {
 }
 
 resource "aws_db_instance" "database" {
-  identifier = "jamaica-database"
+  identifier = "mauritius-database"
 
   engine         = "postgres"
   engine_version = "16" # major version only: minor upgrades apply automatically
@@ -43,9 +43,9 @@ resource "aws_db_instance" "database" {
   backup_retention_period   = 7
   deletion_protection       = true
   skip_final_snapshot       = false
-  final_snapshot_identifier = "jamaica-database-final"
+  final_snapshot_identifier = "mauritius-database-final"
 
   tags = {
-    Name = "jamaica-database"
+    Name = "mauritius-database"
   }
 }

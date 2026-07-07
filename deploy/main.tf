@@ -23,21 +23,21 @@ provider "aws" {
 #
 
 resource "aws_key_pair" "deployer" {
-  key_name   = "opsis-aws-deployer-jamaica"
+  key_name   = "opsis-aws-deployer"
   public_key = var.deployer_public_key
 }
 
-resource "aws_default_vpc" "jamaica" {
+resource "aws_default_vpc" "standalone" {
   tags = {
-    Name = "Jamaica VPC"
+    Name = var.vpc_name
   }
 }
 
 # NB: do not set `description` on this security group: it was created without
 # one, and changing the description forces the security group to be replaced.
 resource "aws_security_group" "access_http_ssh" {
-  name   = "access_jamaica"
-  vpc_id = aws_default_vpc.jamaica.id
+  name   = "access_standalone"
+  vpc_id = aws_default_vpc.standalone.id
 
   ingress {
     description = "SSH"
@@ -89,7 +89,7 @@ data "aws_ami" "ubuntu" {
   owners = ["099720109477"] # Canonical
 }
 
-resource "aws_instance" "jamaica" {
+resource "aws_instance" "standalone" {
   instance_type = var.instance_type
   ami           = data.aws_ami.ubuntu.id
 
@@ -116,7 +116,7 @@ resource "aws_instance" "jamaica" {
   # changes every few weeks; without ignore_changes, any `terraform apply`
   # after a new image release would destroy and recreate the server. To move
   # an existing server to a new AMI deliberately, run:
-  #   terraform apply -replace=aws_instance.jamaica
+  #   terraform apply -replace=aws_instance.standalone
   lifecycle {
     ignore_changes = [ami]
   }
@@ -134,10 +134,10 @@ data "aws_route53_zone" "selected" {
   name = var.route53_zone_name
 }
 
-resource "aws_route53_record" "jamaica" {
+resource "aws_route53_record" "standalone" {
   zone_id = data.aws_route53_zone.selected.zone_id
   name    = var.site_url
   type    = "A"
   ttl     = 300
-  records = [aws_instance.jamaica.public_ip]
+  records = [aws_instance.standalone.public_ip]
 }

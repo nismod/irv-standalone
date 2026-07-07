@@ -4,9 +4,9 @@ set -x
 
 #
 # Deploy app data
-# - assumes that SSH config is set up to connect to host "jamaica"
+# - assumes that SSH config is set up to connect to host "mauritius"
 #
-host="jamaica"
+host="${1:-mauritius}"
 BASEDIR=$(dirname "$0")
 
 pushd "$BASEDIR/.."

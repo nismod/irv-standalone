@@ -4,7 +4,7 @@ set -euo pipefail
 #
 # Provision virtual machine
 # - assuming OS is Ubuntu LTS (20.04 or later)
-# - assuming this script is run as a user in groups sudo and jsrat_admin
+# - assuming this script is run as a user in groups sudo and irv_admin
 # - assuming it is run from a checkout (or copy) of the deploy directory, so
 #   that ./etc/nginx/sites-available/site.conf.template is alongside it
 #
@@ -15,13 +15,13 @@ set -euo pipefail
 #
 # Configuration (environment variables):
 #   SITE_DOMAIN   domain to serve and request a certificate for
-#                 (default: jamaica.infrastructureresilience.org)
+#                 (default: mauritius.infrastructureresilience.org)
 #   CERTBOT_EMAIL email for Let's Encrypt registration and expiry notices;
 #                 if unset, certificate setup is skipped and printed as a
 #                 manual follow-up step
 #
 
-SITE_DOMAIN="${SITE_DOMAIN:-jamaica.infrastructureresilience.org}"
+SITE_DOMAIN="${SITE_DOMAIN:-mauritius.infrastructureresilience.org}"
 CERTBOT_EMAIL="${CERTBOT_EMAIL:-}"
 BASEDIR=$(cd "$(dirname "$0")" && pwd)
 
@@ -70,13 +70,13 @@ sudo usermod -aG docker "$USER"
 #
 # Set up data directories
 #
-getent group jsrat_admin > /dev/null || sudo groupadd jsrat_admin
+getent group irv_admin > /dev/null || sudo groupadd irv_admin
 sudo mkdir -p /var/www/html
 sudo mkdir -p /var/www/tileserver/raster/data
 sudo mkdir -p /var/www/tileserver/vector/data
 sudo mkdir -p /var/www/tileserver/stacks
 sudo mkdir -p /var/www/etl
-sudo chown -R :jsrat_admin /var/www/
+sudo chown -R :irv_admin /var/www/
 sudo chmod -R 775 /var/www/tileserver/ /var/www/etl/
 
 #

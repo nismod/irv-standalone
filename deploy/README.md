@@ -14,7 +14,7 @@ The virtual machine runs several services, coordinated by docker compose
   the backend over the compose network
 
 The application source code is held in [this
-repository](https://github.com/nismod/irv-jamaica/) and this guide assumes that
+repository](https://github.com/nismod/irv-standalone/) and this guide assumes that
 it is built using node and npm locally on a development machine. It would be
 possible to build directly on the server in a working directory.
 
@@ -106,7 +106,7 @@ Operational notes:
 - The AMI lookup tracks the latest Ubuntu LTS image but the running instance
   is not replaced when a new image is released (`ignore_changes = [ami]`). To
   rebuild the server on a fresh image, run
-  `terraform apply -replace=aws_instance.jamaica` - note this destroys the
+  `terraform apply -replace=aws_instance.standalone` - note this destroys the
   server and its disk. If a planned rebuild shows the *old* AMI id being
   reused, temporarily comment out the `ignore_changes` line in `main.tf` for
   that apply to pick up the latest image.
@@ -145,7 +145,7 @@ Copy the `deploy` directory to the server (or clone this repository there),
 then run:
 
 ```bash
-SITE_DOMAIN=jamaica.infrastructureresilience.org \
+SITE_DOMAIN=mauritius.infrastructureresilience.org \
 CERTBOT_EMAIL=you@example.org \
   ./provision.sh
 ```
@@ -269,7 +269,7 @@ Expected contents, to be replaced with actual details:
 ```conf
 # Database connection
 PGHOST=localhost
-PGDATABASE=jamaica
+PGDATABASE=irvdev
 PGUSER=docker
 PGPASSWORD=docker
 
@@ -278,8 +278,8 @@ PGPASSWORD=docker
 #   python3 -c "import secrets; print(secrets.token_urlsafe(50))"
 DJANGO_SECRET_KEY=change-me
 DJANGO_DEBUG=false
-DJANGO_ALLOWED_HOSTS=jamaica.infrastructureresilience.org
-CSRF_TRUSTED_ORIGINS=https://jamaica.infrastructureresilience.org
+DJANGO_ALLOWED_HOSTS=mauritius.infrastructureresilience.org
+CSRF_TRUSTED_ORIGINS=https://mauritius.infrastructureresilience.org
 ```
 
 Testing database connection:

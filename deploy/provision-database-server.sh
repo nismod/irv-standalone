@@ -34,10 +34,10 @@ export DEBIAN_FRONTEND=noninteractive \
         postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR_VERSION}-scripts
 
 # Create database
-sudo -u postgres createdb jamaicadev
+sudo -u postgres createdb irvdev
 # Create admin user for create/backup/restore
-sudo -u postgres createuser jamaicadev --pwprompt
-sudo -u postgres psql -c 'alter user jamaicadev with superuser;'
+sudo -u postgres createuser irvdev --pwprompt
+sudo -u postgres psql -c 'alter user irvdev with superuser;'
 # Create read-only user for app connection
 sudo -u postgres createuser jsratapp --pwprompt
 sudo -u postgres psql -c 'GRANT pg_read_all_data TO jsratapp;''

@@ -1,11 +1,11 @@
 output "public_ip" {
   description = "Public IP address of the application server"
-  value       = aws_instance.jamaica.public_ip
+  value       = aws_instance.standalone.public_ip
 }
 
 output "site_url" {
   description = "DNS name pointing at the application server"
-  value       = aws_route53_record.jamaica.name
+  value       = aws_route53_record.standalone.name
 }
 
 output "database_address" {

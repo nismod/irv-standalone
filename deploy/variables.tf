@@ -1,7 +1,7 @@
 variable "site_url" {
   description = "Fully-qualified domain name for the site, created as a Route53 A record"
   type        = string
-  default     = "jamaica.infrastructureresilience.org"
+  default     = "mauritius.infrastructureresilience.org"
 }
 
 variable "route53_zone_name" {
@@ -26,7 +26,7 @@ variable "ubuntu_ami_name_filter" {
   description = <<-EOT
     Name filter used to pick the most recent Canonical Ubuntu AMI for new
     instances. Changing this does not replace a running instance (see
-    ignore_changes on aws_instance.jamaica).
+    ignore_changes on aws_instance.standalone).
   EOT
   type        = string
   default     = "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"
@@ -35,7 +35,7 @@ variable "ubuntu_ami_name_filter" {
 variable "deployer_public_key" {
   description = "SSH public key granted access to the instance"
   type        = string
-  default     = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAjX5yhc7GWROTVOM8r92rO6MEUyKt/JfTCQzCY/lNi9 opsis-aws-jamaica"
+  default     = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGSG7VjfFHbwV9WEWPz1dUiiSrwz/f26IegBWW4kHbat opsis-irv-mauritius"
 }
 
 variable "root_volume_size_gb" {
@@ -65,7 +65,7 @@ variable "db_max_allocated_storage" {
 variable "db_name" {
   description = "Name of the initial database created on the RDS instance"
   type        = string
-  default     = "jamaica"
+  default     = "irvdev"
 }
 
 variable "db_username" {
