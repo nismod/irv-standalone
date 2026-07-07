@@ -74,8 +74,10 @@ getent group jsrat_admin > /dev/null || sudo groupadd jsrat_admin
 sudo mkdir -p /var/www/html
 sudo mkdir -p /var/www/tileserver/raster/data
 sudo mkdir -p /var/www/tileserver/vector/data
+sudo mkdir -p /var/www/tileserver/stacks
+sudo mkdir -p /var/www/etl
 sudo chown -R :jsrat_admin /var/www/
-sudo chmod -R 775 /var/www/tileserver/
+sudo chmod -R 775 /var/www/tileserver/ /var/www/etl/
 
 #
 # Set up nginx as a reverse proxy for the app services

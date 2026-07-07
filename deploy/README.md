@@ -2,13 +2,16 @@
 
 The site can run on a single Linux virtual machine, with a separate database server.
 
-The virtual machine runs several services, coordinated by docker-compose:
+The virtual machine runs several services, coordinated by docker compose
+(mirroring `docker-compose.dev.yml`, without traefik or the dev database):
 
 - Frontend React application, built using node and npm. In production this is
   stored and served as static files (HTML/JS/CSS).
-- Vector tileserver, tileserver-gl-light, depends on node
-- Raster tileserver, terracotta, depends on gunicorn and Python 3.10
-- Backend Python application, depends on uvicorn, fastapi and Python 3.10
+- Backend Django application (`irvapp`), which serves the API - including
+  raster tiles (from tiledb) and pixel data - and proxies the vector
+  tileserver
+- Vector tileserver, tileserver-gl-light - not exposed directly, reached by
+  the backend over the compose network
 
 The application source code is held in [this
 repository](https://github.com/nismod/irv-jamaica/) and this guide assumes that
@@ -253,15 +256,30 @@ sudo certbot renew
 Then visit the site (hard browser refresh) to check the certificate comes
 through.
 
-## Database connection
+## Backend environment file
 
-The `PG*` variables for connection to database, to be replaced with actual details:
+The backend (django) container reads its configuration from an environment
+file which holds secrets and environment-specific values, so it must **not**
+be committed to this repository (the `envs` directory is git-ignored). It
+lives at `envs/prod/.backend.env` locally (`envs/stage/.backend.env` for
+staging) and is uploaded to the server by `deploy.sh` / `deploy_stage.sh`.
+
+Expected contents, to be replaced with actual details:
 
 ```conf
+# Database connection
+PGHOST=localhost
 PGDATABASE=jamaica
 PGUSER=docker
 PGPASSWORD=docker
-PGHOST=localhost
+
+# Django settings
+# generate a secret key with e.g.:
+#   python3 -c "import secrets; print(secrets.token_urlsafe(50))"
+DJANGO_SECRET_KEY=change-me
+DJANGO_DEBUG=false
+DJANGO_ALLOWED_HOSTS=jamaica.infrastructureresilience.org
+CSRF_TRUSTED_ORIGINS=https://jamaica.infrastructureresilience.org
 ```
 
 Testing database connection:
@@ -301,8 +319,10 @@ For pulling from the GitHub container registry (GHCR), you will need to follow t
 [instructions for authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
 and use a token with `read:packages` scope to read from the GHCR.
 
-The docker compose setup runs frontend, backend, vector and raster tileservers
-and exposes these on high-numbered ports within the machine.
+The docker compose setup runs the frontend, the django backend and the vector
+tileserver. Frontend and backend are exposed on high-numbered ports bound to
+localhost; the vector tileserver is reached by the backend over the compose
+network.
 
 [Nginx](https://nginx.org/en/) is used as a reverse-proxy to terminate incoming
 connections and pass them on to the containerised services.
@@ -318,7 +338,8 @@ for instructions on setting up or renewing SSL certificates.
 For pushing to the GitHub container registry, you will need to follow these
 [instructions for authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) and use a token with `write:packages` scope.
 
-Build and publish all images:
+Build and publish all images (versions as set in `docker-compose.prod.yml`;
+the backend image is built from `./irvapp`):
 
 ```bash
 # Build images locally
@@ -326,16 +347,8 @@ docker compose -f docker-compose.prod.yml build
 
 # Push to GitHub container registry
 docker push ghcr.io/nismod/jsrat-frontend:0.1
-docker push ghcr.io/nismod/jsrat-backend:0.2
+docker push ghcr.io/nismod/jsrat-backend:0.3
 docker push ghcr.io/nismod/jsrat-vector-tileserver:0.1
-docker push ghcr.io/nismod/jsrat-raster-tileserver:0.1
-```
-
-```bash
-docker push ghcr.io/nismod/jsrat-frontend:0.1
-docker push ghcr.io/nismod/jsrat-backend:0.2
-docker push ghcr.io/nismod/jsrat-vector-tileserver:0.1
-docker push ghcr.io/nismod/jsrat-raster-tileserver:0.1
 ```
 
 ### Updating a service

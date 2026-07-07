@@ -1,4 +1,11 @@
 # Production environment
+#
+# Mirrors docker-compose.dev.yml, except:
+# - no traefik: nginx on the host reverse-proxies to the published ports
+# - no db: the database is a separate server (RDS on AWS)
+# - environment variables are read from ./envs/prod/.backend.env, which is
+#   uploaded to the server by deploy/deploy.sh and must not be committed
+#   (see deploy/README.md for the expected contents)
 services:
   frontend:
     image: ghcr.io/nismod/jsrat-frontend:0.1
@@ -7,48 +14,31 @@ services:
     ports:
       - "127.0.0.1:3000:80"
 
-  backend:
-    image: ghcr.io/nismod/jsrat-backend:0.2
-    build: ./backend
+  django:
+    image: ghcr.io/nismod/jsrat-backend:0.3
+    build: ./irvapp
     restart: unless-stopped
     ports:
-      - "127.0.0.1:3001:80"
+      - "127.0.0.1:3001:8000"
     env_file:
+      # PG* connection details, DJANGO_SECRET_KEY, DJANGO_DEBUG,
+      # DJANGO_ALLOWED_HOSTS, CSRF_TRUSTED_ORIGINS - not committed
       - ./envs/prod/.backend.env
+    environment:
+      - PIXEL_STACK_DATA_DIR=/data/pixel
+      - LAYER_METADATA_PATH=/data/pixel/hazard_layers.csv
+      - TILEDB_URI=/data/raster
+    volumes:
+      - ./tileserver/stacks:/data/pixel:ro
+      - ./tileserver/raster/data:/data/raster:ro
+      - ./etl/hazard_layers.csv:/data/pixel/hazard_layers.csv:ro
 
   vector-tileserver:
     image: ghcr.io/nismod/jsrat-vector-tileserver:0.1
-    build:
-      context: ./tileserver/vector
+    build: ./tileserver/vector
     restart: unless-stopped
-    command:
-      [
-        "tileserver-gl-light",
-        "-c",
-        "config.json",
-        "-p",
-        "8080",
-        "--verbose",
-        "-u",
-        "https://jsrat.licj.org.jm:9443/vector", #this matches the URL of the hosting server
-      ]
-    ports:
-      - "127.0.0.1:3002:8080"
+    # no published ports: django proxies to http://vector-tileserver:8080
+    # over the compose network (see VECTOR_TILESERVER_INTERNAL_URL)
     volumes:
       - ./tileserver/vector/data:/data
       - ./tileserver/vector/config.json:/config.json
-
-  raster-tileserver:
-    image: ghcr.io/nismod/jsrat-raster-tileserver:0.2
-    build: ./tileserver/raster
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:3003:5000"
-    volumes:
-      - ./tileserver/raster/data:/data
-      - ./tileserver/raster/config.toml:/config.toml
-    environment:
-      - TC_DRIVER_PATH=/data/terracotta.sqlite
-      - TC_RESAMPLING_METHOD=nearest
-      - TC_REPROJECTION_METHOD=nearest
-      - TC_PNG_COMPRESS_LEVEL=1

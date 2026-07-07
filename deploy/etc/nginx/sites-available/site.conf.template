@@ -6,25 +6,15 @@
 # redirect. See the files alongside this one for examples of the final,
 # certbot-managed result.
 
-# Route to docker services
+# Route to docker services. The backend (django) serves the API, including
+# raster and pixel data, and proxies the vector tileserver internally over
+# the docker compose network - so only frontend and backend are exposed.
 upstream frontend {
 	server 127.0.0.1:3000;
 }
 
 upstream backend {
 	server 127.0.0.1:3001;
-}
-
-upstream vector_tileserver {
-	server 127.0.0.1:3002;
-}
-
-upstream raster_tileserver {
-	server 127.0.0.1:3003;
-}
-
-upstream pixel_driller {
-	server 127.0.0.1:3004;
 }
 
 # Set up rate limit
@@ -79,44 +69,6 @@ server {
 		add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
 	}
 
-	location /vector {
-		# basic authentication - use htpasswd to add users
-		auth_basic "Access restricted";
-		auth_basic_user_file /etc/nginx/.htpasswd;
-
-		proxy_pass http://vector_tileserver;
-		rewrite ^/vector/(.+) /$1 break;
-		proxy_set_header Host $host/vector;
-		proxy_set_header X-Real-IP $remote_addr;
-		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		proxy_set_header X-Forwarded-Proto $scheme;
-
-		# allow CORS with auth
-		add_header Access-Control-Allow-Origin "$http_origin" always;
-		add_header 'Access-Control-Allow-Credentials' 'true' always;
-		add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-		add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
-	}
-
-	location /raster {
-		# basic authentication - use htpasswd to add users
-		auth_basic "Access restricted";
-		auth_basic_user_file /etc/nginx/.htpasswd;
-
-		proxy_pass http://raster_tileserver;
-		rewrite ^/raster/(.+) /$1 break;
-		proxy_set_header Host $host;
-		proxy_set_header X-Real-IP $remote_addr;
-		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		proxy_set_header X-Forwarded-Proto $scheme;
-
-		# allow CORS with auth
-		add_header Access-Control-Allow-Origin "$http_origin" always;
-		add_header 'Access-Control-Allow-Credentials' 'true' always;
-		add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-		add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
-	}
-
 	location /api {
 		# basic authentication - use htpasswd to add users
 		auth_basic "Access restricted";
@@ -138,22 +90,4 @@ server {
 		add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
 	}
 
-	location /pixel {
-		# basic authentication - use htpasswd to add users
-		auth_basic "Access restricted";
-		auth_basic_user_file /etc/nginx/.htpasswd;
-
-		proxy_pass http://pixel_driller;
-		rewrite ^/pixel/(.+) /$1 break;
-		proxy_set_header Host $host/pixel;
-		proxy_set_header X-Real-IP $remote_addr;
-		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-		proxy_set_header X-Forwarded-Proto $scheme;
-
-		# allow CORS with auth
-		add_header Access-Control-Allow-Origin "$http_origin" always;
-		add_header 'Access-Control-Allow-Credentials' 'true' always;
-		add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
-		add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
-	}
 }

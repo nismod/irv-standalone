@@ -1,87 +1,44 @@
-# Staging environment - as production except for domain
+# Staging environment - as production except for domain and canary image tags
+#
+# Environment variables are read from ./envs/.backend.env, which is uploaded
+# to the server by deploy/deploy_stage.sh and must not be committed (see
+# deploy/README.md for the expected contents)
 services:
   frontend:
     image: ghcr.io/nismod/jsrat-frontend:canary
-    restart: unless-stopped
     platform: linux/amd64
     build: ./frontend
+    restart: unless-stopped
     ports:
       - "127.0.0.1:3000:80"
 
-  backend:
-    image: ghcr.io/nismod/jsrat-backend:0.2
-    restart: unless-stopped
+  django:
+    image: ghcr.io/nismod/jsrat-backend:canary
     platform: linux/amd64
-    build: ./backend
+    build: ./irvapp
+    restart: unless-stopped
     ports:
-      - "127.0.0.1:3001:80"
+      - "127.0.0.1:3001:8000"
     env_file:
+      # PG* connection details, DJANGO_SECRET_KEY, DJANGO_DEBUG,
+      # DJANGO_ALLOWED_HOSTS, CSRF_TRUSTED_ORIGINS - not committed
       - ./envs/.backend.env
+    environment:
+      - PIXEL_STACK_DATA_DIR=/data/pixel
+      - LAYER_METADATA_PATH=/data/pixel/hazard_layers.csv
+      - TILEDB_URI=/data/raster
+    volumes:
+      - ./tileserver/stacks:/data/pixel:ro
+      - ./tileserver/raster/data:/data/raster:ro
+      - ./etl/hazard_layers.csv:/data/pixel/hazard_layers.csv:ro
 
   vector-tileserver:
     image: ghcr.io/nismod/jsrat-vector-tileserver:0.1
-    restart: unless-stopped
     platform: linux/amd64
-    build:
-      context: ./tileserver/vector
-    command:
-      [
-        "tileserver-gl-light",
-        "-c",
-        "config.json",
-        "-p",
-        "8080",
-        "--verbose",
-        "-u",
-        "https://jamaica.infrastructureresilience.org/vector", #this matches the URL of the hosting server
-      ]
-    ports:
-      - "127.0.0.1:3002:8080"
+    build: ./tileserver/vector
+    restart: unless-stopped
+    # no published ports: django proxies to http://vector-tileserver:8080
+    # over the compose network (see VECTOR_TILESERVER_INTERNAL_URL)
     volumes:
       - ./tileserver/vector/data:/data
       - ./tileserver/vector/config.json:/config.json
-
-  raster-tileserver:
-    image: ghcr.io/nismod/jsrat-raster-tileserver:0.2
-    restart: unless-stopped
-    platform: linux/amd64
-    build: ./tileserver/raster
-    ports:
-      - "127.0.0.1:3003:5000"
-    volumes:
-      - ./tileserver/raster/data:/data
-      - ./tileserver/raster/config.toml:/config.toml
-    environment:
-      - TC_DRIVER_PATH=/data/terracotta.sqlite
-      - TC_RESAMPLING_METHOD=nearest
-      - TC_REPROJECTION_METHOD=nearest
-      - TC_PNG_COMPRESS_LEVEL=1
-
-  raster-tile-ingester:
-    image: ghcr.io/nismod/jsrat-raster-tileserver:0.2
-    build: ./tileserver/raster
-    profiles: ["raster-tile-ingester"]
-    volumes:
-      - ./tileserver/raster/data:/data
-      - ./tileserver/raster/config.toml:/config.toml
-    command:
-      [
-        "terracotta",
-        "ingest",
-        "/data/{type}__rp_{rp}__rcp_{rcp}__epoch_{epoch}__conf_{confidence}.tif",
-        "-o",
-        "/data/terracotta.sqlite",
-      ]
-
-  pixel-driller:
-    image: ghcr.io/nismod/jsrat-pixel-driller:canary
-    restart: unless-stopped
-    platform: linux/amd64
-    build: ./pixel_driller
-    ports:
-      - "127.0.0.1:3004:80"
-    volumes:
-      - ./tileserver/stacks:/data
-    environment:
-      - PIXEL_STACK_DATA_DIR=/data
-      - LAYER_METADATA_PATH=/data/hazard_layers.csv

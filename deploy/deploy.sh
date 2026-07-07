@@ -18,9 +18,12 @@ rsync -ravz tileserver/vector/data/ "$host:/var/www/tileserver/vector/data"
 rsync -ravz tileserver/vector/fonts/ "$host:/var/www/tileserver/vector/fonts"
 rsync -ravz tileserver/vector/config.json "$host:/var/www/tileserver/vector"
 
-# raster data
+# raster data (tiledb arrays, served by the django backend)
 rsync -ravz tileserver/raster/data/ "$host:/var/www/tileserver/raster/data"
-rsync -ravz tileserver/raster/config.toml "$host:/var/www/tileserver/raster"
+
+# pixel stack data and layer metadata (served by the django backend)
+rsync -ravz tileserver/stacks/ "$host:/var/www/tileserver/stacks"
+rsync -avz etl/hazard_layers.csv "$host:/var/www/etl/"
 
 # docker compose configuration
 rsync -avz docker-compose.prod.yml "$host:/var/www/"

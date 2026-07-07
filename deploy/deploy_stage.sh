@@ -22,6 +22,10 @@ rsync -ravz tileserver/vector/config.json "$host:/var/www/tileserver/vector"
 rsync -ravz tileserver/raster/data/ "$host:/var/www/tileserver/raster/data"
 rsync -ravz tileserver/raster/config.toml "$host:/var/www/tileserver/raster"
 
+# pixel stack data
+rsync -ravz tileserver/stacks/ "$host:/var/www/tileserver/stacks"
+rsync -avz etl/hazard_layers.csv "$host:/var/www/etl/"
+
 # docker compose configuration
 rsync -avz docker-compose.stage.yml "$host:/var/www/"
 rsync -avz envs/stage/ "$host:/var/www/envs"
