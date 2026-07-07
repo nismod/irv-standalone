@@ -33,10 +33,14 @@ venv
 
 # build
 build/
-.terraform
+
+# terraform: never commit state (may contain secrets) or local overrides;
+# the dependency lock file (.terraform.lock.hcl) *should* be committed
+.terraform/
 *.tfstate
-*.tfstate.backup
-*.hcl
+*.tfstate.*
+*.tfvars
+crash.log
 
 
 # tileserver database

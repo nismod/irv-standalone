@@ -43,13 +43,48 @@ then run:
 aws configure   # one-off to set your AWS credentials
 ```
 
-Install [terraform](https://www.terraform.io/) then run:
+Install [terraform](https://www.terraform.io/) (>= 1.5) then, from this
+`deploy` directory, run:
 
 ```bash
 terraform init  # one-off to fetch provider from terraform registry
 terraform plan  # to see what actions will be taken in detail
-terraform apply # rerun after any change to main.tf
+terraform apply # rerun after any change to the *.tf files
 ```
+
+The configuration is split across several files:
+
+- `versions.tf` - required terraform and provider versions, and a commented-out
+  S3 remote state backend
+- `variables.tf` - input variables (site domain name, instance type, SSH key
+  and allowed SSH source ranges, AMI filter)
+- `main.tf` - the resources: EC2 instance, key pair, security group, DNS record
+- `outputs.tf` - outputs (server public IP, site URL)
+
+All variables have working defaults. To override them, pass `-var` flags or
+create a `terraform.tfvars` file (git-ignored, as it may hold
+environment-specific or sensitive values). For example, to restrict SSH access
+to a trusted network - strongly recommended - and use a larger instance:
+
+```conf
+# terraform.tfvars
+ssh_ingress_cidr_blocks = ["192.0.2.0/24"]
+instance_type           = "t3.small"
+```
+
+Operational notes:
+
+- Commit the `.terraform.lock.hcl` file that `terraform init` creates, so that
+  everyone applies with the same provider version.
+- By default terraform state is stored locally in `terraform.tfstate`, which
+  must not be committed (it can contain sensitive values) and is easy to lose.
+  If more than one person applies this configuration, move state to a shared
+  S3 backend: see the commented block in `versions.tf`.
+- The AMI lookup tracks the latest Ubuntu LTS image but the running instance
+  is not replaced when a new image is released (`ignore_changes = [ami]`). To
+  rebuild the server on a fresh image, run
+  `terraform apply -replace=aws_instance.jamaica` - note this destroys the
+  server and its disk.
 
 ## On-premises (optional)
 
