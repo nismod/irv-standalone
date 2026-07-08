@@ -35,6 +35,7 @@ ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 # Application definition
 
 INSTALLED_APPS = [
+    # Django core apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -43,11 +44,13 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django.contrib.gis',
+    # Third-party apps
     'allauth',
     'allauth.account',
     'rest_framework',
     'drf_spectacular',
     'tree_queries',
+    # Local apps
     'irv_auth',
     'api',
     'vector_proxy',
