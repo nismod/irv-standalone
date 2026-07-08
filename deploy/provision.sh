@@ -71,13 +71,14 @@ sudo usermod -aG docker "$USER"
 # Set up data directories
 #
 getent group irv_admin > /dev/null || sudo groupadd irv_admin
+sudo usermod -aG irv_admin "$USER"
 sudo mkdir -p /var/www/html
 sudo mkdir -p /var/www/tileserver/raster/data
 sudo mkdir -p /var/www/tileserver/vector/data
 sudo mkdir -p /var/www/tileserver/stacks
 sudo mkdir -p /var/www/etl
 sudo chown -R :irv_admin /var/www/
-sudo chmod -R 775 /var/www/tileserver/ /var/www/etl/
+sudo chmod -R 775 /var/www/
 
 #
 # Set up nginx as a reverse proxy for the app services

@@ -162,13 +162,18 @@ The service requires two virtual machines with similar specifications:
 
 > This is relevant in either AWS or on-premises setup.
 
-Copy the `deploy` directory to the server (or clone this repository there),
-then run:
+Copy the `deploy` directory to the server (or clone this repository there)
+
+```bash
+rsync -Pavr --exclude='*/.terraform/*' deploy mauritius:'~/'
+```
+
+Then run:
 
 ```bash
 SITE_DOMAIN=mauritius.infrastructureresilience.org \
 CERTBOT_EMAIL=you@example.org \
-  ./provision.sh
+  bash deploy/provision.sh
 ```
 
 Notes:
@@ -189,6 +194,12 @@ Notes:
 > This is only relevant on-premises. On AWS, terraform provisions an RDS
 > PostgreSQL database instead (see `database.tf`) - do not run the script.
 
+On AWS, get the database address from terraform and save as `PGHOST` in the `.env` file:
+
+```bash
+terraform output -raw database_address
+```
+
 On AWS, the database master password is generated and stored by RDS in AWS
 Secrets Manager; it is not in terraform configuration or state. To retrieve
 it:
@@ -201,15 +212,30 @@ aws secretsmanager get-secret-value \
 
 The database only accepts connections from the application server's security
 group, so connect from the application server (over SSH), with `PGHOST` set to
-the `database_address` terraform output. Enable PostGIS once per database:
+the `database_address` terraform output.
+
+Enable PostGIS once per database:
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS postgis;
 ```
 
+If setting up from scratch, login as postgres, then set up user with database privileges.
+
+```sql
+CREATE ROLE irv_rw;
+GRANT USAGE, CREATE ON SCHEMA public to irv_rw;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO irv_rw;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON SEQUENCES TO irv_rw;
+
+CREATE USER irvadmin WITH PASSWORD 'replace-me';
+GRANT irv_rw TO irvadmin;
+```
+
+
 ## Basic authentication
 
-The J-SRAT app can be configured to use [HTTP Basic
+The app can be configured to use [HTTP Basic
 Authentication](https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication)
 to authenticate users. In this case, the connection must always use HTTPS, to
 ensure that credentials are protected.
@@ -324,21 +350,25 @@ pg_restore -cC -d postgres /path/to/backup.dump
 
 ## Deployment
 
-Run `deploy.sh` to upload data and docker-compose config, pull the published
-images and (re)start the services.
-
-### Manage production
+Create a GitHub access token with `read:packages` - use this to log into the
+GitHub package registry. For more information, see these [instructions for
+authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
+and use a token with `read:packages` scope to read from the GHCR.
 
 On remote, to first start the application:
 
 ```bash
+# on remote
+docker login ghcr.io  # use GitHub username for username, GitHub access token for password
 cd /var/www
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-For pulling from the GitHub container registry (GHCR), you will need to follow these
-[instructions for authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
-and use a token with `read:packages` scope to read from the GHCR.
+Run `deploy/deploy_stage.sh` to upload data and docker-compose config, pull the
+published images and (re)start the services.
+
+### Manage staging/production
+
 
 The docker compose setup runs the frontend, the django backend and the vector
 tileserver. Frontend and backend are exposed on high-numbered ports bound to

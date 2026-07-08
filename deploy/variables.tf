@@ -29,7 +29,7 @@ variable "ubuntu_ami_name_filter" {
     ignore_changes on aws_instance.standalone).
   EOT
   type        = string
-  default     = "ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"
+  default     = "ubuntu/images/hvm-ssd-gp3/ubuntu-resolute-26.04-amd64-server-*"
 }
 
 variable "deployer_public_key" {
