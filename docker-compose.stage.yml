@@ -30,7 +30,7 @@ services:
     volumes:
       - ./tileserver/stacks:/data/pixel:ro
       - ./tileserver/raster/data:/data/raster:ro
-      - ./etl/hazard_layers.csv:/data/pixel/hazard_layers.csv:ro
+      - ./etl:/data/pixel:ro
 
   vector-tileserver:
     image: ghcr.io/nismod/jsrat-vector-tileserver:0.1
