@@ -92,6 +92,27 @@ recommended:
 ssh_ingress_cidr_blocks = ["192.0.2.0/24"]
 ```
 
+Example SSH client config for the AWS host:
+
+```sshconfig
+Host mauritius
+  HostName <terraform public_ip output>
+  User ubuntu
+  IdentityFile ~/.ssh/opsis-irv-mauritius
+```
+
+With that in place, you can connect directly with:
+
+```bash
+ssh mauritius
+```
+
+Or, without a local SSH config entry:
+
+```bash
+ssh -i ~/.ssh/opsis-irv-mauritius ubuntu@"$(terraform output -raw public_ip)"
+```
+
 Operational notes:
 
 - `.terraform.lock.hcl` pins the exact provider version and is committed. It

@@ -8,16 +8,25 @@
 #
 
 resource "aws_security_group" "database" {
-  name        = "access_database"
+  name        = "access_mauritius_db"
   description = "Allow PostgreSQL access from the application server"
-  vpc_id      = aws_default_vpc.standalone.id
+  vpc_id      = aws_vpc.standalone.id
 
   ingress {
     description     = "PostgreSQL from application server"
     from_port       = 5432
     to_port         = 5432
     protocol        = "tcp"
-    security_groups = [aws_security_group.access_http_ssh.id]
+    security_groups = [aws_security_group.access_vpc.id]
+  }
+}
+
+resource "aws_db_subnet_group" "database" {
+  name       = "mauritius-database-subnet-group"
+  subnet_ids = aws_subnet.db_private[*].id
+
+  tags = {
+    Name = "mauritius-database-subnet-group"
   }
 }
 
@@ -25,7 +34,7 @@ resource "aws_db_instance" "database" {
   identifier = "mauritius-database"
 
   engine         = "postgres"
-  engine_version = "16" # major version only: minor upgrades apply automatically
+  engine_version = "18" # major version only: minor upgrades apply automatically
 
   instance_class        = var.db_instance_class
   allocated_storage     = var.db_allocated_storage
@@ -37,10 +46,11 @@ resource "aws_db_instance" "database" {
   username                    = var.db_username
   manage_master_user_password = true
 
+  db_subnet_group_name   = aws_db_subnet_group.database.name
   vpc_security_group_ids = [aws_security_group.database.id]
   publicly_accessible    = false
 
-  backup_retention_period   = 7
+  backup_retention_period   = 2
   deletion_protection       = true
   skip_final_snapshot       = false
   final_snapshot_identifier = "mauritius-database-final"

@@ -23,21 +23,81 @@ provider "aws" {
 #
 
 resource "aws_key_pair" "deployer" {
-  key_name   = "opsis-aws-deployer"
+  key_name   = var.deployer_public_key_name
   public_key = var.deployer_public_key
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
 resource "aws_default_vpc" "standalone" {
   tags = {
-    Name = var.vpc_name
+    Name = "Default VPC"
   }
 }
 
-# NB: do not set `description` on this security group: it was created without
-# one, and changing the description forces the security group to be replaced.
-resource "aws_security_group" "access_http_ssh" {
-  name   = "access_standalone"
-  vpc_id = aws_default_vpc.standalone.id
+resource "aws_vpc" "standalone" {
+  cidr_block           = var.vpc_cidr_block
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = {
+    Name = var.vpc_name
+  }
+}
+resource "aws_internet_gateway" "standalone" {
+  vpc_id = aws_vpc.standalone.id
+
+  tags = {
+    Name = "${var.vpc_name} IGW"
+  }
+}
+
+resource "aws_subnet" "app_public" {
+  vpc_id                  = aws_vpc.standalone.id
+  cidr_block              = var.public_subnet_cidr_block
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "${var.vpc_name} App Public"
+  }
+}
+
+resource "aws_subnet" "db_private" {
+  count = length(var.db_subnet_cidr_blocks)
+
+  vpc_id            = aws_vpc.standalone.id
+  cidr_block        = var.db_subnet_cidr_blocks[count.index]
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+
+  tags = {
+    Name = "${var.vpc_name} DB Private ${count.index + 1}"
+  }
+}
+
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.standalone.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.standalone.id
+  }
+
+  tags = {
+    Name = "${var.vpc_name} Public Routes"
+  }
+}
+
+resource "aws_route_table_association" "app_public" {
+  subnet_id      = aws_subnet.app_public.id
+  route_table_id = aws_route_table.public.id
+}
+
+resource "aws_security_group" "access_vpc" {
+  name   = "access_mauritius"
+  vpc_id = aws_vpc.standalone.id
 
   ingress {
     description = "SSH"
@@ -93,8 +153,10 @@ resource "aws_instance" "standalone" {
   instance_type = var.instance_type
   ami           = data.aws_ami.ubuntu.id
 
-  key_name               = aws_key_pair.deployer.key_name
-  vpc_security_group_ids = [aws_security_group.access_http_ssh.id]
+  key_name                    = aws_key_pair.deployer.key_name
+  subnet_id                   = aws_subnet.app_public.id
+  associate_public_ip_address = true
+  vpc_security_group_ids      = [aws_security_group.access_vpc.id]
 
   # Encrypted root volume. NB: enabling encryption on an instance that was
   # created without it forces the instance to be destroyed and recreated -

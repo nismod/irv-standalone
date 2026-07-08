@@ -38,6 +38,10 @@ variable "deployer_public_key" {
   default     = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGSG7VjfFHbwV9WEWPz1dUiiSrwz/f26IegBWW4kHbat opsis-irv-mauritius"
 }
 
+variable "deployer_public_key_name" {
+  default = "opsis-irv-mauritius"
+}
+
 variable "root_volume_size_gb" {
   description = "Size of the application server root EBS volume in GB"
   type        = number
@@ -80,5 +84,27 @@ variable "ssh_ingress_cidr_blocks" {
     restrict this to a trusted IP range or VPN rather than the whole internet.
   EOT
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+  default     = ["129.67.116.0/22", "163.1.0.0/16"]
+}
+
+variable "vpc_name" {
+  default = "Mauritius Staging VPC"
+}
+
+variable "vpc_cidr_block" {
+  description = "CIDR block for the dedicated VPC"
+  type        = string
+  default     = "10.42.0.0/16"
+}
+
+variable "public_subnet_cidr_block" {
+  description = "CIDR block for the public subnet hosting the app instance"
+  type        = string
+  default     = "10.42.1.0/24"
+}
+
+variable "db_subnet_cidr_blocks" {
+  description = "CIDR blocks for private database subnets in distinct AZs"
+  type        = list(string)
+  default     = ["10.42.10.0/24", "10.42.11.0/24"]
 }
