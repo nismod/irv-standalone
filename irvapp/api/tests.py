@@ -1,5 +1,6 @@
 import json
 
+from allauth.account.models import EmailAddress
 from django.contrib.auth.models import User
 from django.contrib.gis.geos import Point
 from django.test import TestCase
@@ -233,7 +234,15 @@ class AuthViewTests(TestCase):
     def setUp(self):
         self.client = APIClient(enforce_csrf_checks=True)
         self.user = User.objects.create_user(
-            username="testuser", password="testpass"
+            username="testuser",
+            password="testpass",
+            email="testuser@example.com",
+        )
+        EmailAddress.objects.create(
+            user=self.user,
+            email=self.user.email,
+            primary=True,
+            verified=True,
         )
 
     def test_current_user_returns_anonymous_and_sets_csrf_cookie(self):

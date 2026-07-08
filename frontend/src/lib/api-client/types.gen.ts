@@ -298,6 +298,27 @@ export type RasterTileSourceDomains = {
     }>;
 };
 
+export type RegistrationCsrfErrorResponse = {
+    detail: string;
+};
+
+export type RegistrationErrorResponse = {
+    detail: string;
+};
+
+export type RegistrationFailureResponse = {
+    detail: string;
+};
+
+export type RegistrationRequest = {
+    username: string;
+    email: string;
+};
+
+export type RegistrationSuccessResponse = {
+    detail: string;
+};
+
 export type SessionState = {
     authenticated: boolean;
     user: CurrentUser | null;
@@ -499,6 +520,12 @@ export type RasterTileSourceWritable = {
     keys: Array<string>;
 };
 
+export type RegistrationRequestWritable = {
+    username: string;
+    email: string;
+    password: string;
+};
+
 export type SessionStateWritable = {
     authenticated: boolean;
     user: CurrentUserWritable | null;
@@ -564,6 +591,36 @@ export type AuthMeRetrieveResponses = {
 };
 
 export type AuthMeRetrieveResponse = AuthMeRetrieveResponses[keyof AuthMeRetrieveResponses];
+
+export type AuthRegisterCreateData = {
+    body: RegistrationRequestWritable;
+    path?: never;
+    query?: never;
+    url: '/auth/register';
+};
+
+export type AuthRegisterCreateErrors = {
+    /**
+     * Invalid registration details.
+     */
+    400: RegistrationErrorResponse;
+    /**
+     * CSRF validation failed.
+     */
+    403: RegistrationCsrfErrorResponse;
+    /**
+     * Registration failed.
+     */
+    500: RegistrationFailureResponse;
+};
+
+export type AuthRegisterCreateError = AuthRegisterCreateErrors[keyof AuthRegisterCreateErrors];
+
+export type AuthRegisterCreateResponses = {
+    200: RegistrationSuccessResponse;
+};
+
+export type AuthRegisterCreateResponse = AuthRegisterCreateResponses[keyof AuthRegisterCreateResponses];
 
 export type MapAdaptationCostBenefitsListData = {
     body?: never;
