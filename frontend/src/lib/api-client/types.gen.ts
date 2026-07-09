@@ -214,71 +214,6 @@ export type PaginatedSortedFeatureListResponse = {
     pages: number;
 };
 
-export type PatchedAdaptationCostBenefit = {
-    readonly pk?: string;
-    hazard?: string;
-    rcp?: string;
-    adaptation_name?: string;
-    adaptation_protection_level?: number;
-    protector_feature_id?: number | null;
-    adaptation_cost?: number | null;
-    avoided_ead_amin?: number | null;
-    avoided_ead_mean?: number | null;
-    avoided_ead_amax?: number | null;
-    avoided_eael_amin?: number | null;
-    avoided_eael_mean?: number | null;
-    avoided_eael_amax?: number | null;
-    feature?: number;
-};
-
-export type PatchedDamagesExpected = {
-    readonly pk?: string;
-    hazard?: string;
-    rcp?: string;
-    epoch?: number;
-    protection_standard?: number;
-    ead_amin?: number | null;
-    ead_mean?: number | null;
-    ead_amax?: number | null;
-    eael_amin?: number | null;
-    eael_mean?: number | null;
-    eael_amax?: number | null;
-    feature?: number;
-};
-
-export type PatchedDamagesRp = {
-    readonly pk?: string;
-    hazard?: string;
-    rcp?: string;
-    epoch?: number;
-    rp?: number;
-    exposure?: number | null;
-    damage_amin?: number | null;
-    damage_mean?: number | null;
-    damage_amax?: number | null;
-    loss_amin?: number | null;
-    loss_mean?: number | null;
-    loss_amax?: number | null;
-    feature?: number;
-};
-
-export type PatchedDataset = {
-    id?: string;
-    label?: string;
-    group?: string;
-    unit?: string;
-    stacking_order?: number;
-    display_order?: number;
-};
-
-export type PatchedFeature = {
-    readonly id?: number;
-    string_id?: string;
-    layer?: string;
-    sublayer?: string | null;
-    properties?: unknown;
-};
-
 /**
  * Serialize point_query payload: column names to value lists.
  */
@@ -484,58 +419,6 @@ export type PaginatedInfrastructureNodeListWritable = {
     results: Array<InfrastructureNodeWritable>;
 };
 
-export type PatchedAdaptationCostBenefitWritable = {
-    hazard?: string;
-    rcp?: string;
-    adaptation_name?: string;
-    adaptation_protection_level?: number;
-    protector_feature_id?: number | null;
-    adaptation_cost?: number | null;
-    avoided_ead_amin?: number | null;
-    avoided_ead_mean?: number | null;
-    avoided_ead_amax?: number | null;
-    avoided_eael_amin?: number | null;
-    avoided_eael_mean?: number | null;
-    avoided_eael_amax?: number | null;
-    feature?: number;
-};
-
-export type PatchedDamagesExpectedWritable = {
-    hazard?: string;
-    rcp?: string;
-    epoch?: number;
-    protection_standard?: number;
-    ead_amin?: number | null;
-    ead_mean?: number | null;
-    ead_amax?: number | null;
-    eael_amin?: number | null;
-    eael_mean?: number | null;
-    eael_amax?: number | null;
-    feature?: number;
-};
-
-export type PatchedDamagesRpWritable = {
-    hazard?: string;
-    rcp?: string;
-    epoch?: number;
-    rp?: number;
-    exposure?: number | null;
-    damage_amin?: number | null;
-    damage_mean?: number | null;
-    damage_amax?: number | null;
-    loss_amin?: number | null;
-    loss_mean?: number | null;
-    loss_amax?: number | null;
-    feature?: number;
-};
-
-export type PatchedFeatureWritable = {
-    string_id?: string;
-    layer?: string;
-    sublayer?: string | null;
-    properties?: unknown;
-};
-
 export type RasterTileSourceWritable = {
     domain: string;
     name: string;
@@ -669,40 +552,6 @@ export type MapAdaptationCostBenefitsListResponses = {
 
 export type MapAdaptationCostBenefitsListResponse = MapAdaptationCostBenefitsListResponses[keyof MapAdaptationCostBenefitsListResponses];
 
-export type MapAdaptationCostBenefitsCreateData = {
-    body: AdaptationCostBenefitWritable;
-    path?: never;
-    query?: never;
-    url: '/map/adaptation-cost-benefits';
-};
-
-export type MapAdaptationCostBenefitsCreateResponses = {
-    201: AdaptationCostBenefit;
-};
-
-export type MapAdaptationCostBenefitsCreateResponse = MapAdaptationCostBenefitsCreateResponses[keyof MapAdaptationCostBenefitsCreateResponses];
-
-export type MapAdaptationCostBenefitsDestroyData = {
-    body?: never;
-    path: {
-        /**
-         * A unique value identifying this adaptation cost benefit.
-         */
-        pk: string;
-    };
-    query?: never;
-    url: '/map/adaptation-cost-benefits/{pk}';
-};
-
-export type MapAdaptationCostBenefitsDestroyResponses = {
-    /**
-     * No response body
-     */
-    204: void;
-};
-
-export type MapAdaptationCostBenefitsDestroyResponse = MapAdaptationCostBenefitsDestroyResponses[keyof MapAdaptationCostBenefitsDestroyResponses];
-
 export type MapAdaptationCostBenefitsRetrieveData = {
     body?: never;
     path: {
@@ -720,42 +569,6 @@ export type MapAdaptationCostBenefitsRetrieveResponses = {
 };
 
 export type MapAdaptationCostBenefitsRetrieveResponse = MapAdaptationCostBenefitsRetrieveResponses[keyof MapAdaptationCostBenefitsRetrieveResponses];
-
-export type MapAdaptationCostBenefitsPartialUpdateData = {
-    body?: PatchedAdaptationCostBenefitWritable;
-    path: {
-        /**
-         * A unique value identifying this adaptation cost benefit.
-         */
-        pk: string;
-    };
-    query?: never;
-    url: '/map/adaptation-cost-benefits/{pk}';
-};
-
-export type MapAdaptationCostBenefitsPartialUpdateResponses = {
-    200: AdaptationCostBenefit;
-};
-
-export type MapAdaptationCostBenefitsPartialUpdateResponse = MapAdaptationCostBenefitsPartialUpdateResponses[keyof MapAdaptationCostBenefitsPartialUpdateResponses];
-
-export type MapAdaptationCostBenefitsUpdateData = {
-    body: AdaptationCostBenefitWritable;
-    path: {
-        /**
-         * A unique value identifying this adaptation cost benefit.
-         */
-        pk: string;
-    };
-    query?: never;
-    url: '/map/adaptation-cost-benefits/{pk}';
-};
-
-export type MapAdaptationCostBenefitsUpdateResponses = {
-    200: AdaptationCostBenefit;
-};
-
-export type MapAdaptationCostBenefitsUpdateResponse = MapAdaptationCostBenefitsUpdateResponses[keyof MapAdaptationCostBenefitsUpdateResponses];
 
 export type MapAttributesCreateData = {
     body: AttributeLookupRequest;
@@ -853,40 +666,6 @@ export type MapDamagesExpectedListResponses = {
 
 export type MapDamagesExpectedListResponse = MapDamagesExpectedListResponses[keyof MapDamagesExpectedListResponses];
 
-export type MapDamagesExpectedCreateData = {
-    body: DamagesExpectedWritable;
-    path?: never;
-    query?: never;
-    url: '/map/damages-expected';
-};
-
-export type MapDamagesExpectedCreateResponses = {
-    201: DamagesExpected;
-};
-
-export type MapDamagesExpectedCreateResponse = MapDamagesExpectedCreateResponses[keyof MapDamagesExpectedCreateResponses];
-
-export type MapDamagesExpectedDestroyData = {
-    body?: never;
-    path: {
-        /**
-         * A unique value identifying this damages expected.
-         */
-        pk: string;
-    };
-    query?: never;
-    url: '/map/damages-expected/{pk}';
-};
-
-export type MapDamagesExpectedDestroyResponses = {
-    /**
-     * No response body
-     */
-    204: void;
-};
-
-export type MapDamagesExpectedDestroyResponse = MapDamagesExpectedDestroyResponses[keyof MapDamagesExpectedDestroyResponses];
-
 export type MapDamagesExpectedRetrieveData = {
     body?: never;
     path: {
@@ -904,42 +683,6 @@ export type MapDamagesExpectedRetrieveResponses = {
 };
 
 export type MapDamagesExpectedRetrieveResponse = MapDamagesExpectedRetrieveResponses[keyof MapDamagesExpectedRetrieveResponses];
-
-export type MapDamagesExpectedPartialUpdateData = {
-    body?: PatchedDamagesExpectedWritable;
-    path: {
-        /**
-         * A unique value identifying this damages expected.
-         */
-        pk: string;
-    };
-    query?: never;
-    url: '/map/damages-expected/{pk}';
-};
-
-export type MapDamagesExpectedPartialUpdateResponses = {
-    200: DamagesExpected;
-};
-
-export type MapDamagesExpectedPartialUpdateResponse = MapDamagesExpectedPartialUpdateResponses[keyof MapDamagesExpectedPartialUpdateResponses];
-
-export type MapDamagesExpectedUpdateData = {
-    body: DamagesExpectedWritable;
-    path: {
-        /**
-         * A unique value identifying this damages expected.
-         */
-        pk: string;
-    };
-    query?: never;
-    url: '/map/damages-expected/{pk}';
-};
-
-export type MapDamagesExpectedUpdateResponses = {
-    200: DamagesExpected;
-};
-
-export type MapDamagesExpectedUpdateResponse = MapDamagesExpectedUpdateResponses[keyof MapDamagesExpectedUpdateResponses];
 
 export type MapDamagesRpListData = {
     body?: never;
@@ -963,40 +706,6 @@ export type MapDamagesRpListResponses = {
 
 export type MapDamagesRpListResponse = MapDamagesRpListResponses[keyof MapDamagesRpListResponses];
 
-export type MapDamagesRpCreateData = {
-    body: DamagesRpWritable;
-    path?: never;
-    query?: never;
-    url: '/map/damages-rp';
-};
-
-export type MapDamagesRpCreateResponses = {
-    201: DamagesRp;
-};
-
-export type MapDamagesRpCreateResponse = MapDamagesRpCreateResponses[keyof MapDamagesRpCreateResponses];
-
-export type MapDamagesRpDestroyData = {
-    body?: never;
-    path: {
-        /**
-         * A unique value identifying this damages rp.
-         */
-        pk: string;
-    };
-    query?: never;
-    url: '/map/damages-rp/{pk}';
-};
-
-export type MapDamagesRpDestroyResponses = {
-    /**
-     * No response body
-     */
-    204: void;
-};
-
-export type MapDamagesRpDestroyResponse = MapDamagesRpDestroyResponses[keyof MapDamagesRpDestroyResponses];
-
 export type MapDamagesRpRetrieveData = {
     body?: never;
     path: {
@@ -1014,42 +723,6 @@ export type MapDamagesRpRetrieveResponses = {
 };
 
 export type MapDamagesRpRetrieveResponse = MapDamagesRpRetrieveResponses[keyof MapDamagesRpRetrieveResponses];
-
-export type MapDamagesRpPartialUpdateData = {
-    body?: PatchedDamagesRpWritable;
-    path: {
-        /**
-         * A unique value identifying this damages rp.
-         */
-        pk: string;
-    };
-    query?: never;
-    url: '/map/damages-rp/{pk}';
-};
-
-export type MapDamagesRpPartialUpdateResponses = {
-    200: DamagesRp;
-};
-
-export type MapDamagesRpPartialUpdateResponse = MapDamagesRpPartialUpdateResponses[keyof MapDamagesRpPartialUpdateResponses];
-
-export type MapDamagesRpUpdateData = {
-    body: DamagesRpWritable;
-    path: {
-        /**
-         * A unique value identifying this damages rp.
-         */
-        pk: string;
-    };
-    query?: never;
-    url: '/map/damages-rp/{pk}';
-};
-
-export type MapDamagesRpUpdateResponses = {
-    200: DamagesRp;
-};
-
-export type MapDamagesRpUpdateResponse = MapDamagesRpUpdateResponses[keyof MapDamagesRpUpdateResponses];
 
 export type MapDatasetsListData = {
     body?: never;
@@ -1073,40 +746,6 @@ export type MapDatasetsListResponses = {
 
 export type MapDatasetsListResponse = MapDatasetsListResponses[keyof MapDatasetsListResponses];
 
-export type MapDatasetsCreateData = {
-    body: Dataset;
-    path?: never;
-    query?: never;
-    url: '/map/datasets';
-};
-
-export type MapDatasetsCreateResponses = {
-    201: Dataset;
-};
-
-export type MapDatasetsCreateResponse = MapDatasetsCreateResponses[keyof MapDatasetsCreateResponses];
-
-export type MapDatasetsDestroyData = {
-    body?: never;
-    path: {
-        /**
-         * A unique value identifying this dataset.
-         */
-        id: string;
-    };
-    query?: never;
-    url: '/map/datasets/{id}';
-};
-
-export type MapDatasetsDestroyResponses = {
-    /**
-     * No response body
-     */
-    204: void;
-};
-
-export type MapDatasetsDestroyResponse = MapDatasetsDestroyResponses[keyof MapDatasetsDestroyResponses];
-
 export type MapDatasetsRetrieveData = {
     body?: never;
     path: {
@@ -1124,42 +763,6 @@ export type MapDatasetsRetrieveResponses = {
 };
 
 export type MapDatasetsRetrieveResponse = MapDatasetsRetrieveResponses[keyof MapDatasetsRetrieveResponses];
-
-export type MapDatasetsPartialUpdateData = {
-    body?: PatchedDataset;
-    path: {
-        /**
-         * A unique value identifying this dataset.
-         */
-        id: string;
-    };
-    query?: never;
-    url: '/map/datasets/{id}';
-};
-
-export type MapDatasetsPartialUpdateResponses = {
-    200: Dataset;
-};
-
-export type MapDatasetsPartialUpdateResponse = MapDatasetsPartialUpdateResponses[keyof MapDatasetsPartialUpdateResponses];
-
-export type MapDatasetsUpdateData = {
-    body: Dataset;
-    path: {
-        /**
-         * A unique value identifying this dataset.
-         */
-        id: string;
-    };
-    query?: never;
-    url: '/map/datasets/{id}';
-};
-
-export type MapDatasetsUpdateResponses = {
-    200: Dataset;
-};
-
-export type MapDatasetsUpdateResponse = MapDatasetsUpdateResponses[keyof MapDatasetsUpdateResponses];
 
 export type MapFeaturesListData = {
     body?: never;
@@ -1183,40 +786,6 @@ export type MapFeaturesListResponses = {
 
 export type MapFeaturesListResponse = MapFeaturesListResponses[keyof MapFeaturesListResponses];
 
-export type MapFeaturesCreateData = {
-    body: FeatureWritable;
-    path?: never;
-    query?: never;
-    url: '/map/features';
-};
-
-export type MapFeaturesCreateResponses = {
-    201: Feature;
-};
-
-export type MapFeaturesCreateResponse = MapFeaturesCreateResponses[keyof MapFeaturesCreateResponses];
-
-export type MapFeaturesDestroyData = {
-    body?: never;
-    path: {
-        /**
-         * A unique integer value identifying this feature.
-         */
-        id: number;
-    };
-    query?: never;
-    url: '/map/features/{id}';
-};
-
-export type MapFeaturesDestroyResponses = {
-    /**
-     * No response body
-     */
-    204: void;
-};
-
-export type MapFeaturesDestroyResponse = MapFeaturesDestroyResponses[keyof MapFeaturesDestroyResponses];
-
 export type MapFeaturesRetrieveData = {
     body?: never;
     path: {
@@ -1234,42 +803,6 @@ export type MapFeaturesRetrieveResponses = {
 };
 
 export type MapFeaturesRetrieveResponse = MapFeaturesRetrieveResponses[keyof MapFeaturesRetrieveResponses];
-
-export type MapFeaturesPartialUpdateData = {
-    body?: PatchedFeatureWritable;
-    path: {
-        /**
-         * A unique integer value identifying this feature.
-         */
-        id: number;
-    };
-    query?: never;
-    url: '/map/features/{id}';
-};
-
-export type MapFeaturesPartialUpdateResponses = {
-    200: Feature;
-};
-
-export type MapFeaturesPartialUpdateResponse = MapFeaturesPartialUpdateResponses[keyof MapFeaturesPartialUpdateResponses];
-
-export type MapFeaturesUpdateData = {
-    body: FeatureWritable;
-    path: {
-        /**
-         * A unique integer value identifying this feature.
-         */
-        id: number;
-    };
-    query?: never;
-    url: '/map/features/{id}';
-};
-
-export type MapFeaturesUpdateResponses = {
-    200: Feature;
-};
-
-export type MapFeaturesUpdateResponse = MapFeaturesUpdateResponses[keyof MapFeaturesUpdateResponses];
 
 export type MapFeaturesProtectedByListData = {
     body?: never;
