@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthLoginCreateData, AuthLoginCreateErrors, AuthLoginCreateResponses, AuthLogoutCreateData, AuthLogoutCreateErrors, AuthLogoutCreateResponses, AuthMeRetrieveData, AuthMeRetrieveResponses, AuthRegisterCreateData, AuthRegisterCreateErrors, AuthRegisterCreateResponses, MapAdaptationCostBenefitsCreateData, MapAdaptationCostBenefitsCreateResponses, MapAdaptationCostBenefitsDestroyData, MapAdaptationCostBenefitsDestroyResponses, MapAdaptationCostBenefitsListData, MapAdaptationCostBenefitsListResponses, MapAdaptationCostBenefitsPartialUpdateData, MapAdaptationCostBenefitsPartialUpdateResponses, MapAdaptationCostBenefitsRetrieveData, MapAdaptationCostBenefitsRetrieveResponses, MapAdaptationCostBenefitsUpdateData, MapAdaptationCostBenefitsUpdateResponses, MapAttributesCreateData, MapAttributesCreateResponses, MapConfigListData, MapConfigListResponses, MapConfigRetrieveData, MapConfigRetrieveResponses, MapDamagesExpectedCreateData, MapDamagesExpectedCreateResponses, MapDamagesExpectedDestroyData, MapDamagesExpectedDestroyResponses, MapDamagesExpectedListData, MapDamagesExpectedListResponses, MapDamagesExpectedPartialUpdateData, MapDamagesExpectedPartialUpdateResponses, MapDamagesExpectedRetrieveData, MapDamagesExpectedRetrieveResponses, MapDamagesExpectedUpdateData, MapDamagesExpectedUpdateResponses, MapDamagesRpCreateData, MapDamagesRpCreateResponses, MapDamagesRpDestroyData, MapDamagesRpDestroyResponses, MapDamagesRpListData, MapDamagesRpListResponses, MapDamagesRpPartialUpdateData, MapDamagesRpPartialUpdateResponses, MapDamagesRpRetrieveData, MapDamagesRpRetrieveResponses, MapDamagesRpUpdateData, MapDamagesRpUpdateResponses, MapFeaturesCreateData, MapFeaturesCreateResponses, MapFeaturesDestroyData, MapFeaturesDestroyResponses, MapFeaturesListData, MapFeaturesListResponses, MapFeaturesPartialUpdateData, MapFeaturesPartialUpdateResponses, MapFeaturesProtectedByListData, MapFeaturesProtectedByListResponses, MapFeaturesRetrieveData, MapFeaturesRetrieveResponses, MapFeaturesSortedByRetrieveData, MapFeaturesSortedByRetrieveResponses, MapFeaturesUpdateData, MapFeaturesUpdateResponses, MapInfrastructureTreeListData, MapInfrastructureTreeListResponses, MapInfrastructureTreeRetrieveData, MapInfrastructureTreeRetrieveResponses, PixelRetrieveData, PixelRetrieveResponses, RasterColormapData, RasterColormapErrors, RasterColormapResponses, RasterTileSourceData, RasterTileSourceDomainsData, RasterTileSourceDomainsResponses, RasterTileSourceResponses, RasterTileSourcesData, RasterTileSourcesResponses, TilesRasterPngRetrieveData, TilesRasterPngRetrieveErrors, TilesRasterPngRetrieveResponses, TilesVectorRetrieve2Data, TilesVectorRetrieve2Errors, TilesVectorRetrieve2Responses, TilesVectorRetrieveData, TilesVectorRetrieveErrors, TilesVectorRetrieveResponses } from './types.gen';
+import type { AuthLoginCreateData, AuthLoginCreateErrors, AuthLoginCreateResponses, AuthLogoutCreateData, AuthLogoutCreateErrors, AuthLogoutCreateResponses, AuthMeRetrieveData, AuthMeRetrieveResponses, AuthRegisterCreateData, AuthRegisterCreateErrors, AuthRegisterCreateResponses, MapAdaptationCostBenefitsCreateData, MapAdaptationCostBenefitsCreateResponses, MapAdaptationCostBenefitsDestroyData, MapAdaptationCostBenefitsDestroyResponses, MapAdaptationCostBenefitsListData, MapAdaptationCostBenefitsListResponses, MapAdaptationCostBenefitsPartialUpdateData, MapAdaptationCostBenefitsPartialUpdateResponses, MapAdaptationCostBenefitsRetrieveData, MapAdaptationCostBenefitsRetrieveResponses, MapAdaptationCostBenefitsUpdateData, MapAdaptationCostBenefitsUpdateResponses, MapAttributesCreateData, MapAttributesCreateResponses, MapConfigListData, MapConfigListResponses, MapConfigRetrieveData, MapConfigRetrieveResponses, MapDamagesExpectedCreateData, MapDamagesExpectedCreateResponses, MapDamagesExpectedDestroyData, MapDamagesExpectedDestroyResponses, MapDamagesExpectedListData, MapDamagesExpectedListResponses, MapDamagesExpectedPartialUpdateData, MapDamagesExpectedPartialUpdateResponses, MapDamagesExpectedRetrieveData, MapDamagesExpectedRetrieveResponses, MapDamagesExpectedUpdateData, MapDamagesExpectedUpdateResponses, MapDamagesRpCreateData, MapDamagesRpCreateResponses, MapDamagesRpDestroyData, MapDamagesRpDestroyResponses, MapDamagesRpListData, MapDamagesRpListResponses, MapDamagesRpPartialUpdateData, MapDamagesRpPartialUpdateResponses, MapDamagesRpRetrieveData, MapDamagesRpRetrieveResponses, MapDamagesRpUpdateData, MapDamagesRpUpdateResponses, MapDatasetsCreateData, MapDatasetsCreateResponses, MapDatasetsDestroyData, MapDatasetsDestroyResponses, MapDatasetsListData, MapDatasetsListResponses, MapDatasetsPartialUpdateData, MapDatasetsPartialUpdateResponses, MapDatasetsRetrieveData, MapDatasetsRetrieveResponses, MapDatasetsUpdateData, MapDatasetsUpdateResponses, MapFeaturesCreateData, MapFeaturesCreateResponses, MapFeaturesDestroyData, MapFeaturesDestroyResponses, MapFeaturesListData, MapFeaturesListResponses, MapFeaturesPartialUpdateData, MapFeaturesPartialUpdateResponses, MapFeaturesProtectedByListData, MapFeaturesProtectedByListResponses, MapFeaturesRetrieveData, MapFeaturesRetrieveResponses, MapFeaturesSortedByRetrieveData, MapFeaturesSortedByRetrieveResponses, MapFeaturesUpdateData, MapFeaturesUpdateResponses, MapInfrastructureTreeListData, MapInfrastructureTreeListResponses, MapInfrastructureTreeRetrieveData, MapInfrastructureTreeRetrieveResponses, PixelRetrieveData, PixelRetrieveResponses, RasterColormapData, RasterColormapErrors, RasterColormapResponses, RasterTileSourceData, RasterTileSourceDomainsData, RasterTileSourceDomainsResponses, RasterTileSourceResponses, RasterTileSourcesData, RasterTileSourcesResponses, TilesRasterPngRetrieveData, TilesRasterPngRetrieveErrors, TilesRasterPngRetrieveResponses, TilesVectorRetrieve2Data, TilesVectorRetrieve2Errors, TilesVectorRetrieve2Responses, TilesVectorRetrieveData, TilesVectorRetrieveErrors, TilesVectorRetrieveResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -312,6 +312,78 @@ export const mapDamagesRpUpdate = <ThrowOnError extends boolean = false>(options
             type: 'apiKey'
         }, { scheme: 'basic', type: 'http' }],
     url: '/map/damages-rp/{pk}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const mapDatasetsList = <ThrowOnError extends boolean = false>(options?: Options<MapDatasetsListData, ThrowOnError>) => (options?.client ?? client).get<MapDatasetsListResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/map/datasets',
+    ...options
+});
+
+export const mapDatasetsCreate = <ThrowOnError extends boolean = false>(options: Options<MapDatasetsCreateData, ThrowOnError>) => (options.client ?? client).post<MapDatasetsCreateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/map/datasets',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const mapDatasetsDestroy = <ThrowOnError extends boolean = false>(options: Options<MapDatasetsDestroyData, ThrowOnError>) => (options.client ?? client).delete<MapDatasetsDestroyResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/map/datasets/{id}',
+    ...options
+});
+
+export const mapDatasetsRetrieve = <ThrowOnError extends boolean = false>(options: Options<MapDatasetsRetrieveData, ThrowOnError>) => (options.client ?? client).get<MapDatasetsRetrieveResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/map/datasets/{id}',
+    ...options
+});
+
+export const mapDatasetsPartialUpdate = <ThrowOnError extends boolean = false>(options: Options<MapDatasetsPartialUpdateData, ThrowOnError>) => (options.client ?? client).patch<MapDatasetsPartialUpdateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/map/datasets/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+export const mapDatasetsUpdate = <ThrowOnError extends boolean = false>(options: Options<MapDatasetsUpdateData, ThrowOnError>) => (options.client ?? client).put<MapDatasetsUpdateResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/map/datasets/{id}',
     ...options,
     headers: {
         'Content-Type': 'application/json',

@@ -3,6 +3,7 @@ from .viewsets import (
     AdaptationCostBenefitViewset,
     DamagesExpectedViewset,
     DamagesRpViewset,
+    DatasetViewset,
 )
 from .api_views import (
     SortedFeaturesView,
@@ -26,4 +27,5 @@ __all__ = [
     "FastAPIPagination",
     "InfrastructureNodeViewSet",
     "FieldGroupQueryParsingMixin",
+    "DatasetViewset",
 ]

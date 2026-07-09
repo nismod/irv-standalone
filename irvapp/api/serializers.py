@@ -4,6 +4,7 @@ from .models import (
     DamagesExpected,
     DamagesNpv,
     DamagesRp,
+    Dataset,
     Feature,
 )
 
@@ -29,6 +30,13 @@ class DamagesRpSerializer(serializers.ModelSerializer):
 class DamagesNpvSerializer(serializers.ModelSerializer):
     class Meta:
         model = DamagesNpv
+        fields = '__all__'
+
+
+class DatasetSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Dataset
         fields = '__all__'
 
 
