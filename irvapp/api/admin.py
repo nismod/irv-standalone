@@ -10,10 +10,14 @@ from .models import (
 )
 
 # Register your models here.
-admin.site.register(MapConfig)
 admin.site.register(Feature)
 admin.site.register(FeatureLayer)
 admin.site.register(Dataset)
+
+
+@admin.register(MapConfig)
+class MapConfigAdmin(admin.ModelAdmin):
+    list_display = ["config_name", "config_value", "config_type"]
 
 
 @admin.register(InfrastructureNode)
