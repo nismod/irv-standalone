@@ -45,6 +45,13 @@ export type ColorMapEntry = {
     ];
 };
 
+/**
+ * * `number` - Number
+ * * `string` - String
+ * * `boolean` - Boolean
+ */
+export type ConfigTypeEnum = 'number' | 'string' | 'boolean';
+
 export type CurrentUser = {
     readonly id: number;
     /**
@@ -155,6 +162,7 @@ export type LogoutCsrfErrorResponse = {
 export type MapConfig = {
     config_name: string;
     config_value: string;
+    config_type?: ConfigTypeEnum;
 };
 
 export type PaginatedAdaptationCostBenefitList = {
