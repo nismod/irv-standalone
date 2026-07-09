@@ -14,6 +14,16 @@ export const devProxy = {
     changeOrigin: true,
     rewrite: (path) => path.replace(/^\/api/, ''),
   },
+  '/admin': {
+    target: 'http://localhost:8000',
+    changeOrigin: true,
+    rewrite: (path) => path.replace(/^\/admin$/, '/admin/'),
+  },
+  '/static/admin': {
+    target: 'http://localhost:8000',
+    changeOrigin: true,
+    rewrite: (path) => path.replace(/^\/static\/admin/, '/static/admin/'),
+  },
   '/pixel': {
     target: 'http://localhost:5080',
     changeOrigin: true,
