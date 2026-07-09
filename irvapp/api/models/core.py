@@ -42,3 +42,15 @@ class Feature(models.Model):
 
     class Meta:
         db_table = "features"
+
+
+class Dataset(models.Model):
+    id = models.CharField(primary_key=True)
+    label = models.CharField()
+    group = models.CharField()
+    unit = models.CharField()
+    stacking_order = models.IntegerField()
+    display_order = models.IntegerField()
+
+    class Meta:
+        db_table = "datasets"

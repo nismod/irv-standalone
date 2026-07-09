@@ -99,6 +99,15 @@ export type DamagesRp = {
     feature: number;
 };
 
+export type Dataset = {
+    id: string;
+    label: string;
+    group: string;
+    unit: string;
+    stacking_order: number;
+    display_order: number;
+};
+
 export type Feature = {
     readonly id: number;
     string_id: string;
@@ -167,6 +176,13 @@ export type PaginatedDamagesRpList = {
     next?: string | null;
     previous?: string | null;
     results: Array<DamagesRp>;
+};
+
+export type PaginatedDatasetList = {
+    count: number;
+    next?: string | null;
+    previous?: string | null;
+    results: Array<Dataset>;
 };
 
 export type PaginatedFeatureList = {
@@ -244,6 +260,15 @@ export type PatchedDamagesRp = {
     loss_mean?: number | null;
     loss_amax?: number | null;
     feature?: number;
+};
+
+export type PatchedDataset = {
+    id?: string;
+    label?: string;
+    group?: string;
+    unit?: string;
+    stacking_order?: number;
+    display_order?: number;
 };
 
 export type PatchedFeature = {
@@ -540,7 +565,7 @@ export type AuthLoginCreateData = {
 
 export type AuthLoginCreateErrors = {
     /**
-     * Invalid credentials.
+     * Invalid credentials or unverified email address.
      */
     401: LoginErrorResponse;
     /**
@@ -1025,6 +1050,116 @@ export type MapDamagesRpUpdateResponses = {
 };
 
 export type MapDamagesRpUpdateResponse = MapDamagesRpUpdateResponses[keyof MapDamagesRpUpdateResponses];
+
+export type MapDatasetsListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Number of results to return per page.
+         */
+        limit?: number;
+        /**
+         * The initial index from which to return the results.
+         */
+        offset?: number;
+    };
+    url: '/map/datasets';
+};
+
+export type MapDatasetsListResponses = {
+    200: PaginatedDatasetList;
+};
+
+export type MapDatasetsListResponse = MapDatasetsListResponses[keyof MapDatasetsListResponses];
+
+export type MapDatasetsCreateData = {
+    body: Dataset;
+    path?: never;
+    query?: never;
+    url: '/map/datasets';
+};
+
+export type MapDatasetsCreateResponses = {
+    201: Dataset;
+};
+
+export type MapDatasetsCreateResponse = MapDatasetsCreateResponses[keyof MapDatasetsCreateResponses];
+
+export type MapDatasetsDestroyData = {
+    body?: never;
+    path: {
+        /**
+         * A unique value identifying this dataset.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/map/datasets/{id}';
+};
+
+export type MapDatasetsDestroyResponses = {
+    /**
+     * No response body
+     */
+    204: void;
+};
+
+export type MapDatasetsDestroyResponse = MapDatasetsDestroyResponses[keyof MapDatasetsDestroyResponses];
+
+export type MapDatasetsRetrieveData = {
+    body?: never;
+    path: {
+        /**
+         * A unique value identifying this dataset.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/map/datasets/{id}';
+};
+
+export type MapDatasetsRetrieveResponses = {
+    200: Dataset;
+};
+
+export type MapDatasetsRetrieveResponse = MapDatasetsRetrieveResponses[keyof MapDatasetsRetrieveResponses];
+
+export type MapDatasetsPartialUpdateData = {
+    body?: PatchedDataset;
+    path: {
+        /**
+         * A unique value identifying this dataset.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/map/datasets/{id}';
+};
+
+export type MapDatasetsPartialUpdateResponses = {
+    200: Dataset;
+};
+
+export type MapDatasetsPartialUpdateResponse = MapDatasetsPartialUpdateResponses[keyof MapDatasetsPartialUpdateResponses];
+
+export type MapDatasetsUpdateData = {
+    body: Dataset;
+    path: {
+        /**
+         * A unique value identifying this dataset.
+         */
+        id: string;
+    };
+    query?: never;
+    url: '/map/datasets/{id}';
+};
+
+export type MapDatasetsUpdateResponses = {
+    200: Dataset;
+};
+
+export type MapDatasetsUpdateResponse = MapDatasetsUpdateResponses[keyof MapDatasetsUpdateResponses];
 
 export type MapFeaturesListData = {
     body?: never;

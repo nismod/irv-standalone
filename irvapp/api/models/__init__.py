@@ -1,4 +1,10 @@
-from .core import Feature, FeatureLayer, InfrastructureNode, MapConfig
+from .core import (
+    Dataset,
+    Feature,
+    FeatureLayer,
+    InfrastructureNode,
+    MapConfig,
+)
 from .risk import (
     AdaptationCostBenefit,
     DamagesExpected,
@@ -11,6 +17,7 @@ __all__ = [
     "DamagesExpected",
     "DamagesNpv",
     "DamagesRp",
+    "Dataset",
     "Feature",
     "FeatureLayer",
     "InfrastructureNode",

@@ -6,12 +6,15 @@ from .models import (
     Feature,
     InfrastructureNode,
     MapConfig,
+    Dataset
 )
 
 # Register your models here.
 admin.site.register(MapConfig)
 admin.site.register(Feature)
 admin.site.register(FeatureLayer)
+admin.site.register(Dataset)
+
 
 @admin.register(InfrastructureNode)
 class InfrastructureNodeAdmin(TreeAdmin):
