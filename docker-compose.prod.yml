@@ -8,14 +8,14 @@
 #   (see deploy/README.md for the expected contents)
 services:
   frontend:
-    image: ghcr.io/nismod/jsrat-frontend:0.1
+    image: ghcr.io/nismod/irvapp-frontend:0.1
     build: ./frontend
     restart: unless-stopped
     ports:
       - "127.0.0.1:3000:80"
 
   django:
-    image: ghcr.io/nismod/jsrat-backend:0.3
+    image: ghcr.io/nismod/irvapp-backend:0.1
     build: ./irvapp
     restart: unless-stopped
     ports:

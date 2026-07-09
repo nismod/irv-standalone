@@ -1,4 +1,4 @@
-name: Create and publish canary Docker image to GHCR
+name: Create and publish canary Docker images to GHCR
 
 on:
   push:
@@ -31,33 +31,20 @@ jobs:
           cache-to: type=gha,mode=max
           push: true
           tags: |
-            ghcr.io/nismod/jsrat-frontend:${{ github.ref_name }}
-            ghcr.io/nismod/jsrat-frontend:canary
+            ghcr.io/nismod/irvapp-frontend:${{ github.ref_name }}
+            ghcr.io/nismod/irvapp-frontend:canary
           secrets: |
             GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push backend Docker image
         uses: docker/build-push-action@v7
         with:
-          context: "{{defaultContext}}:backend"
+          context: "{{defaultContext}}:irvapp"
           cache-from: type=gha
           cache-to: type=gha,mode=max
           push: true
           tags: |
-            ghcr.io/nismod/jsrat-backend:${{ github.ref_name }}
-            ghcr.io/nismod/jsrat-backend:canary
-          secrets: |
-            GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push pixel-driller Docker image
-        uses: docker/build-push-action@v7
-        with:
-          context: "{{defaultContext}}:pixel_driller"
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          push: true
-          tags: |
-            ghcr.io/nismod/jsrat-pixel-driller:${{ github.ref_name }}
-            ghcr.io/nismod/jsrat-pixel-driller:canary
+            ghcr.io/nismod/irvapp-backend:${{ github.ref_name }}
+            ghcr.io/nismod/irvapp-backend:canary
           secrets: |
             GH_TOKEN=${{ secrets.GITHUB_TOKEN }}

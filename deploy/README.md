@@ -397,8 +397,8 @@ the backend image is built from `./irvapp`):
 docker compose -f docker-compose.prod.yml build
 
 # Push to GitHub container registry
-docker push ghcr.io/nismod/jsrat-frontend:0.1
-docker push ghcr.io/nismod/jsrat-backend:0.3
+docker push ghcr.io/nismod/irvapp-frontend:0.1
+docker push ghcr.io/nismod/irvapp-backend:0.1
 docker push ghcr.io/nismod/jsrat-vector-tileserver:0.1
 ```
 
@@ -409,13 +409,13 @@ Update a specific image, then build and push:
 ```bash
 # Edit the image version in `docker-compose.prod.yml`
 # in this example it's on line 33:
-#     image: ghcr.io/nismod/jsrat-frontend:0.1
+#     image: ghcr.io/nismod/irvapp-frontend:0.1
 
 # Build
 docker compose -f docker-compose.prod.yml build frontend
 
 # Push
-docker push ghcr.io/nismod/jsrat-frontend:0.1
+docker push ghcr.io/nismod/irvapp-frontend:0.1
 ```
 
 Run `deploy.sh` to update the docker-compose config on the server, pull
@@ -426,7 +426,7 @@ specific service:
 
 ```bash
 # Pull image
-docker pull ghcr.io/nismod/jsrat-frontend:0.1
+docker pull ghcr.io/nismod/irvapp-frontend:0.1
 
 # Restart service
 docker compose -f docker-compose.prod.yml up -d frontend

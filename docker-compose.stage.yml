@@ -5,7 +5,7 @@
 # deploy/README.md for the expected contents)
 services:
   frontend:
-    image: ghcr.io/nismod/jsrat-frontend:canary
+    image: ghcr.io/nismod/irvapp-frontend:canary
     platform: linux/amd64
     build: ./frontend
     restart: unless-stopped
@@ -13,7 +13,7 @@ services:
       - "127.0.0.1:3000:80"
 
   django:
-    image: ghcr.io/nismod/jsrat-backend:canary
+    image: ghcr.io/nismod/irvapp-backend:canary
     platform: linux/amd64
     build: ./irvapp
     restart: unless-stopped
