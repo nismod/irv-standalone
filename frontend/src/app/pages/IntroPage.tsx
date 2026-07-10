@@ -1,4 +1,3 @@
-import { Fragment } from 'react';
 import { styled } from '@mui/material/styles';
 import { Divider, Grid, Paper, Stack, Typography } from '@mui/material';
 import { useAtomValue } from 'jotai';
@@ -27,6 +26,9 @@ const markdownComponents: Components = {
     if (!props.href) return <>{props.children}</>;
     return <ExtLink {...props} />;
   },
+  h2: ({ node, ...props }) => <Typography variant="h2" gutterBottom {...props} />,
+  h3: ({ node, ...props }) => <Typography variant="h3" gutterBottom {...props} />,
+  h4: ({ node, ...props }) => <Typography variant="h4" gutterBottom {...props} />,
 };
 
 const smallMarkdownComponents: Components = {
@@ -85,13 +87,11 @@ export const IntroPage = () => {
             }}
           >
             <TextBox sx={{ mt: -2, pt: 8 }}>
-              <p>{pageContent.summary}</p>
-              {pageContent.sectors.map((sector) => (
-                <Fragment key={sector.title}>
-                  <Typography variant="h2">{sector.title}</Typography>
-                  <p>{sector.description}</p>
-                </Fragment>
-              ))}
+              <Markdown
+                components={markdownComponents}
+              >
+                {pageContent.summary.markdown}
+              </Markdown>
             </TextBox>
           </Grid>
           <Grid size={12}>
@@ -100,8 +100,6 @@ export const IntroPage = () => {
                 {pageContent.collaboration.markdown}
               </Markdown>
               <LogoRow logos={pageContent.collaboration.logos} />
-
-              <Typography variant="h2">{pageContent.funding.title}</Typography>
 
               <Markdown components={markdownComponents}>{pageContent.funding.markdown}</Markdown>
 

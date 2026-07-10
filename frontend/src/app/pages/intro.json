@@ -1,20 +1,8 @@
 {
   "title": "Climate-related risk analytics for transport, energy & water infrastructure in Jamaica",
-  "summary": "The Jamaica Systemic Risk Assessment Tool (J‑SRAT) supports climate adaptation decision-making by identifying spatial criticalities and risks under current and future climate scenarios.",
-  "sectors": [
-    {
-      "title": "Transport",
-      "description": "Roads, rail, ports and airports."
-    },
-    {
-      "title": "Energy",
-      "description": "Electricity generation, transmission and distribution."
-    },
-    {
-      "title": "Water",
-      "description": "Water supply, wastewater and irrigation."
-    }
-  ],
+  "summary": {
+    "markdown": "The Jamaica Systemic Risk Assessment Tool (J‑SRAT) supports climate adaptation decision-making by identifying spatial criticalities and risks under current and future climate scenarios.\n\n## Transport\n\nRoads, rail, ports and airports.\n\n## Energy\n\nElectricity generation, transmission and distribution.\n\n## Water\n\nWater supply, wastewater and irrigation."
+  },
   "collaboration": {
     "markdown": "The research, analysis and development has been led by researchers in the\u00a0[Oxford Programme for Sustainable Infrastructure Systems](https://opsis.eci.ox.ac.uk/), University of Oxford, in collaboration with the Planning Institute of Jamaica and supported by engagement with infrastructure and climate specialists and related government bodies.",
     "logos": [
@@ -39,8 +27,7 @@
     ]
   },
   "funding": {
-    "title": "Funding and support",
-    "markdown": "This project is led by researchers in the\u00a0[Oxford Programme for Sustainable Infrastructure Systems](https://opsis.eci.ox.ac.uk/) in the Environmental Change Institute, University of Oxford, with the Government of Jamaica (GoJ), funded by UK Aid through the UK Foreign and Commonwealth Development Office (FCDO). The initiative forms part of the Coalition for Climate Resilient Investment’s (CCRI) work on “Systemic Resilience” in collaboration with the Green Climate Fund.",
+    "markdown": "## Funding and support\n\nThis project is led by researchers in the\u00a0[Oxford Programme for Sustainable Infrastructure Systems](https://opsis.eci.ox.ac.uk/) in the Environmental Change Institute, University of Oxford, with the Government of Jamaica (GoJ), funded by UK Aid through the UK Foreign and Commonwealth Development Office (FCDO). The initiative forms part of the Coalition for Climate Resilient Investment’s (CCRI) work on “Systemic Resilience” in collaboration with the Green Climate Fund.",
     "logos": [
       {
         "href": "https://www.gov.uk/guidance/uk-aid",

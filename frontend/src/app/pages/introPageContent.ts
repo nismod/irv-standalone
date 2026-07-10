@@ -17,17 +17,14 @@ export interface Logo {
 
 export interface IntroPageContent {
   title: string;
-  summary: string;
-  sectors: Array<{
-    title: string;
-    description: string;
-  }>;
+  summary: {
+    markdown: string;
+  };
   collaboration: {
     markdown: string;
     logos: Logo[];
   };
   funding: {
-    title: string;
     markdown: string;
     logos: Logo[];
   };
@@ -39,14 +36,14 @@ export interface IntroPageContent {
 
 export const emptyPageContent: IntroPageContent = {
   title: '',
-  summary: '',
-  sectors: [],
+  summary: {
+    markdown: '',
+  },
   collaboration: {
     markdown: '',
     logos: [],
   },
   funding: {
-    title: '',
     markdown: '',
     logos: [],
   },
