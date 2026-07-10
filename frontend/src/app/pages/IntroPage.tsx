@@ -1,68 +1,12 @@
 import { Fragment } from 'react';
 import { styled } from '@mui/material/styles';
 import { Divider, Grid, Paper, Stack, Typography } from '@mui/material';
-import { atom, useAtomValue } from 'jotai';
-import { unwrap } from 'jotai/utils';
+import { useAtomValue } from 'jotai';
 import Markdown, { type Components } from 'react-markdown';
 
 import ScrollToTop from 'lib/hooks/scroll-to-top';
 import { ExtLink } from 'lib/nav';
-
-interface Logo {
-  href: string;
-  src: string;
-  alt: string;
-  height: number;
-}
-
-interface IntroPageContent {
-  title: string;
-  summary: string;
-  sectors: Array<{
-    title: string;
-    description: string;
-  }>;
-  collaboration: {
-    markdown: string;
-    logos: Logo[];
-  };
-  funding: {
-    title: string;
-    markdown: string;
-    logos: Logo[];
-  };
-  backgroundImage: {
-    src: string;
-    credit: string;
-  };
-}
-
-const emptyPageContent: IntroPageContent = {
-  title: '',
-  summary: '',
-  sectors: [],
-  collaboration: {
-    markdown: '',
-    logos: [],
-  },
-  funding: {
-    title: '',
-    markdown: '',
-    logos: [],
-  },
-  backgroundImage: {
-    src: '',
-    credit: '',
-  },
-};
-
-async function fetchPageContent(): Promise<IntroPageContent> {
-  const module = await import('./intro.json');
-  return module.default as IntroPageContent;
-}
-
-const pageContentQuery = atom(fetchPageContent);
-const pageContentState = unwrap(pageContentQuery, (prev) => prev ?? emptyPageContent);
+import { type Logo, pageContentState } from './introPageContent';
 
 const HeadingBox = styled(Paper)(({ theme }) => ({
   backgroundColor: 'rgba(0, 92, 97, 0.3)',
