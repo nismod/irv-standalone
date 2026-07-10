@@ -1,7 +1,68 @@
+import { Fragment } from 'react';
 import { styled } from '@mui/material/styles';
 import { Divider, Grid, Paper, Stack, Typography } from '@mui/material';
+import { atom, useAtomValue } from 'jotai';
+import { unwrap } from 'jotai/utils';
+import Markdown, { type Components } from 'react-markdown';
+
 import ScrollToTop from 'lib/hooks/scroll-to-top';
 import { ExtLink } from 'lib/nav';
+
+interface Logo {
+  href: string;
+  src: string;
+  alt: string;
+  height: number;
+}
+
+interface IntroPageContent {
+  title: string;
+  summary: string;
+  sectors: Array<{
+    title: string;
+    description: string;
+  }>;
+  collaboration: {
+    markdown: string;
+    logos: Logo[];
+  };
+  funding: {
+    title: string;
+    markdown: string;
+    logos: Logo[];
+  };
+  backgroundImage: {
+    src: string;
+    credit: string;
+  };
+}
+
+const emptyPageContent: IntroPageContent = {
+  title: '',
+  summary: '',
+  sectors: [],
+  collaboration: {
+    markdown: '',
+    logos: [],
+  },
+  funding: {
+    title: '',
+    markdown: '',
+    logos: [],
+  },
+  backgroundImage: {
+    src: '',
+    credit: '',
+  },
+};
+
+async function fetchPageContent(): Promise<IntroPageContent> {
+  const module = await import('./intro.json');
+  return module.default as IntroPageContent;
+}
+
+const pageContentQuery = atom(fetchPageContent);
+const pageContentState = unwrap(pageContentQuery, (prev) => prev ?? emptyPageContent);
 
 const HeadingBox = styled(Paper)(({ theme }) => ({
   backgroundColor: 'rgba(0, 92, 97, 0.3)',
@@ -17,125 +78,98 @@ const TextBox = styled(Paper)(() => ({
   borderRadius: 0,
 }));
 
-export const IntroPage = () => (
-  <div className="home">
-    <article>
-      <ScrollToTop />
-      <Grid container columnSpacing={8} rowSpacing={4}>
-        <Grid
-          sx={{ width: '100%' }}
-          size={{
-            md: 6,
-          }}
-        >
-          <HeadingBox sx={{ mt: -2, pt: 8 }}>
-            <Typography variant="h1">
-              Climate-related risk analytics for transport, energy &amp; water infrastructure in
-              Jamaica
-            </Typography>
-          </HeadingBox>
-        </Grid>
-        <Grid
-          size={{
-            md: 6,
-          }}
-        >
-          <TextBox sx={{ mt: -2, pt: 8 }}>
-            <p>
-              The Jamaica Systemic Risk Assessment Tool (J&#8209;SRAT) supports climate adaptation
-              decision-making by identifying spatial criticalities and risks under current and
-              future climate scenarios.
-            </p>
-            <Typography variant="h2">Transport</Typography>
-            <p>Roads, rail, ports and airports.</p>
-            <Typography variant="h2">Energy</Typography>
-            <p>Electricity generation, transmission and distribution.</p>
-            <Typography variant="h2">Water</Typography>
-            <p>Water supply, wastewater and irrigation.</p>
-          </TextBox>
-        </Grid>
-        <Grid size={12}>
-          <TextBox sx={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}>
-            <p>
-              The research, analysis and development has been led by researchers in the&nbsp;
-              <ExtLink href="https://opsis.eci.ox.ac.uk/">
-                Oxford Programme for Sustainable Infrastructure Systems
-              </ExtLink>
-              , University of Oxford, in collaboration with the Planning Institute of Jamaica and
-              supported by engagement with infrastructure and climate specialists and related
-              government bodies.
-            </p>
-            <p>
-              <Stack
-                direction={{ xs: 'column', md: 'row' }}
-                divider={<Divider orientation="vertical" flexItem />}
-                justifyContent="center"
-                alignItems="center"
-                spacing={2}
-              >
-                <ExtLink href="https://www.gov.jm">
-                  <img height="150" src="./jamaica-coatofarms.png" alt="Government of Jamaica" />
-                </ExtLink>
-                <ExtLink href="https://www.pioj.gov.jm/">
-                  <img height="150" src="./jamaica-pioj.png" alt="Planning Institute of Jamaica" />
-                </ExtLink>
-                <ExtLink href="https://opsis.eci.ox.ac.uk">
-                  <img
-                    height="100"
-                    src="./logo-opsis.png"
-                    alt="Oxford Programme for Sustainable Infrastructure Systems"
-                  />
-                </ExtLink>
-              </Stack>
-            </p>
+const markdownComponents: Components = {
+  a: ({ node, ...props }) => {
+    if (!props.href) return <>{props.children}</>;
+    return <ExtLink {...props} />;
+  },
+};
 
-            <Typography variant="h2">Funding and support</Typography>
+const smallMarkdownComponents: Components = {
+  ...markdownComponents,
+  p: ({ children }) => (
+    <p>
+      <small>{children}</small>
+    </p>
+  ),
+};
 
-            <p>
-              This project is led by researchers in the&nbsp;
-              <ExtLink href="https://opsis.eci.ox.ac.uk/">
-                Oxford Programme for Sustainable Infrastructure Systems
-              </ExtLink>{' '}
-              in the Environmental Change Institute, University of Oxford, with the Government of
-              Jamaica (GoJ), funded by UK Aid through the UK Foreign and Commonwealth Development
-              Office (FCDO). The initiative forms part of the Coalition for Climate Resilient
-              Investment&rsquo;s (CCRI) work on &ldquo;Systemic Resilience&rdquo; in collaboration
-              with the Green Climate Fund.
-            </p>
-
-            <Stack
-              direction={{ xs: 'column', md: 'row' }}
-              divider={<Divider orientation="vertical" flexItem />}
-              spacing={2}
-              justifyContent="center"
-              alignItems="center"
-            >
-              <ExtLink href="https://www.gov.uk/guidance/uk-aid">
-                <img height="100" src="/logo-ukaid.png" alt="UK AID" />
-              </ExtLink>
-              <ExtLink href="https://www.greenclimate.fund/">
-                <img height="100" src="/logo-gcf.png" alt="Green Climate Fund" />
-              </ExtLink>
-              <ExtLink href="https://resilientinvestment.org/">
-                <img
-                  height="100"
-                  src="/logo-ccri.png"
-                  alt="Coalition for Climate Resilient Investment"
-                />
-              </ExtLink>
-            </Stack>
-
-            <p>
-              <small>
-                Photo credit: Hurricane Irma, 7 September 2017. Data: MODIS/Terra (NASA WorldView).
-                Processed by Antti Lipponen&nbsp;(
-                <ExtLink href="https://twitter.com/anttilip">@anttilip</ExtLink>)&nbsp;
-                <ExtLink href="https://creativecommons.org/licenses/by/2.0/">CC-BY</ExtLink>
-              </small>
-            </p>
-          </TextBox>
-        </Grid>
-      </Grid>
-    </article>
-  </div>
+const LogoRow = ({ logos }: { logos: Logo[] }) => (
+  <Stack
+    direction={{ xs: 'column', md: 'row' }}
+    divider={<Divider orientation="vertical" flexItem />}
+    spacing={2}
+    justifyContent="center"
+    alignItems="center"
+    sx={{ my: 2 }}
+  >
+    {logos.map((logo) => (
+      <ExtLink key={logo.href} href={logo.href}>
+        <img height={logo.height} src={logo.src} alt={logo.alt} />
+      </ExtLink>
+    ))}
+  </Stack>
 );
+
+export const IntroPage = () => {
+  const pageContent = useAtomValue(pageContentState);
+  return (
+    <div
+      className="home"
+      style={{
+        backgroundImage: pageContent.backgroundImage.src
+          ? `url("${pageContent.backgroundImage.src}")`
+          : undefined,
+      }}
+    >
+      <article>
+        <ScrollToTop />
+        <Grid container columnSpacing={8} rowSpacing={4}>
+          <Grid
+            sx={{ width: '100%' }}
+            size={{
+              md: 6,
+            }}
+          >
+            <HeadingBox sx={{ mt: -2, pt: 8 }}>
+              <Typography variant="h1">{pageContent.title}</Typography>
+            </HeadingBox>
+          </Grid>
+          <Grid
+            size={{
+              md: 6,
+            }}
+          >
+            <TextBox sx={{ mt: -2, pt: 8 }}>
+              <p>{pageContent.summary}</p>
+              {pageContent.sectors.map((sector) => (
+                <Fragment key={sector.title}>
+                  <Typography variant="h2">{sector.title}</Typography>
+                  <p>{sector.description}</p>
+                </Fragment>
+              ))}
+            </TextBox>
+          </Grid>
+          <Grid size={12}>
+            <TextBox sx={{ backgroundColor: 'rgba(255, 255, 255, 0.9)' }}>
+              <Markdown components={markdownComponents}>
+                {pageContent.collaboration.markdown}
+              </Markdown>
+              <LogoRow logos={pageContent.collaboration.logos} />
+
+              <Typography variant="h2">{pageContent.funding.title}</Typography>
+
+              <Markdown components={markdownComponents}>{pageContent.funding.markdown}</Markdown>
+
+              <LogoRow logos={pageContent.funding.logos} />
+
+              <Markdown components={smallMarkdownComponents}>
+                {pageContent.backgroundImage.credit}
+              </Markdown>
+            </TextBox>
+          </Grid>
+        </Grid>
+      </article>
+    </div>
+  );
+};
