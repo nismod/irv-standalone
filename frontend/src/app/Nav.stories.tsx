@@ -6,6 +6,21 @@ import { navItems } from 'App';
 import { globalStyleVariables } from './theme';
 import { Nav } from './Nav';
 
+const mapConfigHandler = http.get('/api/map/config', () =>
+  HttpResponse.json({
+    count: 1,
+    next: null,
+    previous: null,
+    results: [
+      {
+        config_name: 'appName',
+        config_value: 'J-SRAT',
+        config_type: 'string',
+      },
+    ],
+  }),
+);
+
 function withQueryClient(Story) {
   const queryClient = new QueryClient();
 
@@ -23,6 +38,7 @@ const meta = {
   parameters: {
     msw: {
       handlers: [
+        mapConfigHandler,
         http.get('/api/auth/me', () =>
           HttpResponse.json({ authenticated: false, user: null }),
         ),
@@ -49,6 +65,7 @@ export const LoggedIn: Story = {
   parameters: {
     msw: {
       handlers: [
+        mapConfigHandler,
         http.get('/api/auth/me', () =>
           HttpResponse.json({
             authenticated: true,
