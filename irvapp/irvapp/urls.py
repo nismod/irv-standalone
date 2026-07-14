@@ -42,4 +42,5 @@ urlpatterns = [
         name='redoc',
     ),
     path('accounts/', include('allauth.urls')),
+    path('martor/', include('martor.urls')),
 ]

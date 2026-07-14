@@ -3,6 +3,7 @@ django-allauth~=65.18.0
 django-tree-queries[admin]~=0.24.0
 djangorestframework~=3.17.1
 drf-spectacular~=0.29.0
+martor~=1.8.2
 pandas~=3.0.3
 psycopg[binary]~=3.3.4
 pyproj~=3.7.2
