@@ -165,6 +165,11 @@ export type MapConfig = {
     config_type?: ConfigTypeEnum;
 };
 
+export type MarkdownBlock = {
+    slot: string;
+    markdown: string;
+};
+
 export type PaginatedAdaptationCostBenefitList = {
     count: number;
     next?: string | null;
@@ -537,6 +542,21 @@ export type AuthRegisterCreateResponses = {
 };
 
 export type AuthRegisterCreateResponse = AuthRegisterCreateResponses[keyof AuthRegisterCreateResponses];
+
+export type ContentListData = {
+    body?: never;
+    path: {
+        page: string;
+    };
+    query?: never;
+    url: '/content/{page}';
+};
+
+export type ContentListResponses = {
+    200: Array<MarkdownBlock>;
+};
+
+export type ContentListResponse = ContentListResponses[keyof ContentListResponses];
 
 export type MapAdaptationCostBenefitsListData = {
     body?: never;

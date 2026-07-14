@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     # Local apps
     'irv_auth',
     'api',
+    'content',
     'vector_proxy',
     'raster',
     'pixel',
