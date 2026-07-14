@@ -25,6 +25,7 @@ from drf_spectacular.views import (
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('auth/', include('irv_auth.urls')),
+    path('content/', include('content.urls')),
     path('map/', include('api.urls')),
     path('pixel/', include('pixel.urls')),
     path('tiles/vector/', include('vector_proxy.urls')),
