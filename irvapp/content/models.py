@@ -1,11 +1,12 @@
 from django.db import models
+from martor.models import MartorField
 
 
 class MarkdownBlock(models.Model):
     title = models.CharField(max_length=200)
     page = models.CharField(max_length=20)
     slot = models.CharField(max_length=20)
-    markdown = models.TextField()
+    markdown = MartorField()
 
     class Meta:
         db_table = 'markdown_block'

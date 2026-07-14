@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'drf_spectacular',
     'tree_queries',
+    'martor',
     # Local apps
     'irv_auth',
     'api',
@@ -205,3 +206,6 @@ RASTER_TILESERVER_INTERNAL_URL = os.environ.get(
     'RASTER_TILESERVER_INTERNAL_URL',
     'http://raster-tileserver:5000',
 )
+
+# Disable markdown image upload functionality
+MARTOR_UPLOAD_URL = ''
