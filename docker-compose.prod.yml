@@ -1,4 +1,7 @@
 # Production environment
+volumes:
+  django-media:
+
 services:
   frontend:
     image: ghcr.io/nismod/jsrat-frontend:0.1
@@ -13,6 +16,8 @@ services:
       - "3001:80"
     env_file:
       - ./envs/prod/.backend.env
+    volumes:
+      - django-media:/code/media
 
   vector-tileserver:
     image: ghcr.io/nismod/jsrat-vector-tileserver:0.1

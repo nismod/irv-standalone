@@ -1,49 +1,5 @@
 {
   "title": "Climate-related risk analytics for transport, energy & water infrastructure in Jamaica",
-  "collaboration": {
-    "logos": [
-      {
-        "href": "https://www.gov.jm",
-        "src": "/jamaica-coatofarms.png",
-        "alt": "Government of Jamaica",
-        "height": 150
-      },
-      {
-        "href": "https://www.pioj.gov.jm/",
-        "src": "/jamaica-pioj.png",
-        "alt": "Planning Institute of Jamaica",
-        "height": 150
-      },
-      {
-        "href": "https://opsis.eci.ox.ac.uk",
-        "src": "/logo-opsis.png",
-        "alt": "Oxford Programme for Sustainable Infrastructure Systems",
-        "height": 100
-      }
-    ]
-  },
-  "funding": {
-    "logos": [
-      {
-        "href": "https://www.gov.uk/guidance/uk-aid",
-        "src": "/logo-ukaid.png",
-        "alt": "UK AID",
-        "height": 100
-      },
-      {
-        "href": "https://www.greenclimate.fund/",
-        "src": "/logo-gcf.png",
-        "alt": "Green Climate Fund",
-        "height": 100
-      },
-      {
-        "href": "https://resilientinvestment.org/",
-        "src": "/logo-ccri.png",
-        "alt": "Coalition for Climate Resilient Investment",
-        "height": 100
-      }
-    ]
-  },
   "backgroundImage": {
     "src": "/irma-2017_data-from-nasa-modis_processed-by-antti-lipponen_1280.jpg"
   }

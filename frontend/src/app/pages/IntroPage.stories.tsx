@@ -22,6 +22,24 @@ export const Default: Story = {
             { slot: 'background-credit', markdown: 'Background image credit' },
           ]),
         ),
+        http.get('/api/content/intro/logos', () =>
+          HttpResponse.json([
+            {
+              slot: 'collaboration',
+              src: '/jamaica-coatofarms.png',
+              href: 'https://www.gov.jm',
+              alt: 'Government of Jamaica',
+              height: 150,
+            },
+            {
+              slot: 'funding',
+              src: '/logo-ukaid.png',
+              href: 'https://www.gov.uk/guidance/uk-aid',
+              alt: 'UK AID',
+              height: 100,
+            },
+          ]),
+        ),
       ],
     },
   },

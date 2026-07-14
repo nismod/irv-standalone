@@ -152,6 +152,14 @@ server {
 		add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
 	}
 
+	location /media/ {
+		# Uploaded content is served by the Django backend.
+		proxy_pass http://backend;
+		proxy_set_header Host $http_host;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
+	}
+
 	location /pixel {
 		# basic authentication - use htpasswd to add users
 		auth_basic "Access restricted";

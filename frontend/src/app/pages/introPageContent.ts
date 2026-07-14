@@ -1,38 +1,53 @@
 import { atom } from 'jotai';
 import { unwrap } from 'jotai/utils';
 
-import { contentList, type MarkdownBlock } from 'lib/api-client';
+import {
+  contentList,
+  contentLogosList,
+  type Logo as ApiLogo,
+  type MarkdownBlock,
+} from 'lib/api-client';
 
 interface IntroPageStaticContent {
   title: string;
-  collaboration: {
-    logos: Logo[];
-  };
-  funding: {
-    logos: Logo[];
-  };
   backgroundImage: {
     src: string;
   };
 }
 
 async function fetchPageContent(): Promise<IntroPageContent> {
-  const [module, { data: blocks, error }] = await Promise.all([
-    import('./intro.json'),
-    contentList({
-      baseUrl: '/api',
-      path: { page: 'intro' },
-    }),
-  ]);
+  const [module, { data: blocks, error: blocksError }, { data: logos, error: logosError }] =
+    await Promise.all([
+      import('./intro.json'),
+      contentList({
+        baseUrl: '/api',
+        path: { page: 'intro' },
+      }),
+      contentLogosList({
+        baseUrl: '/api',
+        path: { page: 'intro' },
+      }),
+    ]);
 
-  if (error) {
-    throw new Error(`Failed to load intro page content: ${JSON.stringify(error)}`);
+  if (blocksError || logosError) {
+    throw new Error(
+      `Failed to load intro page content: ${JSON.stringify(blocksError ?? logosError)}`,
+    );
   }
 
   const staticContent = module.default as IntroPageStaticContent;
   const markdownBySlot = new Map(
     (blocks ?? []).map(({ slot, markdown }: MarkdownBlock) => [slot, markdown]),
   );
+  const logosBySlot = new Map<string, Logo[]>();
+  for (const logo of logos ?? []) {
+    const slotLogos = logosBySlot.get(logo.slot);
+    if (slotLogos) {
+      slotLogos.push(logo);
+    } else {
+      logosBySlot.set(logo.slot, [logo]);
+    }
+  }
 
   return {
     ...staticContent,
@@ -40,12 +55,12 @@ async function fetchPageContent(): Promise<IntroPageContent> {
       markdown: markdownBySlot.get('summary') ?? '',
     },
     collaboration: {
-      ...staticContent.collaboration,
       markdown: markdownBySlot.get('collaboration') ?? '',
+      logos: logosBySlot.get('collaboration') ?? [],
     },
     funding: {
-      ...staticContent.funding,
       markdown: markdownBySlot.get('funding') ?? '',
+      logos: logosBySlot.get('funding') ?? [],
     },
     backgroundImage: {
       ...staticContent.backgroundImage,
@@ -56,12 +71,7 @@ async function fetchPageContent(): Promise<IntroPageContent> {
 const pageContentQuery = atom(fetchPageContent);
 export const pageContentState = unwrap(pageContentQuery, (prev) => prev ?? emptyPageContent);
 
-export interface Logo {
-  href: string;
-  src: string;
-  alt: string;
-  height: number;
-}
+export type Logo = ApiLogo;
 
 export interface IntroPageContent {
   title: string;

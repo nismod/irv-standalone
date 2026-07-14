@@ -155,6 +155,20 @@ export type LoginRequest = {
     username: string;
 };
 
+export type Logo = {
+    /**
+     * The named page slot in which this logo should appear.
+     */
+    slot: string;
+    src: string;
+    href: string;
+    alt: string;
+    /**
+     * Displayed logo height in pixels.
+     */
+    height?: number;
+};
+
 export type LogoutCsrfErrorResponse = {
     detail: string;
 };
@@ -557,6 +571,21 @@ export type ContentListResponses = {
 };
 
 export type ContentListResponse = ContentListResponses[keyof ContentListResponses];
+
+export type ContentLogosListData = {
+    body?: never;
+    path: {
+        page: string;
+    };
+    query?: never;
+    url: '/content/{page}/logos';
+};
+
+export type ContentLogosListResponses = {
+    200: Array<Logo>;
+};
+
+export type ContentLogosListResponse = ContentLogosListResponses[keyof ContentLogosListResponses];
 
 export type MapAdaptationCostBenefitsListData = {
     body?: never;
