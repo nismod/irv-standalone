@@ -11,4 +11,8 @@ export const devProxy = {
     target: 'https://jamaica.infrastructureresilience.org',
     changeOrigin: true,
   },
+  '/media/': {
+    target: 'https://jamaica.infrastructureresilience.org',
+    changeOrigin: true,
+  },
 };

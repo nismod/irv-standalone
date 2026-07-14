@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from content.models import MarkdownBlock
+from content.models import Logo, MarkdownBlock
 
 
 @admin.register(MarkdownBlock)
@@ -11,3 +11,11 @@ class MarkdownBlockAdmin(admin.ModelAdmin):
 
     class Media:
         css = {"all": ("content/admin.css",)}
+
+
+@admin.register(Logo)
+class LogoAdmin(admin.ModelAdmin):
+    list_display = ["name", "page", "slot", "position", "height"]
+    list_editable = ["position"]
+    list_filter = ["page", "slot"]
+    search_fields = ["name", "link"]

@@ -50,7 +50,7 @@ const LogoRow = ({ logos }: { logos: Logo[] }) => (
     sx={{ my: 2 }}
   >
     {logos.map((logo) => (
-      <ExtLink key={logo.href} href={logo.href}>
+      <ExtLink key={`${logo.href}-${logo.src}`} href={logo.href}>
         <img height={logo.height} src={logo.src} alt={logo.alt} />
       </ExtLink>
     ))}

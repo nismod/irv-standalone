@@ -1,6 +1,7 @@
 # Development environment - includes database, hard-coded env vars
 volumes:
   postgis-data:
+  django-media:
 
 services:
   traefik:
@@ -48,13 +49,14 @@ services:
         condition: service_healthy
     volumes:
       - ./irvapp:/code
+      - django-media:/code/media
       - ./tileserver/stacks:/data/pixel:ro
       - ./tileserver/raster/data:/data/raster:ro
       - ./etl/hazard_layers.csv:/data/pixel/hazard_layers.csv:ro
     command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.django.rule=Host(`localhost`) && (PathPrefix(`/api`) || PathPrefix(`/admin`) || PathPrefix(`/static/`) || PathPrefix(`/martor/`))"
+      - "traefik.http.routers.django.rule=Host(`localhost`) && (PathPrefix(`/api`) || PathPrefix(`/admin`) || PathPrefix(`/static/`) || PathPrefix(`/media/`) || PathPrefix(`/martor/`))"
       - "traefik.http.routers.django.entrypoints=web"
       - "traefik.http.routers.django.middlewares=django-stripprefix"
       - "traefik.http.middlewares.django-stripprefix.stripprefix.prefixes=/api"

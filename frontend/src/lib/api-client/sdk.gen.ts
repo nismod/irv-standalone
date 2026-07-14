@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthLoginCreateData, AuthLoginCreateErrors, AuthLoginCreateResponses, AuthLogoutCreateData, AuthLogoutCreateErrors, AuthLogoutCreateResponses, AuthMeRetrieveData, AuthMeRetrieveResponses, AuthRegisterCreateData, AuthRegisterCreateErrors, AuthRegisterCreateResponses, ContentListData, ContentListResponses, MapAdaptationCostBenefitsListData, MapAdaptationCostBenefitsListResponses, MapAdaptationCostBenefitsRetrieveData, MapAdaptationCostBenefitsRetrieveResponses, MapAttributesCreateData, MapAttributesCreateResponses, MapConfigListData, MapConfigListResponses, MapConfigRetrieveData, MapConfigRetrieveResponses, MapDamagesExpectedListData, MapDamagesExpectedListResponses, MapDamagesExpectedRetrieveData, MapDamagesExpectedRetrieveResponses, MapDamagesRpListData, MapDamagesRpListResponses, MapDamagesRpRetrieveData, MapDamagesRpRetrieveResponses, MapDatasetsListData, MapDatasetsListResponses, MapDatasetsRetrieveData, MapDatasetsRetrieveResponses, MapFeaturesListData, MapFeaturesListResponses, MapFeaturesProtectedByListData, MapFeaturesProtectedByListResponses, MapFeaturesRetrieveData, MapFeaturesRetrieveResponses, MapFeaturesSortedByRetrieveData, MapFeaturesSortedByRetrieveResponses, MapInfrastructureTreeListData, MapInfrastructureTreeListResponses, MapInfrastructureTreeRetrieveData, MapInfrastructureTreeRetrieveResponses, PixelRetrieveData, PixelRetrieveResponses, RasterColormapData, RasterColormapErrors, RasterColormapResponses, RasterTileSourceData, RasterTileSourceDomainsData, RasterTileSourceDomainsResponses, RasterTileSourceResponses, RasterTileSourcesData, RasterTileSourcesResponses, TilesRasterPngRetrieveData, TilesRasterPngRetrieveErrors, TilesRasterPngRetrieveResponses, TilesVectorRetrieve2Data, TilesVectorRetrieve2Errors, TilesVectorRetrieve2Responses, TilesVectorRetrieveData, TilesVectorRetrieveErrors, TilesVectorRetrieveResponses } from './types.gen';
+import type { AuthLoginCreateData, AuthLoginCreateErrors, AuthLoginCreateResponses, AuthLogoutCreateData, AuthLogoutCreateErrors, AuthLogoutCreateResponses, AuthMeRetrieveData, AuthMeRetrieveResponses, AuthRegisterCreateData, AuthRegisterCreateErrors, AuthRegisterCreateResponses, ContentListData, ContentListResponses, ContentLogosListData, ContentLogosListResponses, MapAdaptationCostBenefitsListData, MapAdaptationCostBenefitsListResponses, MapAdaptationCostBenefitsRetrieveData, MapAdaptationCostBenefitsRetrieveResponses, MapAttributesCreateData, MapAttributesCreateResponses, MapConfigListData, MapConfigListResponses, MapConfigRetrieveData, MapConfigRetrieveResponses, MapDamagesExpectedListData, MapDamagesExpectedListResponses, MapDamagesExpectedRetrieveData, MapDamagesExpectedRetrieveResponses, MapDamagesRpListData, MapDamagesRpListResponses, MapDamagesRpRetrieveData, MapDamagesRpRetrieveResponses, MapDatasetsListData, MapDatasetsListResponses, MapDatasetsRetrieveData, MapDatasetsRetrieveResponses, MapFeaturesListData, MapFeaturesListResponses, MapFeaturesProtectedByListData, MapFeaturesProtectedByListResponses, MapFeaturesRetrieveData, MapFeaturesRetrieveResponses, MapFeaturesSortedByRetrieveData, MapFeaturesSortedByRetrieveResponses, MapInfrastructureTreeListData, MapInfrastructureTreeListResponses, MapInfrastructureTreeRetrieveData, MapInfrastructureTreeRetrieveResponses, PixelRetrieveData, PixelRetrieveResponses, RasterColormapData, RasterColormapErrors, RasterColormapResponses, RasterTileSourceData, RasterTileSourceDomainsData, RasterTileSourceDomainsResponses, RasterTileSourceResponses, RasterTileSourcesData, RasterTileSourcesResponses, TilesRasterPngRetrieveData, TilesRasterPngRetrieveErrors, TilesRasterPngRetrieveResponses, TilesVectorRetrieve2Data, TilesVectorRetrieve2Errors, TilesVectorRetrieve2Responses, TilesVectorRetrieveData, TilesVectorRetrieveErrors, TilesVectorRetrieveResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -73,6 +73,16 @@ export const contentList = <ThrowOnError extends boolean = false>(options: Optio
             type: 'apiKey'
         }, { scheme: 'basic', type: 'http' }],
     url: '/content/{page}',
+    ...options
+});
+
+export const contentLogosList = <ThrowOnError extends boolean = false>(options: Options<ContentLogosListData, ThrowOnError>) => (options.client ?? client).get<ContentLogosListResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/content/{page}/logos',
     ...options
 });
 

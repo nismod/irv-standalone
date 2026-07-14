@@ -25,6 +25,10 @@ export const devProxy = {
     changeOrigin: true,
     rewrite: (path) => path.replace(/^\/static\//, '/static/'),
   },
+  '/media/': {
+    target: 'http://localhost',
+    changeOrigin: true,
+  },
   '/martor/': {
     target: 'http://localhost',
     changeOrigin: true,
