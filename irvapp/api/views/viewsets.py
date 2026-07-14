@@ -7,16 +7,18 @@ from api.serializers import (
     AdaptationCostBenefitSerializer,
     DamagesExpectedSerializer,
     DamagesRpSerializer,
+    DatasetSerializer,
 )
 from api.models import (
     Feature,
     AdaptationCostBenefit,
     DamagesExpected,
     DamagesRp,
+    Dataset,
 )
 
 
-class FeatureViewset(viewsets.ModelViewSet):
+class FeatureViewset(viewsets.ReadOnlyModelViewSet):
     queryset = Feature.objects.all()
     serializer_class = FeatureSerializer
     permission_classes = [IsAuthenticated]
@@ -38,19 +40,25 @@ class FeatureViewset(viewsets.ModelViewSet):
         return FeatureSerializer
 
 
-class AdaptationCostBenefitViewset(viewsets.ModelViewSet):
+class AdaptationCostBenefitViewset(viewsets.ReadOnlyModelViewSet):
     queryset = AdaptationCostBenefit.objects.all()
     serializer_class = AdaptationCostBenefitSerializer
     permission_classes = [IsAuthenticated]
 
 
-class DamagesExpectedViewset(viewsets.ModelViewSet):
+class DamagesExpectedViewset(viewsets.ReadOnlyModelViewSet):
     queryset = DamagesExpected.objects.all()
     serializer_class = DamagesExpectedSerializer
     permission_classes = [IsAuthenticated]
 
 
-class DamagesRpViewset(viewsets.ModelViewSet):
+class DamagesRpViewset(viewsets.ReadOnlyModelViewSet):
     queryset = DamagesRp.objects.all()
     serializer_class = DamagesRpSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class DatasetViewset(viewsets.ReadOnlyModelViewSet):
+    queryset = Dataset.objects.all()
+    serializer_class = DatasetSerializer
     permission_classes = [IsAuthenticated]

@@ -5,6 +5,14 @@ from tree_queries.models import OrderableTreeNode, TreeQuerySet
 class MapConfig(models.Model):
     config_name = models.CharField(primary_key=True)
     config_value = models.CharField()
+    config_type = models.CharField(
+        choices=[
+            ("number", "Number"),
+            ("string", "String"),
+            ("boolean", "Boolean"),
+        ],
+        default='number'
+    )
 
     class Meta:
         db_table = "map_config"
@@ -42,3 +50,15 @@ class Feature(models.Model):
 
     class Meta:
         db_table = "features"
+
+
+class Dataset(models.Model):
+    id = models.CharField(primary_key=True)
+    label = models.CharField()
+    group = models.CharField()
+    unit = models.CharField()
+    stacking_order = models.IntegerField()
+    display_order = models.IntegerField()
+
+    class Meta:
+        db_table = "datasets"

@@ -3,6 +3,10 @@
 # Environment variables are read from ./envs/.backend.env, which is uploaded
 # to the server by deploy/deploy_stage.sh and must not be committed (see
 # deploy/README.md for the expected contents)
+# Staging environment - as production except for domain
+volumes:
+  django-media:
+
 services:
   frontend:
     image: ghcr.io/nismod/irvapp-frontend:canary
@@ -31,6 +35,7 @@ services:
       - ./tileserver/stacks:/data/pixel:ro
       - ./tileserver/raster/data:/data/raster:ro
       - ./etl:/data/pixel:ro
+      - django-media:/code/media
 
   vector-tileserver:
     image: ghcr.io/nismod/jsrat-vector-tileserver:0.1

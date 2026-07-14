@@ -44,18 +44,26 @@ ALLOWED_HOSTS = [
 # Application definition
 
 INSTALLED_APPS = [
+    # Django core apps
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'django.contrib.gis',
+    # Third-party apps
+    'allauth',
+    'allauth.account',
     'rest_framework',
     'drf_spectacular',
     'tree_queries',
+    'martor',
+    # Local apps
     'irv_auth',
     'api',
+    'content',
     'vector_proxy',
     'raster',
     'pixel',
@@ -69,6 +77,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "allauth.account.middleware.AccountMiddleware",
 ]
 
 ROOT_URLCONF = 'irvapp.urls'
@@ -139,6 +148,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by email
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
@@ -156,6 +173,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': (
@@ -198,3 +218,6 @@ RASTER_TILESERVER_INTERNAL_URL = os.environ.get(
     'RASTER_TILESERVER_INTERNAL_URL',
     'http://raster-tileserver:5000',
 )
+
+# Disable markdown image upload functionality
+MARTOR_UPLOAD_URL = ''

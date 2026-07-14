@@ -157,7 +157,12 @@ const UserSessionControls: FC<{ onLogout?: () => void }> = ({ onLogout }) => {
   );
 };
 
-const MobileNavContent: FC<{ navItems: NavItemConfig[] }> = ({ navItems }) => {
+interface NavContentProps {
+  appName: string;
+  navItems: NavItemConfig[];
+}
+
+const MobileNavContent: FC<NavContentProps> = ({ appName, navItems }) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const closeDrawer = useCallback(() => {
@@ -171,7 +176,7 @@ const MobileNavContent: FC<{ navItems: NavItemConfig[] }> = ({ navItems }) => {
       </IconButton>
 
       <ToolbarNavLink to="/" onClick={closeDrawer}>
-        J-SRAT
+        {appName}
       </ToolbarNavLink>
 
       <GrowingDivider />
@@ -201,9 +206,9 @@ const MobileNavContent: FC<{ navItems: NavItemConfig[] }> = ({ navItems }) => {
   );
 };
 
-const DesktopNavContent: FC<{ navItems: NavItemConfig[] }> = ({ navItems }) => (
+const DesktopNavContent: FC<NavContentProps> = ({ appName, navItems }) => (
   <>
-    <ToolbarNavLink to="/">J-SRAT</ToolbarNavLink>
+    <ToolbarNavLink to="/">{appName}</ToolbarNavLink>
 
     {navItems.map(({ to, title, tooltip }) => (
       <NavTooltip key={to} title={tooltip} placement="bottom">
@@ -230,6 +235,8 @@ export interface NavItemConfig {
  */
 export const Nav: FC<{ height: number; navItems: NavItemConfig[] }> = ({ height, navItems }) => {
   const isMobile = useIsMobile();
+  const mapConfig  = useAtomValue(mapViewConfig);
+  const appName = mapConfig.app.name;
 
   return (
     <AppBar position="fixed" sx={{ color: 'white' }}>
@@ -242,9 +249,9 @@ export const Nav: FC<{ height: number; navItems: NavItemConfig[] }> = ({ height,
         }}
       >
         {isMobile ? (
-          <MobileNavContent navItems={navItems} />
+          <MobileNavContent appName={appName} navItems={navItems} />
         ) : (
-          <DesktopNavContent navItems={navItems} />
+          <DesktopNavContent appName={appName} navItems={navItems} />
         )}
       </Toolbar>
     </AppBar>

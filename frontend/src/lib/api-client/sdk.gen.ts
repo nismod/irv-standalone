@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthLoginCreateData, AuthLoginCreateErrors, AuthLoginCreateResponses, AuthLogoutCreateData, AuthLogoutCreateErrors, AuthLogoutCreateResponses, AuthMeRetrieveData, AuthMeRetrieveResponses, MapAdaptationCostBenefitsCreateData, MapAdaptationCostBenefitsCreateResponses, MapAdaptationCostBenefitsDestroyData, MapAdaptationCostBenefitsDestroyResponses, MapAdaptationCostBenefitsListData, MapAdaptationCostBenefitsListResponses, MapAdaptationCostBenefitsPartialUpdateData, MapAdaptationCostBenefitsPartialUpdateResponses, MapAdaptationCostBenefitsRetrieveData, MapAdaptationCostBenefitsRetrieveResponses, MapAdaptationCostBenefitsUpdateData, MapAdaptationCostBenefitsUpdateResponses, MapAttributesCreateData, MapAttributesCreateResponses, MapConfigListData, MapConfigListResponses, MapConfigRetrieveData, MapConfigRetrieveResponses, MapDamagesExpectedCreateData, MapDamagesExpectedCreateResponses, MapDamagesExpectedDestroyData, MapDamagesExpectedDestroyResponses, MapDamagesExpectedListData, MapDamagesExpectedListResponses, MapDamagesExpectedPartialUpdateData, MapDamagesExpectedPartialUpdateResponses, MapDamagesExpectedRetrieveData, MapDamagesExpectedRetrieveResponses, MapDamagesExpectedUpdateData, MapDamagesExpectedUpdateResponses, MapDamagesRpCreateData, MapDamagesRpCreateResponses, MapDamagesRpDestroyData, MapDamagesRpDestroyResponses, MapDamagesRpListData, MapDamagesRpListResponses, MapDamagesRpPartialUpdateData, MapDamagesRpPartialUpdateResponses, MapDamagesRpRetrieveData, MapDamagesRpRetrieveResponses, MapDamagesRpUpdateData, MapDamagesRpUpdateResponses, MapFeaturesCreateData, MapFeaturesCreateResponses, MapFeaturesDestroyData, MapFeaturesDestroyResponses, MapFeaturesListData, MapFeaturesListResponses, MapFeaturesPartialUpdateData, MapFeaturesPartialUpdateResponses, MapFeaturesProtectedByListData, MapFeaturesProtectedByListResponses, MapFeaturesRetrieveData, MapFeaturesRetrieveResponses, MapFeaturesSortedByRetrieveData, MapFeaturesSortedByRetrieveResponses, MapFeaturesUpdateData, MapFeaturesUpdateResponses, MapInfrastructureTreeListData, MapInfrastructureTreeListResponses, MapInfrastructureTreeRetrieveData, MapInfrastructureTreeRetrieveResponses, PixelRetrieveData, PixelRetrieveResponses, RasterColormapData, RasterColormapErrors, RasterColormapResponses, RasterTileSourceData, RasterTileSourceDomainsData, RasterTileSourceDomainsResponses, RasterTileSourceResponses, RasterTileSourcesData, RasterTileSourcesResponses, TilesRasterPngRetrieveData, TilesRasterPngRetrieveErrors, TilesRasterPngRetrieveResponses, TilesVectorRetrieve2Data, TilesVectorRetrieve2Errors, TilesVectorRetrieve2Responses, TilesVectorRetrieveData, TilesVectorRetrieveErrors, TilesVectorRetrieveResponses } from './types.gen';
+import type { AuthLoginCreateData, AuthLoginCreateErrors, AuthLoginCreateResponses, AuthLogoutCreateData, AuthLogoutCreateErrors, AuthLogoutCreateResponses, AuthMeRetrieveData, AuthMeRetrieveResponses, AuthRegisterCreateData, AuthRegisterCreateErrors, AuthRegisterCreateResponses, ContentListData, ContentListResponses, ContentLogosListData, ContentLogosListResponses, MapAdaptationCostBenefitsListData, MapAdaptationCostBenefitsListResponses, MapAdaptationCostBenefitsRetrieveData, MapAdaptationCostBenefitsRetrieveResponses, MapAttributesCreateData, MapAttributesCreateResponses, MapConfigListData, MapConfigListResponses, MapConfigRetrieveData, MapConfigRetrieveResponses, MapDamagesExpectedListData, MapDamagesExpectedListResponses, MapDamagesExpectedRetrieveData, MapDamagesExpectedRetrieveResponses, MapDamagesRpListData, MapDamagesRpListResponses, MapDamagesRpRetrieveData, MapDamagesRpRetrieveResponses, MapDatasetsListData, MapDatasetsListResponses, MapDatasetsRetrieveData, MapDatasetsRetrieveResponses, MapFeaturesListData, MapFeaturesListResponses, MapFeaturesProtectedByListData, MapFeaturesProtectedByListResponses, MapFeaturesRetrieveData, MapFeaturesRetrieveResponses, MapFeaturesSortedByRetrieveData, MapFeaturesSortedByRetrieveResponses, MapInfrastructureTreeListData, MapInfrastructureTreeListResponses, MapInfrastructureTreeRetrieveData, MapInfrastructureTreeRetrieveResponses, PixelRetrieveData, PixelRetrieveResponses, RasterColormapData, RasterColormapErrors, RasterColormapResponses, RasterTileSourceData, RasterTileSourceDomainsData, RasterTileSourceDomainsResponses, RasterTileSourceResponses, RasterTileSourcesData, RasterTileSourcesResponses, TilesRasterPngRetrieveData, TilesRasterPngRetrieveErrors, TilesRasterPngRetrieveResponses, TilesVectorRetrieve2Data, TilesVectorRetrieve2Errors, TilesVectorRetrieve2Responses, TilesVectorRetrieveData, TilesVectorRetrieveErrors, TilesVectorRetrieveResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -52,23 +52,13 @@ export const authMeRetrieve = <ThrowOnError extends boolean = false>(options?: O
     ...options
 });
 
-export const mapAdaptationCostBenefitsList = <ThrowOnError extends boolean = false>(options?: Options<MapAdaptationCostBenefitsListData, ThrowOnError>) => (options?.client ?? client).get<MapAdaptationCostBenefitsListResponses, unknown, ThrowOnError>({
+export const authRegisterCreate = <ThrowOnError extends boolean = false>(options: Options<AuthRegisterCreateData, ThrowOnError>) => (options.client ?? client).post<AuthRegisterCreateResponses, AuthRegisterCreateErrors, ThrowOnError>({
     security: [{
             in: 'cookie',
             name: 'sessionid',
             type: 'apiKey'
         }, { scheme: 'basic', type: 'http' }],
-    url: '/map/adaptation-cost-benefits',
-    ...options
-});
-
-export const mapAdaptationCostBenefitsCreate = <ThrowOnError extends boolean = false>(options: Options<MapAdaptationCostBenefitsCreateData, ThrowOnError>) => (options.client ?? client).post<MapAdaptationCostBenefitsCreateResponses, unknown, ThrowOnError>({
-    security: [{
-            in: 'cookie',
-            name: 'sessionid',
-            type: 'apiKey'
-        }, { scheme: 'basic', type: 'http' }],
-    url: '/map/adaptation-cost-benefits',
+    url: '/auth/register',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -76,13 +66,33 @@ export const mapAdaptationCostBenefitsCreate = <ThrowOnError extends boolean = f
     }
 });
 
-export const mapAdaptationCostBenefitsDestroy = <ThrowOnError extends boolean = false>(options: Options<MapAdaptationCostBenefitsDestroyData, ThrowOnError>) => (options.client ?? client).delete<MapAdaptationCostBenefitsDestroyResponses, unknown, ThrowOnError>({
+export const contentList = <ThrowOnError extends boolean = false>(options: Options<ContentListData, ThrowOnError>) => (options.client ?? client).get<ContentListResponses, unknown, ThrowOnError>({
     security: [{
             in: 'cookie',
             name: 'sessionid',
             type: 'apiKey'
         }, { scheme: 'basic', type: 'http' }],
-    url: '/map/adaptation-cost-benefits/{pk}',
+    url: '/content/{page}',
+    ...options
+});
+
+export const contentLogosList = <ThrowOnError extends boolean = false>(options: Options<ContentLogosListData, ThrowOnError>) => (options.client ?? client).get<ContentLogosListResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/content/{page}/logos',
+    ...options
+});
+
+export const mapAdaptationCostBenefitsList = <ThrowOnError extends boolean = false>(options?: Options<MapAdaptationCostBenefitsListData, ThrowOnError>) => (options?.client ?? client).get<MapAdaptationCostBenefitsListResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/map/adaptation-cost-benefits',
     ...options
 });
 
@@ -94,34 +104,6 @@ export const mapAdaptationCostBenefitsRetrieve = <ThrowOnError extends boolean =
         }, { scheme: 'basic', type: 'http' }],
     url: '/map/adaptation-cost-benefits/{pk}',
     ...options
-});
-
-export const mapAdaptationCostBenefitsPartialUpdate = <ThrowOnError extends boolean = false>(options: Options<MapAdaptationCostBenefitsPartialUpdateData, ThrowOnError>) => (options.client ?? client).patch<MapAdaptationCostBenefitsPartialUpdateResponses, unknown, ThrowOnError>({
-    security: [{
-            in: 'cookie',
-            name: 'sessionid',
-            type: 'apiKey'
-        }, { scheme: 'basic', type: 'http' }],
-    url: '/map/adaptation-cost-benefits/{pk}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-export const mapAdaptationCostBenefitsUpdate = <ThrowOnError extends boolean = false>(options: Options<MapAdaptationCostBenefitsUpdateData, ThrowOnError>) => (options.client ?? client).put<MapAdaptationCostBenefitsUpdateResponses, unknown, ThrowOnError>({
-    security: [{
-            in: 'cookie',
-            name: 'sessionid',
-            type: 'apiKey'
-        }, { scheme: 'basic', type: 'http' }],
-    url: '/map/adaptation-cost-benefits/{pk}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
 });
 
 /**
@@ -171,30 +153,6 @@ export const mapDamagesExpectedList = <ThrowOnError extends boolean = false>(opt
     ...options
 });
 
-export const mapDamagesExpectedCreate = <ThrowOnError extends boolean = false>(options: Options<MapDamagesExpectedCreateData, ThrowOnError>) => (options.client ?? client).post<MapDamagesExpectedCreateResponses, unknown, ThrowOnError>({
-    security: [{
-            in: 'cookie',
-            name: 'sessionid',
-            type: 'apiKey'
-        }, { scheme: 'basic', type: 'http' }],
-    url: '/map/damages-expected',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-export const mapDamagesExpectedDestroy = <ThrowOnError extends boolean = false>(options: Options<MapDamagesExpectedDestroyData, ThrowOnError>) => (options.client ?? client).delete<MapDamagesExpectedDestroyResponses, unknown, ThrowOnError>({
-    security: [{
-            in: 'cookie',
-            name: 'sessionid',
-            type: 'apiKey'
-        }, { scheme: 'basic', type: 'http' }],
-    url: '/map/damages-expected/{pk}',
-    ...options
-});
-
 export const mapDamagesExpectedRetrieve = <ThrowOnError extends boolean = false>(options: Options<MapDamagesExpectedRetrieveData, ThrowOnError>) => (options.client ?? client).get<MapDamagesExpectedRetrieveResponses, unknown, ThrowOnError>({
     security: [{
             in: 'cookie',
@@ -205,34 +163,6 @@ export const mapDamagesExpectedRetrieve = <ThrowOnError extends boolean = false>
     ...options
 });
 
-export const mapDamagesExpectedPartialUpdate = <ThrowOnError extends boolean = false>(options: Options<MapDamagesExpectedPartialUpdateData, ThrowOnError>) => (options.client ?? client).patch<MapDamagesExpectedPartialUpdateResponses, unknown, ThrowOnError>({
-    security: [{
-            in: 'cookie',
-            name: 'sessionid',
-            type: 'apiKey'
-        }, { scheme: 'basic', type: 'http' }],
-    url: '/map/damages-expected/{pk}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-export const mapDamagesExpectedUpdate = <ThrowOnError extends boolean = false>(options: Options<MapDamagesExpectedUpdateData, ThrowOnError>) => (options.client ?? client).put<MapDamagesExpectedUpdateResponses, unknown, ThrowOnError>({
-    security: [{
-            in: 'cookie',
-            name: 'sessionid',
-            type: 'apiKey'
-        }, { scheme: 'basic', type: 'http' }],
-    url: '/map/damages-expected/{pk}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
 export const mapDamagesRpList = <ThrowOnError extends boolean = false>(options?: Options<MapDamagesRpListData, ThrowOnError>) => (options?.client ?? client).get<MapDamagesRpListResponses, unknown, ThrowOnError>({
     security: [{
             in: 'cookie',
@@ -240,30 +170,6 @@ export const mapDamagesRpList = <ThrowOnError extends boolean = false>(options?:
             type: 'apiKey'
         }, { scheme: 'basic', type: 'http' }],
     url: '/map/damages-rp',
-    ...options
-});
-
-export const mapDamagesRpCreate = <ThrowOnError extends boolean = false>(options: Options<MapDamagesRpCreateData, ThrowOnError>) => (options.client ?? client).post<MapDamagesRpCreateResponses, unknown, ThrowOnError>({
-    security: [{
-            in: 'cookie',
-            name: 'sessionid',
-            type: 'apiKey'
-        }, { scheme: 'basic', type: 'http' }],
-    url: '/map/damages-rp',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-export const mapDamagesRpDestroy = <ThrowOnError extends boolean = false>(options: Options<MapDamagesRpDestroyData, ThrowOnError>) => (options.client ?? client).delete<MapDamagesRpDestroyResponses, unknown, ThrowOnError>({
-    security: [{
-            in: 'cookie',
-            name: 'sessionid',
-            type: 'apiKey'
-        }, { scheme: 'basic', type: 'http' }],
-    url: '/map/damages-rp/{pk}',
     ...options
 });
 
@@ -277,32 +183,24 @@ export const mapDamagesRpRetrieve = <ThrowOnError extends boolean = false>(optio
     ...options
 });
 
-export const mapDamagesRpPartialUpdate = <ThrowOnError extends boolean = false>(options: Options<MapDamagesRpPartialUpdateData, ThrowOnError>) => (options.client ?? client).patch<MapDamagesRpPartialUpdateResponses, unknown, ThrowOnError>({
+export const mapDatasetsList = <ThrowOnError extends boolean = false>(options?: Options<MapDatasetsListData, ThrowOnError>) => (options?.client ?? client).get<MapDatasetsListResponses, unknown, ThrowOnError>({
     security: [{
             in: 'cookie',
             name: 'sessionid',
             type: 'apiKey'
         }, { scheme: 'basic', type: 'http' }],
-    url: '/map/damages-rp/{pk}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
+    url: '/map/datasets',
+    ...options
 });
 
-export const mapDamagesRpUpdate = <ThrowOnError extends boolean = false>(options: Options<MapDamagesRpUpdateData, ThrowOnError>) => (options.client ?? client).put<MapDamagesRpUpdateResponses, unknown, ThrowOnError>({
+export const mapDatasetsRetrieve = <ThrowOnError extends boolean = false>(options: Options<MapDatasetsRetrieveData, ThrowOnError>) => (options.client ?? client).get<MapDatasetsRetrieveResponses, unknown, ThrowOnError>({
     security: [{
             in: 'cookie',
             name: 'sessionid',
             type: 'apiKey'
         }, { scheme: 'basic', type: 'http' }],
-    url: '/map/damages-rp/{pk}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
+    url: '/map/datasets/{id}',
+    ...options
 });
 
 export const mapFeaturesList = <ThrowOnError extends boolean = false>(options?: Options<MapFeaturesListData, ThrowOnError>) => (options?.client ?? client).get<MapFeaturesListResponses, unknown, ThrowOnError>({
@@ -315,30 +213,6 @@ export const mapFeaturesList = <ThrowOnError extends boolean = false>(options?: 
     ...options
 });
 
-export const mapFeaturesCreate = <ThrowOnError extends boolean = false>(options: Options<MapFeaturesCreateData, ThrowOnError>) => (options.client ?? client).post<MapFeaturesCreateResponses, unknown, ThrowOnError>({
-    security: [{
-            in: 'cookie',
-            name: 'sessionid',
-            type: 'apiKey'
-        }, { scheme: 'basic', type: 'http' }],
-    url: '/map/features',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-export const mapFeaturesDestroy = <ThrowOnError extends boolean = false>(options: Options<MapFeaturesDestroyData, ThrowOnError>) => (options.client ?? client).delete<MapFeaturesDestroyResponses, unknown, ThrowOnError>({
-    security: [{
-            in: 'cookie',
-            name: 'sessionid',
-            type: 'apiKey'
-        }, { scheme: 'basic', type: 'http' }],
-    url: '/map/features/{id}',
-    ...options
-});
-
 export const mapFeaturesRetrieve = <ThrowOnError extends boolean = false>(options: Options<MapFeaturesRetrieveData, ThrowOnError>) => (options.client ?? client).get<MapFeaturesRetrieveResponses, unknown, ThrowOnError>({
     security: [{
             in: 'cookie',
@@ -347,34 +221,6 @@ export const mapFeaturesRetrieve = <ThrowOnError extends boolean = false>(option
         }, { scheme: 'basic', type: 'http' }],
     url: '/map/features/{id}',
     ...options
-});
-
-export const mapFeaturesPartialUpdate = <ThrowOnError extends boolean = false>(options: Options<MapFeaturesPartialUpdateData, ThrowOnError>) => (options.client ?? client).patch<MapFeaturesPartialUpdateResponses, unknown, ThrowOnError>({
-    security: [{
-            in: 'cookie',
-            name: 'sessionid',
-            type: 'apiKey'
-        }, { scheme: 'basic', type: 'http' }],
-    url: '/map/features/{id}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
-});
-
-export const mapFeaturesUpdate = <ThrowOnError extends boolean = false>(options: Options<MapFeaturesUpdateData, ThrowOnError>) => (options.client ?? client).put<MapFeaturesUpdateResponses, unknown, ThrowOnError>({
-    security: [{
-            in: 'cookie',
-            name: 'sessionid',
-            type: 'apiKey'
-        }, { scheme: 'basic', type: 'http' }],
-    url: '/map/features/{id}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
 });
 
 /**

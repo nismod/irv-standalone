@@ -14,6 +14,16 @@ class LoginRequestSerializer(serializers.Serializer):
     )
 
 
+class RegistrationRequestSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    email = serializers.EmailField()
+    password = serializers.CharField(
+        trim_whitespace=False,
+        write_only=True,
+        style={'input_type': 'password'},
+    )
+
+
 class CurrentUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User

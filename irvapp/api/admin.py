@@ -6,12 +6,47 @@ from .models import (
     Feature,
     InfrastructureNode,
     MapConfig,
+    Dataset
 )
 
+
 # Register your models here.
-admin.site.register(MapConfig)
-admin.site.register(Feature)
-admin.site.register(FeatureLayer)
+@admin.register(Feature)
+class FeatureAdmin(admin.ModelAdmin):
+    list_display = [
+        "string_id",
+        "layer",
+        "sublayer",
+    ]
+    list_select_related = ("layer",)
+
+
+@admin.register(FeatureLayer)
+class FeatureLayerAdmin(admin.ModelAdmin):
+    list_display = [
+        "layer_name",
+        "sector",
+        "subsector",
+        "asset_type",
+    ]
+
+
+@admin.register(Dataset)
+class DatasetAdmin(admin.ModelAdmin):
+    list_display = [
+        "id",
+        "label",
+        "group",
+        "unit",
+        "stacking_order",
+        "display_order",
+    ]
+
+
+@admin.register(MapConfig)
+class MapConfigAdmin(admin.ModelAdmin):
+    list_display = ["config_name", "config_value", "config_type"]
+
 
 @admin.register(InfrastructureNode)
 class InfrastructureNodeAdmin(TreeAdmin):

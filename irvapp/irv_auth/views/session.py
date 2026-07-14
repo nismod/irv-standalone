@@ -1,5 +1,6 @@
 from typing import cast
 
+from allauth.account.models import EmailAddress
 from django.contrib.auth import authenticate, login, logout
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -13,7 +14,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .serializers import CurrentUserSerializer, LoginRequestSerializer
+from ..serializers import CurrentUserSerializer, LoginRequestSerializer
 
 
 class SessionStateSerializer(serializers.Serializer):
@@ -48,7 +49,7 @@ class LoginView(APIView):
                         "detail": serializers.CharField(),
                     },
                 ),
-                description="Invalid credentials.",
+                description="Invalid credentials or unverified email address.",
             ),
             403: OpenApiResponse(
                 response=inline_serializer(
@@ -76,6 +77,16 @@ class LoginView(APIView):
         if user is None:
             return Response(
                 {"detail": "Invalid username or password."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if not EmailAddress.objects.filter(user=user, verified=True).exists():
+            return Response(
+                {
+                    "detail": (
+                        "Please verify your email address before logging in."
+                    )
+                },
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 

@@ -51,6 +51,7 @@ terracotta.sqlite
 __pycache__
 *.egg-info
 *.pyc
+irvapp/media/
 
 # frontend config
 proxy-table.json

@@ -7,7 +7,11 @@ from api.models import MapConfig
 class MapConfigSerializer(serializers.ModelSerializer):
     class Meta:
         model = MapConfig
-        fields = ['config_name', 'config_value']
+        fields = [
+            'config_name',
+            'config_value',
+            'config_type'
+        ]
 
 
 class MapConfigViewSet(viewsets.ReadOnlyModelViewSet):
