@@ -1,8 +1,20 @@
-from rest_framework.generics import ListAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 from rest_framework.permissions import AllowAny
 
-from content.models import Logo, MarkdownBlock
-from content.serializers import LogoSerializer, MarkdownBlockSerializer
+from content.models import Logo, MarkdownBlock, Page
+from content.serializers import (
+    LogoSerializer,
+    MarkdownBlockSerializer,
+    PageSerializer,
+)
+
+
+class PageView(RetrieveAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = PageSerializer
+    queryset = Page.objects.all()
+    lookup_field = "name"
+    lookup_url_kwarg = "page"
 
 
 class MarkdownBlockPageView(ListAPIView):

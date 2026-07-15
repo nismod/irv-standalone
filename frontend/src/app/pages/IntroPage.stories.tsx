@@ -14,12 +14,20 @@ export const Default: Story = {
   parameters: {
     msw: {
       handlers: [
+        http.get('/api/content/intro/metadata', () =>
+          HttpResponse.json({
+            name: 'intro',
+            title: 'Climate-related risk analytics',
+            background_image:
+              '/media/backgrounds/irma-2017_data-from-nasa-modis_processed-by-antti-lipponen_1280.jpg',
+            background_credit: 'Background image credit',
+          }),
+        ),
         http.get('/api/content/intro', () =>
           HttpResponse.json([
             { slot: 'summary', markdown: 'Intro summary' },
             { slot: 'collaboration', markdown: 'Collaboration' },
             { slot: 'funding', markdown: '## Funding and support' },
-            { slot: 'background-credit', markdown: 'Background image credit' },
           ]),
         ),
         http.get('/api/content/intro/logos', () =>
