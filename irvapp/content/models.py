@@ -2,9 +2,35 @@ from django.db import models
 from martor.models import MartorField
 
 
+class Page(models.Model):
+    name = models.SlugField(
+        primary_key=True,
+        max_length=20,
+    )
+    title = models.CharField(max_length=200)
+    background_image = models.ImageField(
+        upload_to="backgrounds/",
+        blank=True,
+        null=True,
+        help_text="Optional background image for the page.",
+    )
+    background_credit = MartorField(
+        blank=True,
+        null=True,
+        help_text="Optional credit for the background image.",
+    )
+
+    class Meta:
+        db_table = "page"
+        ordering = ["name"]
+
+    def __str__(self):
+        return self.name
+
+
 class MarkdownBlock(models.Model):
     title = models.CharField(max_length=200)
-    page = models.CharField(max_length=20)
+    page = models.ForeignKey(Page, on_delete=models.CASCADE)
     slot = models.CharField(max_length=20)
     markdown = MartorField()
 
@@ -27,7 +53,7 @@ class Logo(models.Model):
         max_length=200,
         help_text="The organisation name, also used as the image alt text.",
     )
-    page = models.CharField(max_length=20, default="intro")
+    page = models.ForeignKey(Page, on_delete=models.CASCADE)
     slot = models.CharField(
         max_length=20,
         help_text="The named page slot in which this logo should appear.",

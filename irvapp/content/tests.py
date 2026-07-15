@@ -6,14 +6,15 @@ from django.db import IntegrityError, transaction
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
-from content.models import Logo, MarkdownBlock
+from content.models import Logo, MarkdownBlock, Page
 
 
 class MarkdownBlockTests(TestCase):
     def test_page_and_slot_are_unique_together(self):
+        page = Page.objects.create(name="test", title="Test")
         MarkdownBlock.objects.create(
             title="Summary",
-            page="test",
+            page=page,
             slot="summary",
             markdown="First version",
         )
@@ -21,24 +22,97 @@ class MarkdownBlockTests(TestCase):
         with self.assertRaises(IntegrityError), transaction.atomic():
             MarkdownBlock.objects.create(
                 title="Replacement summary",
-                page="test",
+                page=page,
                 slot="summary",
                 markdown="Second version",
             )
 
 
+class PageViewTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.media_root = tempfile.mkdtemp()
+        self.media_override = override_settings(MEDIA_ROOT=self.media_root)
+        self.media_override.enable()
+
+    def tearDown(self):
+        self.media_override.disable()
+        shutil.rmtree(self.media_root)
+
+    def test_returns_page_without_authentication(self):
+        Page.objects.create(
+            name="test-intro",
+            title="Test intro",
+            background_image=SimpleUploadedFile(
+                "background.jpg",
+                b"not-validated-until-form-submission",
+                content_type="image/jpeg",
+            ),
+            background_credit="Photo by **Example**",
+        )
+
+        response = self.client.get("/content/test-intro/metadata")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "name": "test-intro",
+                "title": "Test intro",
+                "background_image": "/media/backgrounds/background.jpg",
+                "background_credit": "Photo by **Example**",
+            },
+        )
+
+    def test_unknown_page_returns_not_found(self):
+        response = self.client.get("/content/missing/metadata")
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_seeded_intro_page_contains_page_metadata(self):
+        response = self.client.get("/content/intro/metadata")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json()["title"],
+            (
+                "Climate-related risk analytics for transport, energy & "
+                "water infrastructure in Jamaica"
+            ),
+        )
+        self.assertEqual(
+            response.json()["background_image"],
+            (
+                "/media/backgrounds/irma-2017_data-from-nasa-modis_"
+                "processed-by-antti-lipponen_1280.jpg"
+            ),
+        )
+        self.assertIn(
+            "Photo credit: Hurricane Irma",
+            response.json()["background_credit"],
+        )
+
+
 class MarkdownBlockPageViewTests(TestCase):
     def setUp(self):
         self.client = APIClient()
+        self.intro_page = Page.objects.create(
+            name="test-intro",
+            title="Test intro",
+        )
+        self.guide_page = Page.objects.create(
+            name="guide",
+            title="Guide",
+        )
         MarkdownBlock.objects.create(
             title="Test intro summary",
-            page="test-intro",
+            page=self.intro_page,
             slot="summary",
             markdown="Intro **summary**",
         )
         MarkdownBlock.objects.create(
             title="Guide summary",
-            page="guide",
+            page=self.guide_page,
             slot="summary",
             markdown="Guide summary",
         )
@@ -58,7 +132,7 @@ class MarkdownBlockPageViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             {block["slot"] for block in response.json()},
-            {"summary", "collaboration", "funding", "background-credit"},
+            {"summary", "collaboration", "funding"},
         )
 
 
@@ -68,6 +142,14 @@ class LogoPageViewTests(TestCase):
         self.media_root = tempfile.mkdtemp()
         self.media_override = override_settings(MEDIA_ROOT=self.media_root)
         self.media_override.enable()
+        self.intro_page = Page.objects.create(
+            name="test-intro",
+            title="Test intro",
+        )
+        self.guide_page = Page.objects.create(
+            name="guide",
+            title="Guide",
+        )
 
     def tearDown(self):
         self.media_override.disable()
@@ -76,7 +158,7 @@ class LogoPageViewTests(TestCase):
     def create_logo(self, **overrides):
         defaults = {
             "name": "Example organisation",
-            "page": "test-intro",
+            "page": self.intro_page,
             "slot": "collaboration",
             "image": SimpleUploadedFile(
                 "example.png",
@@ -100,7 +182,7 @@ class LogoPageViewTests(TestCase):
             position=1,
             image=SimpleUploadedFile("first.png", b"first"),
         )
-        self.create_logo(page="guide")
+        self.create_logo(page=self.guide_page)
 
         response = self.client.get("/content/test-intro/logos")
 

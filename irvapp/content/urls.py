@@ -1,6 +1,6 @@
 from django.urls import path
 
-from content.views import LogoPageView, MarkdownBlockPageView
+from content.views import LogoPageView, MarkdownBlockPageView, PageView
 
 
 urlpatterns = [
@@ -10,8 +10,13 @@ urlpatterns = [
         name="logo-page",
     ),
     path(
+        "<slug:page>/metadata",
+        PageView.as_view(),
+        name="page-metadata",
+    ),
+    path(
         "<slug:page>",
         MarkdownBlockPageView.as_view(),
-        name="markdown-block-page"
+        name="markdown-block-page",
     ),
 ]

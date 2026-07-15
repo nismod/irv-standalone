@@ -4,38 +4,39 @@ import { unwrap } from 'jotai/utils';
 import {
   contentList,
   contentLogosList,
+  contentMetadataRetrieve,
   type Logo as ApiLogo,
   type MarkdownBlock,
 } from 'lib/api-client';
 
-interface IntroPageStaticContent {
-  title: string;
-  backgroundImage: {
-    src: string;
-  };
-}
-
 async function fetchPageContent(): Promise<IntroPageContent> {
-  const [module, { data: blocks, error: blocksError }, { data: logos, error: logosError }] =
-    await Promise.all([
-      import('./intro.json'),
-      contentList({
-        baseUrl: '/api',
-        path: { page: 'intro' },
-      }),
-      contentLogosList({
-        baseUrl: '/api',
-        path: { page: 'intro' },
-      }),
-    ]);
+  const [
+    { data: page, error: pageError },
+    { data: blocks, error: blocksError },
+    { data: logos, error: logosError },
+  ] = await Promise.all([
+    contentMetadataRetrieve({
+      baseUrl: '/api',
+      path: { page: 'intro' },
+    }),
+    contentList({
+      baseUrl: '/api',
+      path: { page: 'intro' },
+    }),
+    contentLogosList({
+      baseUrl: '/api',
+      path: { page: 'intro' },
+    }),
+  ]);
 
-  if (blocksError || logosError) {
+  if (pageError || blocksError || logosError) {
     throw new Error(
-      `Failed to load intro page content: ${JSON.stringify(blocksError ?? logosError)}`,
+      `Failed to load intro page content: ${JSON.stringify(
+        pageError ?? blocksError ?? logosError,
+      )}`,
     );
   }
 
-  const staticContent = module.default as IntroPageStaticContent;
   const markdownBySlot = new Map(
     (blocks ?? []).map(({ slot, markdown }: MarkdownBlock) => [slot, markdown]),
   );
@@ -50,7 +51,7 @@ async function fetchPageContent(): Promise<IntroPageContent> {
   }
 
   return {
-    ...staticContent,
+    title: page?.title ?? '',
     summary: {
       markdown: markdownBySlot.get('summary') ?? '',
     },
@@ -63,8 +64,8 @@ async function fetchPageContent(): Promise<IntroPageContent> {
       logos: logosBySlot.get('funding') ?? [],
     },
     backgroundImage: {
-      ...staticContent.backgroundImage,
-      credit: markdownBySlot.get('background-credit') ?? '',
+      src: page?.background_image ?? '',
+      credit: page?.background_credit ?? '',
     },
   };
 }

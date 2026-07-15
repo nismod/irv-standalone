@@ -160,7 +160,7 @@ export type Logo = {
      * The named page slot in which this logo should appear.
      */
     slot: string;
-    src: string;
+    readonly src: string;
     href: string;
     alt: string;
     /**
@@ -182,6 +182,16 @@ export type MapConfig = {
 export type MarkdownBlock = {
     slot: string;
     markdown: string;
+};
+
+export type Page = {
+    name: string;
+    title: string;
+    readonly background_image: string | null;
+    /**
+     * Optional credit for the background image.
+     */
+    background_credit?: string | null;
 };
 
 export type PaginatedAdaptationCostBenefitList = {
@@ -411,6 +421,28 @@ export type LoginRequestWritable = {
     password: string;
 };
 
+export type LogoWritable = {
+    /**
+     * The named page slot in which this logo should appear.
+     */
+    slot: string;
+    href: string;
+    alt: string;
+    /**
+     * Displayed logo height in pixels.
+     */
+    height?: number;
+};
+
+export type PageWritable = {
+    name: string;
+    title: string;
+    /**
+     * Optional credit for the background image.
+     */
+    background_credit?: string | null;
+};
+
 export type PaginatedAdaptationCostBenefitListWritable = {
     count: number;
     next?: string | null;
@@ -586,6 +618,21 @@ export type ContentLogosListResponses = {
 };
 
 export type ContentLogosListResponse = ContentLogosListResponses[keyof ContentLogosListResponses];
+
+export type ContentMetadataRetrieveData = {
+    body?: never;
+    path: {
+        page: string;
+    };
+    query?: never;
+    url: '/content/{page}/metadata';
+};
+
+export type ContentMetadataRetrieveResponses = {
+    200: Page;
+};
+
+export type ContentMetadataRetrieveResponse = ContentMetadataRetrieveResponses[keyof ContentMetadataRetrieveResponses];
 
 export type MapAdaptationCostBenefitsListData = {
     body?: never;
