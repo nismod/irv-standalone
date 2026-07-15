@@ -10,6 +10,7 @@ from api.models import (
     AdaptationCostBenefit,
     DamagesExpected,
     DamagesRp,
+    Dataset,
     Feature,
     FeatureLayer,
 )
@@ -474,3 +475,60 @@ class FeatureRouteTests(TestCase):
         self.assertEqual(len(payload["damages_return_period"]), 1)
         self.assertEqual(payload["damages_return_period"][0]["rp"], 100)
         self.assertEqual(payload["damages_npv"], [])
+
+
+class DatasetRouteTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass"
+        )
+        self.client.force_authenticate(user=self.user)
+        Dataset.objects.create(
+            id="flood_extent",
+            label="Flood extent",
+            group="hazards",
+            unit="n/a",
+            stacking_order=1,
+            display_order=1,
+        )
+        Dataset.objects.create(
+            id="storm_track",
+            label="Storm track",
+            group="hazards",
+            unit="n/a",
+            stacking_order=2,
+            display_order=2,
+        )
+        Dataset.objects.create(
+            id="roads",
+            label="Road network",
+            group="networks",
+            unit="n/a",
+            stacking_order=1,
+            display_order=1,
+        )
+
+    def test_datasets_route_returns_all_datasets_without_group_filter(self):
+        response = self.client.get("/map/datasets")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()["results"]
+        self.assertEqual(len(payload), 3)
+
+    def test_datasets_route_filters_by_group(self):
+        response = self.client.get("/map/datasets", {"group": "hazards"})
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()["results"]
+        self.assertEqual(len(payload), 2)
+        self.assertEqual(
+            sorted(item["id"] for item in payload),
+            ["flood_extent", "storm_track"],
+        )
+
+    def test_datasets_route_filters_by_group_case_insensitive(self):
+        response = self.client.get("/map/datasets", {"group": "HAZARDS"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()["results"]), 2)
