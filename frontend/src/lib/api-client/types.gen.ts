@@ -833,6 +833,10 @@ export type MapDatasetsListData = {
     path?: never;
     query?: {
         /**
+         * Optional dataset group filter (for example, hazards).
+         */
+        group?: string;
+        /**
          * Number of results to return per page.
          */
         limit?: number;
