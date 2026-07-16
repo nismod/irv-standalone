@@ -98,7 +98,7 @@ const meta = {
         http.get('/api/map/infrastructure-tree', () => {
           return HttpResponse.json(mockInfrastructureTree);
         }),
-        http.get('/api/tiles/raster/sources/1/domains', () => {
+        http.get('/api/tiles/raster/sources/:domain/domains', () => {
           return HttpResponse.json(rasterSourceDomains);
         }),
       ],

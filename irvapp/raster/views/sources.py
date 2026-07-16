@@ -60,10 +60,11 @@ class RasterTileSourceDomainsView(APIView):
         operation_id="raster_tile_source_domains",
         responses={200: RasterTileSourceDomainsSerializer},
     )
-    def get(self, request, source_id):
+    def get(self, request, domain):
         try:
-            source = RasterTileSource.objects.get(pk=source_id)
-            domains = _source_options(source.database)
+            source = RasterTileSource.objects.get(domain=domain)
+            filters = {"type": domain} if "type" in source.keys else None
+            domains = _source_options(source.database, filters=filters)
             serializer = RasterTileSourceDomainsSerializer(
                 {"domains": domains}
             )

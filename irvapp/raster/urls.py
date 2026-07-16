@@ -13,7 +13,7 @@ urlpatterns = [
     path('sources', RasterTileSourceListView.as_view()),
     path('sources/<int:source_id>', RasterTileSourceDetailView.as_view()),
     path(
-        'sources/<int:source_id>/domains',
+        'sources/<slug:domain>/domains',
         RasterTileSourceDomainsView.as_view(),
     ),
     path(

@@ -153,16 +153,46 @@ class RasterTileSourceViewTests(TestCase):
         mock_get.return_value = SimpleNamespace(
             domain="land_cover",
             database="terracotta_land_cover",
+            keys=["region", "year"],
         )
         mock_source_options.return_value = [
             {"region": "global", "year": "2020"}
         ]
 
-        response = self.client.get("/tiles/raster/sources/1/domains")
+        response = self.client.get(
+            "/tiles/raster/sources/land_cover/domains"
+        )
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json()["domains"],
             [{"region": "global", "year": "2020"}],
         )
-        mock_source_options.assert_called_once_with("terracotta_land_cover")
+        mock_get.assert_called_once_with(domain="land_cover")
+        mock_source_options.assert_called_once_with(
+            "terracotta_land_cover", filters=None
+        )
+
+    @patch("raster.views.sources._source_options")
+    @patch("raster.views.sources.RasterTileSource.objects.get")
+    def test_filters_source_domains_by_terracotta_type(
+        self,
+        mock_get,
+        mock_source_options,
+    ):
+        self.client.force_authenticate(user=self.user)
+        mock_get.return_value = SimpleNamespace(
+            domain="coastal",
+            database="terracotta.sqlite",
+            keys=["type", "rp", "rcp", "epoch", "confidence"],
+        )
+        mock_source_options.return_value = []
+
+        response = self.client.get(
+            "/tiles/raster/sources/coastal/domains"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        mock_source_options.assert_called_once_with(
+            "terracotta.sqlite", filters={"type": "coastal"}
+        )
