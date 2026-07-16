@@ -2,4 +2,7 @@ from django.contrib import admin
 
 from .models import RasterTileSource
 
-admin.site.register(RasterTileSource)
+
+@admin.register(RasterTileSource)
+class RasterTileSourceAdmin(admin.ModelAdmin):
+    list_display = ["name", "domain", "group", "license", "keys"]
