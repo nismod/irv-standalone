@@ -319,6 +319,16 @@ export const rasterTileSources = <ThrowOnError extends boolean = false>(options?
     ...options
 });
 
+export const rasterTileSourceDomains = <ThrowOnError extends boolean = false>(options: Options<RasterTileSourceDomainsData, ThrowOnError>) => (options.client ?? client).get<RasterTileSourceDomainsResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/tiles/raster/sources/{domain}/domains',
+    ...options
+});
+
 export const rasterTileSource = <ThrowOnError extends boolean = false>(options: Options<RasterTileSourceData, ThrowOnError>) => (options.client ?? client).get<RasterTileSourceResponses, unknown, ThrowOnError>({
     security: [{
             in: 'cookie',
@@ -326,16 +336,6 @@ export const rasterTileSource = <ThrowOnError extends boolean = false>(options: 
             type: 'apiKey'
         }, { scheme: 'basic', type: 'http' }],
     url: '/tiles/raster/sources/{source_id}',
-    ...options
-});
-
-export const rasterTileSourceDomains = <ThrowOnError extends boolean = false>(options: Options<RasterTileSourceDomainsData, ThrowOnError>) => (options.client ?? client).get<RasterTileSourceDomainsResponses, unknown, ThrowOnError>({
-    security: [{
-            in: 'cookie',
-            name: 'sessionid',
-            type: 'apiKey'
-        }, { scheme: 'basic', type: 'http' }],
-    url: '/tiles/raster/sources/{source_id}/domains',
     ...options
 });
 

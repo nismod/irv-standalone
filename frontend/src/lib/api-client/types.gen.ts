@@ -1137,6 +1137,21 @@ export type RasterTileSourcesResponses = {
 
 export type RasterTileSourcesResponse = RasterTileSourcesResponses[keyof RasterTileSourcesResponses];
 
+export type RasterTileSourceDomainsData = {
+    body?: never;
+    path: {
+        domain: string;
+    };
+    query?: never;
+    url: '/tiles/raster/sources/{domain}/domains';
+};
+
+export type RasterTileSourceDomainsResponses = {
+    200: RasterTileSourceDomains;
+};
+
+export type RasterTileSourceDomainsResponse = RasterTileSourceDomainsResponses[keyof RasterTileSourceDomainsResponses];
+
 export type RasterTileSourceData = {
     body?: never;
     path: {
@@ -1151,21 +1166,6 @@ export type RasterTileSourceResponses = {
 };
 
 export type RasterTileSourceResponse = RasterTileSourceResponses[keyof RasterTileSourceResponses];
-
-export type RasterTileSourceDomainsData = {
-    body?: never;
-    path: {
-        source_id: number;
-    };
-    query?: never;
-    url: '/tiles/raster/sources/{source_id}/domains';
-};
-
-export type RasterTileSourceDomainsResponses = {
-    200: RasterTileSourceDomains;
-};
-
-export type RasterTileSourceDomainsResponse = RasterTileSourceDomainsResponses[keyof RasterTileSourceDomainsResponses];
 
 export type TilesVectorRetrieveData = {
     body?: never;
