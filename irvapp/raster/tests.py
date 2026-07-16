@@ -36,14 +36,16 @@ class RasterTileImageViewTests(TestCase):
         self.assertEqual(response.status_code, 403)
 
     @patch("raster.views.tiles._get_singleband_image")
-    @patch("raster.views.tiles._tile_db_from_domain")
+    @patch("raster.views.tiles.RasterTileSource.objects.values_list")
     def test_renders_tile_with_explicit_internal_colormap(
         self,
-        mock_tile_db_from_domain,
+        mock_values_list,
         mock_get_singleband_image,
     ):
         self.client.force_authenticate(user=self.user)
-        mock_tile_db_from_domain.return_value = "terracotta_land_cover"
+        mock_values_list.return_value.get.return_value = (
+            "terracotta_land_cover"
+        )
         mock_get_singleband_image.return_value = io.BytesIO(b"png-bytes")
 
         response = self.client.get(
@@ -61,14 +63,18 @@ class RasterTileImageViewTests(TestCase):
             [1, 2, 3],
             {"colormap": CATEGORICAL_COLOR_MAPS["land_cover"]},
         )
+        mock_values_list.assert_called_once_with("database", flat=True)
+        mock_values_list.return_value.get.assert_called_once_with(
+            domain="land_cover"
+        )
 
-    @patch("raster.views.tiles._tile_db_from_domain")
+    @patch("raster.views.tiles.RasterTileSource.objects.values_list")
     def test_requires_explicit_color_map_when_not_builtin(
         self,
-        mock_tile_db_from_domain,
+        mock_values_list,
     ):
         self.client.force_authenticate(user=self.user)
-        mock_tile_db_from_domain.return_value = "terracotta_aqueduct"
+        mock_values_list.return_value.get.return_value = "terracotta_aqueduct"
 
         response = self.client.get(
             "/tiles/raster/aqueduct/a/b/3/1/2.png?colormap=explicit"
@@ -78,6 +84,10 @@ class RasterTileImageViewTests(TestCase):
         self.assertEqual(
             response.json()["detail"],
             "colormap=explicit requires explicit_color_map to be included",
+        )
+        mock_values_list.assert_called_once_with("database", flat=True)
+        mock_values_list.return_value.get.assert_called_once_with(
+            domain="aqueduct"
         )
 
 
@@ -133,17 +143,17 @@ class RasterTileSourceViewTests(TestCase):
         self.assertEqual(response.json()["id"], 1)
 
     @patch("raster.views.sources._source_options")
-    @patch("raster.views.sources._tile_db_from_domain")
     @patch("raster.views.sources.RasterTileSource.objects.get")
     def test_returns_source_domains(
         self,
         mock_get,
-        mock_tile_db_from_domain,
         mock_source_options,
     ):
         self.client.force_authenticate(user=self.user)
-        mock_get.return_value = SimpleNamespace(domain="land_cover")
-        mock_tile_db_from_domain.return_value = "terracotta_land_cover"
+        mock_get.return_value = SimpleNamespace(
+            domain="land_cover",
+            database="terracotta_land_cover",
+        )
         mock_source_options.return_value = [
             {"region": "global", "year": "2020"}
         ]

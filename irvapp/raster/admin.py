@@ -5,4 +5,6 @@ from .models import RasterTileSource
 
 @admin.register(RasterTileSource)
 class RasterTileSourceAdmin(admin.ModelAdmin):
-    list_display = ["name", "domain", "group", "license", "keys"]
+    list_display = [
+        "name", "domain", "group", "license", "keys", "database"
+    ]

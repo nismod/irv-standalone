@@ -16,12 +16,11 @@ from terracotta.exceptions import DatasetNotFoundError
 
 from ..internal.colormaps import CATEGORICAL_COLOR_MAPS
 from ..internal.helpers import handle_exception
+from ..models import RasterTileSource
 from .shared import (
     MissingExplicitColourMapException,
-    SourceDBDoesNotExistException,
     _get_singleband_image,
     _parse_keys,
-    _tile_db_from_domain,
     get_image_size,
 )
 
@@ -95,7 +94,9 @@ class RasterTileImageView(APIView):
 
         try:
             parsed_keys = _parse_keys(keys)
-            source_db = _tile_db_from_domain(domain)
+            source_db = RasterTileSource.objects.values_list(
+                "database", flat=True
+            ).get(domain=domain)
             logger.debug("source DB for tile path: %s", source_db)
 
             options = {}
@@ -156,13 +157,13 @@ class RasterTileImageView(APIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        except SourceDBDoesNotExistException as err:
+        except RasterTileSource.DoesNotExist as err:
             handle_exception(logger, err)
             return Response(
                 {
                     "detail": (
-                        "source database for domain"
-                        f"{err.source_db} does not exist in "
+                        "source database for domain "
+                        f"{domain} does not exist in "
                         "tiles metastore"
                     )
                 },

@@ -12,11 +12,7 @@ from ..serializers import (
     RasterTileSourceDomainsSerializer,
     RasterTileSourceSerializer,
 )
-from .shared import (
-    SourceDBDoesNotExistException,
-    _source_options,
-    _tile_db_from_domain,
-)
+from .shared import _source_options
 
 logger = logging.getLogger(__name__)
 
@@ -67,24 +63,13 @@ class RasterTileSourceDomainsView(APIView):
     def get(self, request, source_id):
         try:
             source = RasterTileSource.objects.get(pk=source_id)
-            domains = _source_options(_tile_db_from_domain(source.domain))
+            domains = _source_options(source.database)
             serializer = RasterTileSourceDomainsSerializer(
                 {"domains": domains}
             )
             return Response(serializer.data)
         except RasterTileSource.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        except SourceDBDoesNotExistException as err:
-            handle_exception(logger, err)
-            return Response(
-                {
-                    "detail": (
-                        f"source database for domain {err.source_db} does not "
-                        "exist in tiles metastore"
-                    )
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
         except Exception as err:
             handle_exception(logger, err)
             return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
