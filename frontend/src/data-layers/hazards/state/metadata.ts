@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 import { unwrap } from 'jotai/utils';
-import { Dataset, mapDatasetsList } from 'lib/api-client';
+import { type Dataset, mapDatasetsList } from 'lib/api-client';
 
 async function fetchHazardsMetadata() {
   try {
@@ -36,6 +36,7 @@ export const hazardsMetadataState = unwrap(hazardsMetadataQuery, (prev) => prev 
 export const hazardsMapOrderState = atom<string[]>((get) => {
   const metadata = get(hazardsMetadataState);
   return Object.values(metadata)
+    .filter((dataset) => dataset.has_access)
     .sort((a, b) => a.stacking_order - b.stacking_order)
     .map((dataset) => dataset.id);
 });

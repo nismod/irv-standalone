@@ -42,10 +42,12 @@ function SpeedSlider({ value, onChange, options }) {
 }
 
 function HazardToggleSection({ hazard, disabled }) {
-  const HAZARDS_METADATA = useAtomValue(hazardsMetadataState);
-  if (!HAZARDS_METADATA[hazard]) {
+  const hazardsMetadata = useAtomValue(hazardsMetadataState);
+  const catalogueEntry = hazardsMetadata[hazard];
+  if (!catalogueEntry) {
     return null;
   }
+  const permissionDenied = !catalogueEntry.has_access;
   const otherProps =
     hazard === 'cyclone'
       ? {
@@ -54,7 +56,11 @@ function HazardToggleSection({ hazard, disabled }) {
         }
       : {};
   return (
-    <ToggleSection id={hazard} label={HAZARDS_METADATA[hazard].label} disabled={disabled}>
+    <ToggleSection
+      id={hazard}
+      label={catalogueEntry.label}
+      disabled={disabled || permissionDenied}
+    >
       <InputSection>
         {hazard === 'storm' ? (
           <FormControl fullWidth>

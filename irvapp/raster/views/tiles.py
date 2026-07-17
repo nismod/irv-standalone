@@ -9,10 +9,13 @@ from drf_spectacular.utils import (
     extend_schema,
 )
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from terracotta.exceptions import DatasetNotFoundError
+
+from api.permissions import HasDatasetAccess
 
 from ..internal.colormaps import CATEGORICAL_COLOR_MAPS
 from ..internal.helpers import handle_exception
@@ -26,9 +29,8 @@ from .shared import (
 
 logger = logging.getLogger(__name__)
 
-
 class RasterTileImageView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDatasetAccess]
 
     @extend_schema(
         parameters=[
@@ -61,6 +63,8 @@ class RasterTileImageView(APIView):
         responses={
             200: OpenApiResponse(description="Rendered raster tile response."),
             400: OpenApiResponse(description="Invalid tile parameters."),
+            403: OpenApiResponse(description="Raster source access denied."),
+            404: OpenApiResponse(description="Raster source not found."),
             500: OpenApiResponse(
                 description="Unexpected tile rendering error."
             ),
@@ -94,9 +98,9 @@ class RasterTileImageView(APIView):
 
         try:
             parsed_keys = _parse_keys(keys)
-            source_db = RasterTileSource.objects.values_list(
-                "database", flat=True
-            ).get(domain=domain)
+            source = RasterTileSource.objects.get(domain=domain)
+            self.check_object_permissions(request, source)
+            source_db = source.database
             logger.debug("source DB for tile path: %s", source_db)
 
             options = {}
@@ -157,18 +161,15 @@ class RasterTileImageView(APIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        except RasterTileSource.DoesNotExist as err:
-            handle_exception(logger, err)
+        except RasterTileSource.DoesNotExist:
             return Response(
                 {
-                    "detail": (
-                        "source database for domain "
-                        f"{domain} does not exist in "
-                        "tiles metastore"
-                    )
+                    "detail": "Not found."
                 },
-                status=status.HTTP_400_BAD_REQUEST,
+                status=status.HTTP_404_NOT_FOUND,
             )
+        except PermissionDenied:
+            raise
         except DatasetNotFoundError as err:
             handle_exception(logger, err)
             return Response(

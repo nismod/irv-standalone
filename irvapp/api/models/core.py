@@ -52,6 +52,16 @@ class Feature(models.Model):
         db_table = "features"
 
 
+class DatasetQuerySet(models.QuerySet):
+    def visible_to(self, user):
+        if user.is_superuser:
+            return self
+
+        return self.filter(
+            access_groups__in=user.groups.all()
+        ).distinct()
+
+
 class Dataset(models.Model):
     id = models.CharField(primary_key=True)
     label = models.CharField()
@@ -59,6 +69,13 @@ class Dataset(models.Model):
     unit = models.CharField()
     stacking_order = models.IntegerField()
     display_order = models.IntegerField()
+    access_groups = models.ManyToManyField(
+        "auth.Group",
+        blank=True,
+        related_name="datasets",
+    )
+
+    objects = DatasetQuerySet.as_manager()
 
     class Meta:
         db_table = "datasets"

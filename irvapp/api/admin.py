@@ -41,6 +41,8 @@ class DatasetAdmin(admin.ModelAdmin):
         "stacking_order",
         "display_order",
     ]
+    filter_horizontal = ["access_groups"]
+    search_fields = ["id", "label"]
 
 
 @admin.register(MapConfig)
