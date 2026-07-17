@@ -113,6 +113,7 @@ export type Dataset = {
     unit: string;
     stacking_order: number;
     display_order: number;
+    readonly has_access: boolean;
 };
 
 export type Feature = {
@@ -866,6 +867,17 @@ export type MapDatasetsRetrieveData = {
     url: '/map/datasets/{id}';
 };
 
+export type MapDatasetsRetrieveErrors = {
+    /**
+     * Dataset access denied.
+     */
+    403: unknown;
+    /**
+     * Dataset not found.
+     */
+    404: unknown;
+};
+
 export type MapDatasetsRetrieveResponses = {
     200: Dataset;
 };
@@ -1075,6 +1087,14 @@ export type TilesRasterPngRetrieveErrors = {
      */
     400: unknown;
     /**
+     * Raster source access denied.
+     */
+    403: unknown;
+    /**
+     * Raster source not found.
+     */
+    404: unknown;
+    /**
      * Unexpected tile rendering error.
      */
     500: unknown;
@@ -1146,6 +1166,17 @@ export type RasterTileSourceDomainsData = {
     url: '/tiles/raster/sources/{domain}/domains';
 };
 
+export type RasterTileSourceDomainsErrors = {
+    /**
+     * Raster source access denied.
+     */
+    403: unknown;
+    /**
+     * Raster source not found.
+     */
+    404: unknown;
+};
+
 export type RasterTileSourceDomainsResponses = {
     200: RasterTileSourceDomains;
 };
@@ -1159,6 +1190,17 @@ export type RasterTileSourceData = {
     };
     query?: never;
     url: '/tiles/raster/sources/{source_id}';
+};
+
+export type RasterTileSourceErrors = {
+    /**
+     * Raster source access denied.
+     */
+    403: unknown;
+    /**
+     * Raster source not found.
+     */
+    404: unknown;
 };
 
 export type RasterTileSourceResponses = {

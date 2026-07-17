@@ -7,7 +7,7 @@ import {
   RadioGroup,
   Select,
 } from '@mui/material';
-import { useId } from 'react';
+import { useEffect, useId } from 'react';
 import { useAtom, useAtomValue } from 'jotai';
 
 import { StateEffectRoot } from 'lib/recoil/state-effects/StateEffectRoot';
@@ -27,6 +27,16 @@ export const DamageSourceControl = () => {
   const [damageSource, setDamageSource] = useAtom(damageSourceState);
   const [damageType, setDamageType] = useAtom(damageTypeState);
   const id = useId();
+
+  useEffect(() => {
+    if (
+      damageSource !== 'all' &&
+      Object.keys(HAZARDS_METADATA).length > 0 &&
+      !HAZARDS_METADATA[damageSource]?.has_access
+    ) {
+      setDamageSource('all');
+    }
+  }, [damageSource, HAZARDS_METADATA, setDamageSource]);
 
   return (
     <>
@@ -51,15 +61,16 @@ export const DamageSourceControl = () => {
             <FormLabel component="legend">Hazard</FormLabel>
             <RadioGroup value={damageSource} onChange={(e, value) => setDamageSource(value)}>
               <FormControlLabel label="All Hazards" control={<Radio value="all" />} />
-              {hazardsUIOrder.filter((h) => !!HAZARDS_METADATA[h] && h !== 'storm').map(
-                (hazard) => (
+              {hazardsUIOrder
+                .filter((h) => !!HAZARDS_METADATA[h] && h !== 'storm')
+                .map((hazard) => (
                   <FormControlLabel
                     key={hazard}
                     label={HAZARDS_METADATA[hazard].label}
+                    disabled={!HAZARDS_METADATA[hazard].has_access}
                     control={<Radio value={hazard} />}
                   />
-                ),
-              )}
+                ))}
             </RadioGroup>
           </FormControl>
         </InputSection>
