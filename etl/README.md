@@ -74,8 +74,15 @@ whether the container is runnin in development or production) or once per host
 machine, with the full path changed from `/data` as required:
 
 ```
-terracotta ingest "/data/{type}__rp_{rp}__rcp_{rcp}__epoch_{epoch}__conf_{confidence}.tif" -o /data/terracotta.sqlite
+python irvapp/manage.py ingest_rasters /data \
+  --path-template '{type}__rp_{rp}__rcp_{rcp}__epoch_{epoch}__conf_{confidence}.tif' \
+  --database /data/terracotta.sqlite
 ```
+
+The database may instead be a PostgreSQL URL, for example
+`postgresql://user:password@host/terracotta`. The same values can be supplied
+through `RASTER_BASE_PATH`, `RASTER_PATH_TEMPLATE`, `TC_DRIVER_PATH`, and
+`TC_DRIVER_PROVIDER`.
 
 ## 4. Other
 

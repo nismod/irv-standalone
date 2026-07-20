@@ -59,20 +59,17 @@ services:
       - TC_PNG_COMPRESS_LEVEL=1
 
   raster-tile-ingester:
-    image: ghcr.io/nismod/jsrat-raster-tileserver:0.2
-    build: ./tileserver/raster
+    image: ghcr.io/nismod/jsrat-backend:0.2
+    build: ./irvapp
     profiles: ["raster-tile-ingester"]
     volumes:
       - ./tileserver/raster/data:/data
       - ./tileserver/raster/config.toml:/config.toml
-    command:
-      [
-        "terracotta",
-        "ingest",
-        "/data/{type}__rp_{rp}__rcp_{rcp}__epoch_{epoch}__conf_{confidence}.tif",
-        "-o",
-        "/data/terracotta.sqlite",
-      ]
+    environment:
+      - RASTER_BASE_PATH=/data
+      - RASTER_PATH_TEMPLATE={type}__rp_{rp}__rcp_{rcp}__epoch_{epoch}__conf_{confidence}.tif
+      - TC_DRIVER_PATH=/data/terracotta.sqlite
+    command: ["python", "manage.py", "ingest_rasters"]
 
   pixel-driller:
     image: ghcr.io/nismod/jsrat-pixel-driller:canary

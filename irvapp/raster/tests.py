@@ -1,15 +1,79 @@
 import io
+import tempfile
+from pathlib import Path
 from unittest.mock import patch
 
 from django.contrib.auth.models import Group, User
-from django.test import TestCase
+from django.test import SimpleTestCase, TestCase
 from rest_framework.test import APIClient
 
 from api.models import Dataset
+from raster import ingestion as ingest
 
 from .internal.colormaps import CATEGORICAL_COLOR_MAPS
 from .models import RasterTileSource
 from .views import _parse_keys
+
+
+class DiscoverRastersTests(SimpleTestCase):
+    def test_discovers_keys_from_custom_template(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base_path = Path(directory)
+            raster = base_path / "flood" / "2050_rcp_4x5.tif"
+            raster.parent.mkdir()
+            raster.touch()
+
+            keys, rasters = ingest.discover_rasters(
+                str(base_path / "{hazard}" / "{epoch}_rcp_{scenario}.tif")
+            )
+
+            self.assertEqual(keys, ["hazard", "epoch", "scenario"])
+            self.assertEqual(rasters, {("flood", "2050", "4x5"): str(raster)})
+
+    def test_rejects_duplicate_keys(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base_path = Path(directory)
+            (base_path / "one").mkdir()
+            (base_path / "two").mkdir()
+            (base_path / "one" / "flood.tif").touch()
+            (base_path / "two" / "flood.tif").touch()
+
+            with self.assertRaisesRegex(ValueError, "duplicate key values"):
+                ingest.discover_rasters(str(base_path / "{}" / "{hazard}.tif"))
+
+    def test_repeated_placeholder_must_match(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base_path = Path(directory)
+            (base_path / "flood").mkdir()
+            matching = base_path / "flood" / "flood.tif"
+            matching.touch()
+            (base_path / "flood" / "wind.tif").touch()
+
+            _, rasters = ingest.discover_rasters(
+                str(base_path / "{hazard}" / "{hazard}.tif")
+            )
+
+            self.assertEqual(rasters, {("flood",): str(matching)})
+
+
+class InferDatabaseProviderTests(SimpleTestCase):
+    def test_infers_postgresql_from_common_url_variants(self):
+        self.assertEqual(
+            ingest.infer_database_provider("postgres://user:pass@host/db"),
+            "postgresql",
+        )
+        self.assertEqual(
+            ingest.infer_database_provider(
+                "postgresql+psycopg://user:pass@host/db"
+            ),
+            "postgresql",
+        )
+
+    def test_falls_back_to_sqlite_for_unknown_schemes(self):
+        self.assertEqual(
+            ingest.infer_database_provider("oracle://user:pass@host/db"),
+            "sqlite",
+        )
 
 
 class ParseKeysTests(TestCase):
