@@ -551,7 +551,8 @@ class DatasetRouteTests(TestCase):
         payload = {
             item["id"]: item for item in response.json()["results"]
         }
-        self.assertEqual(set(payload), {"flood_extent", "storm_track", "roads"})
+        self.assertEqual(
+            set(payload), {"flood_extent", "storm_track", "roads"})
         self.assertTrue(payload["flood_extent"]["has_access"])
         self.assertFalse(payload["storm_track"]["has_access"])
         self.assertNotIn("access_groups", payload["storm_track"])

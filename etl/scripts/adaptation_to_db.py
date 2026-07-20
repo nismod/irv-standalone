@@ -43,13 +43,19 @@ def parse_adaptation(data):
             "cyclone_damage_curve_reduction": "protection_level",
         }
     )
-    # corner case for handling protection against "all" floods - set depth to 999
+    # Corner case for handling protection against "all" floods.
+    # Set the depth to 999.
     if "flood_protection_level" in data.columns:
         data.loc[
             data.flood_protection_level == "All", "protection_level"
         ] = 999
 
-    id_vars = ["uid", "adaptation_option", "protection_level", "adapt_cost_npv"]
+    id_vars = [
+        "uid",
+        "adaptation_option",
+        "protection_level",
+        "adapt_cost_npv",
+    ]
 
     if data.duplicated(subset=id_vars).sum() > 0:
         logging.warning("Dropping duplicated adaptation options")
@@ -69,7 +75,8 @@ def parse_adaptation(data):
     # join metadata columns
     data = data.join(meta)
 
-    # pivot back up so we end with a row per uid, hazard etc. (see index columns below)
+    # Pivot back up so we end with a row per uid, hazard, etc.
+    # See the index columns below.
     # and columns for each damage type, each with min/mean/max
     data = (
         data.drop(columns="variable")
@@ -127,7 +134,8 @@ if __name__ == "__main__":
 
     network_layers = pandas.read_csv(network_layers_fname)
     try:
-        network_layer = network_layers[network_layers.damage_ref == layer_name].iloc[0]
+        network_layer = network_layers[network_layers.damage_ref ==
+            layer_name].iloc[0]
     except IndexError as e:
         print(f"Could not find {layer_name} in network layers.")
         raise e
@@ -135,7 +143,8 @@ if __name__ == "__main__":
     adaptation = pandas.read_csv(avoided_risk_fname).set_index(
         network_layer.asset_id_column
     )
-    ids = pandas.read_parquet(uid_fname).set_index(network_layer.asset_id_column)
+    ids = pandas.read_parquet(uid_fname).set_index(
+        network_layer.asset_id_column)
     adaptation = adaptation.join(ids).reset_index(drop=True)
 
     adaptation_df = parse_adaptation(adaptation)
@@ -144,7 +153,8 @@ if __name__ == "__main__":
     db: Session
     with SessionLocal() as db:
         for i, damage_npv in enumerate(
-            tqdm(adaptation, desc=f"{layer_name}_adaptation", total=len(adaptation_df))
+            tqdm(adaptation, desc=f"{layer_name}_adaptation", total=len(
+                adaptation_df))
         ):
             db.add(damage_npv)
             if i % 1000 == 0:

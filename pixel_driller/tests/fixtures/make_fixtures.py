@@ -12,16 +12,14 @@ def create_raster(
     crs="EPSG:4326",
 ):
     """
-    Creates a single-band raster with constant or random values, occasionally introducing nodata values.
+    Create a single-band raster with constant values.
 
     Parameters:
         file_path (str): Path to save the raster.
         width (int): Width of the raster.
         height (int): Height of the raster.
-        value (int or None): Constant value for the raster. If None, random values are used.
+        value (int or None): Constant value for the raster.
         crs (str): Coordinate Reference System for the raster.
-        nodata_value (float or None): Value to use as nodata. If None, no nodata values are set.
-        nodata_frequency (float): Probability of a cell being assigned the nodata value.
     """
     transform = from_origin(0, 0, 1, 1)  # Arbitrary transform
     data = np.full((height, width), value, dtype=np.float32)

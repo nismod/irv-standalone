@@ -28,6 +28,8 @@ if __name__ == "__main__":
 
     mat = np.full((len(df), len(protection_levels)), protection_levels)
     df["levels"] = mat.tolist()
-    df = df.explode("levels").rename(columns={"levels": "adaptation_protection_level"})
+    df = df.explode("levels").rename(
+        columns={"levels": "adaptation_protection_level"})
 
-    df.to_json("adaptation-options-coastal-defence.json", orient="records", indent=2)
+    df.to_json("adaptation-options-coastal-defence.json",
+               orient="records", indent=2)

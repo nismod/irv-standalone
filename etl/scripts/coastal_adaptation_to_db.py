@@ -50,13 +50,20 @@ def parse_adaptation(data):
     # TODO: Set this in jamaica-infrastructure within benefit_cost_ratio rule
     data["protection_level"] = 100
 
-    # corner case for handling protection against "all" floods - set depth to 999
+    # Corner case for handling protection against "all" floods.
+    # Set the depth to 999.
     if "flood_protection_level" in data.columns:
         data.loc[
             data.flood_protection_level == "All", "protection_level"
         ] = 999
 
-    id_vars = ["uid", "adaptation_option", "protection_level", "adapt_cost_npv", "protector_feature_id"]
+    id_vars = [
+        "uid",
+        "adaptation_option",
+        "protection_level",
+        "adapt_cost_npv",
+        "protector_feature_id",
+    ]
 
     if data.duplicated(subset=id_vars).sum() > 0:
         logging.warning("Dropping duplicated adaptation options")
@@ -76,7 +83,8 @@ def parse_adaptation(data):
     # join metadata columns
     data = data.join(meta)
 
-    # pivot back up so we end with a row per uid, hazard etc. (see index columns below)
+    # Pivot back up so we end with a row per uid, hazard, etc.
+    # See the index columns below.
     # and columns for each damage type, each with min/mean/max
     data = (
         data.drop(columns="variable")
@@ -122,7 +130,8 @@ def ensure_columns(data, expected_columns):
 
 
 def match_asset_to_protector(asset_ids, p_ids, protector_dict):
-    flood_id_col = [col for col in protector_dict.columns if col.startswith('flood_id')][0]
+    flood_id_col = [
+        col for col in protector_dict.columns if col.startswith('flood_id')][0]
     flood_ids = protector_dict.loc[asset_ids, flood_id_col]
     protector_uids = p_ids.loc[flood_ids, 'uid']
     return protector_uids.values
@@ -144,7 +153,8 @@ if __name__ == "__main__":
 
     network_layers = pandas.read_csv(network_layers_fname)
     try:
-        network_layer = network_layers[network_layers.damage_ref == layer_name].iloc[0]
+        network_layer = network_layers[network_layers.damage_ref ==
+            layer_name].iloc[0]
     except IndexError as e:
         print(f"Could not find {layer_name} in network layers.")
         raise e
@@ -154,12 +164,15 @@ if __name__ == "__main__":
     )
     adaptation_with_ids = adaptation.copy()
 
-    ids = pandas.read_parquet(uid_fname).set_index(network_layer.asset_id_column)
+    ids = pandas.read_parquet(uid_fname).set_index(
+        network_layer.asset_id_column)
     adaptation = adaptation.join(ids).reset_index(drop=True)
 
     p_ids = pandas.read_parquet(p_uid_fname).set_index("id")
-    protector_dict = pandas.read_parquet(protector_dict_fname).set_index(network_layer.asset_id_column)
-    protector_ids = match_asset_to_protector(adaptation_with_ids.index, p_ids, protector_dict)
+    protector_dict = pandas.read_parquet(
+        protector_dict_fname).set_index(network_layer.asset_id_column)
+    protector_ids = match_asset_to_protector(
+        adaptation_with_ids.index, p_ids, protector_dict)
     adaptation['protector_feature_id'] = protector_ids
 
     adaptation_df = parse_adaptation(adaptation)
@@ -168,7 +181,8 @@ if __name__ == "__main__":
     db: Session
     with SessionLocal() as db:
         for i, damage_npv in enumerate(
-            tqdm(adaptation, desc=f"{layer_name}_adaptation", total=len(adaptation_df))
+            tqdm(adaptation, desc=f"{layer_name}_adaptation", total=len(
+                adaptation_df))
         ):
             upsert(db, damage_npv)
             if i % 1000 == 0:

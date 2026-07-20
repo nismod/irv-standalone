@@ -16,7 +16,8 @@ from backend.db.models import Feature
 def yield_features(layer, network_tilelayer, analysis_data_dir):
     """Read from file layer to modelled Features"""
     with fiona.open(
-        get_network_layer_path(layer, analysis_data_dir), layer=layer.gpkg_layer
+        get_network_layer_path(layer, analysis_data_dir),
+        layer=layer.gpkg_layer,
     ) as src:
         from_crs = src.crs
         to_crs = CRS.from_epsg(4326)
@@ -73,12 +74,24 @@ def clean_props(props, rename):
     return clean
 
 
-def get_network_layer(layer_name, network_layers, network_layers_areal_protection):
+def get_network_layer(
+    layer_name,
+    network_layers,
+    network_layers_areal_protection,
+):
     if not network_layers_areal_protection.empty:
-        if set(network_layers.columns) == set(network_layers_areal_protection.columns):
-            network_layers = pandas.concat([network_layers, network_layers_areal_protection], ignore_index=True)
+        if set(network_layers.columns) == set(
+            network_layers_areal_protection.columns
+        ):
+            network_layers = pandas.concat(
+                [network_layers, network_layers_areal_protection],
+                ignore_index=True,
+            )
         else:
-            raise ValueError("network_layers_areal_protection could not be appended to network_layers. DataFrames have different fields")
+            raise ValueError(
+                "network_layers_areal_protection could not be appended "
+                "to network_layers. DataFrames have different fields"
+            )
     try:
         return network_layers[network_layers.ref == layer_name].iloc[0]
     except IndexError as e:
@@ -103,7 +116,9 @@ def get_tilelayer_by_asset_type(layer_ref, props, network_tilelayers):
 
 def get_tilelayers_by_network_source(network_source, network_tilelayers):
     try:
-        return network_tilelayers[network_tilelayers.ref == network_source.ref].layer
+        return network_tilelayers[
+            network_tilelayers.ref == network_source.ref
+        ].layer
     except IndexError as e:
         print(f"Could not find {network_source} in tilelayers.")
         raise e
@@ -116,22 +131,34 @@ if __name__ == "__main__":
         analysis_data_dir = snakemake.config["analysis_data_dir"]
 
         network_layers = pandas.read_csv(snakemake.config["network_layers"])
-        network_layers_areal_protection = pandas.read_csv(snakemake.config["network_layers_areal_protection"])
-        network_tilelayers = pandas.read_csv(snakemake.config["network_tilelayers"])
+        network_layers_areal_protection = pandas.read_csv(
+            snakemake.config["network_layers_areal_protection"]
+        )
+        network_tilelayers = pandas.read_csv(
+            snakemake.config["network_tilelayers"]
+        )
 
     except NameError:
         print("Expected to run from snakemake")
         exit()
 
-    layer = get_network_layer(layer, network_layers,network_layers_areal_protection)
-    tilelayers = list(get_tilelayers_by_network_source(layer, network_tilelayers))
+    layer = get_network_layer(
+        layer,
+        network_layers,
+        network_layers_areal_protection,
+    )
+    tilelayers = list(
+        get_tilelayers_by_network_source(layer, network_tilelayers)
+    )
 
     db: Session
     with SessionLocal() as db:
         db.execute(delete(Feature).where(Feature.layer.in_(tilelayers)))
         db.commit()
 
-        for i, feature in enumerate(yield_features(layer, network_tilelayers, analysis_data_dir)):
+        for i, feature in enumerate(
+            yield_features(layer, network_tilelayers, analysis_data_dir)
+        ):
             db.add(feature)
             if i % 1000 == 0:
                 print(f"Processed {i} features", end="\r")
@@ -139,8 +166,10 @@ if __name__ == "__main__":
         db.commit()
 
     with open(str(output), "w") as fh:
-        fh.write(f"Loaded to database.\n\n")
+        fh.write("Loaded to database.\n\n")
         fh.write(
-            f"From:\n{get_network_layer_path(layer, analysis_data_dir)}|{layer.gpkg_layer}\n\n"
+            "From:\n"
+            f"{get_network_layer_path(layer, analysis_data_dir)}"
+            f"|{layer.gpkg_layer}\n\n"
         )
         fh.write(f"Details:\n{str(layer)}\n")

@@ -46,7 +46,8 @@ def parse_npv_damages(data):
     # join metadata columns
     data = data.join(meta)
 
-    # pivot back up so we end with a row per uid, hazard etc. (see index columns below)
+    # Pivot back up so we end with a row per uid, hazard, etc.
+    # See the index columns below.
     # and columns for each damage type, each with min/mean/max
     data = (
         data.drop(columns="variable")
@@ -96,13 +97,16 @@ if __name__ == "__main__":
 
     network_layers = pandas.read_csv(network_layers_fname)
     try:
-        network_layer = network_layers[network_layers.damage_ref == layer_name].iloc[0]
+        network_layer = network_layers[network_layers.damage_ref ==
+            layer_name].iloc[0]
     except IndexError as e:
         print(f"Could not find {layer_name} in network layers.")
         raise e
 
-    damages = pandas.read_csv(npv_fname).set_index(network_layer.asset_id_column)
-    ids = pandas.read_parquet(uid_fname).set_index(network_layer.asset_id_column)
+    damages = pandas.read_csv(npv_fname).set_index(
+        network_layer.asset_id_column)
+    ids = pandas.read_parquet(uid_fname).set_index(
+        network_layer.asset_id_column)
     damages = damages.join(ids).reset_index(drop=True)
 
     damages_df = parse_npv_damages(damages)
@@ -111,7 +115,9 @@ if __name__ == "__main__":
 
     db: Session
     with SessionLocal() as db:
-        for i, damage_npv in enumerate(tqdm(damages, desc=f"{layer_name}_npv")):
+        for i, damage_npv in enumerate(
+            tqdm(damages, desc=f"{layer_name}_npv")
+        ):
             db.add(damage_npv)
             if i % 1000 == 0:
                 db.commit()

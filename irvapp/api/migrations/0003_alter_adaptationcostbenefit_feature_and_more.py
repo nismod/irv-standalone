@@ -14,26 +14,34 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='adaptationcostbenefit',
             name='feature',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='api.feature'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to='api.feature'),
         ),
         migrations.AlterField(
             model_name='damagesexpected',
             name='feature',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='api.feature'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to='api.feature'),
         ),
         migrations.AlterField(
             model_name='damagesnpv',
             name='feature',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='api.feature'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to='api.feature'),
         ),
         migrations.AlterField(
             model_name='damagesrp',
             name='feature',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='api.feature'),
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE, to='api.feature'),
         ),
         migrations.AlterField(
             model_name='feature',
             name='layer',
-            field=models.ForeignKey(db_column='layer', on_delete=django.db.models.deletion.CASCADE, to='api.featurelayer'),
+            field=models.ForeignKey(
+                db_column='layer',
+                on_delete=django.db.models.deletion.CASCADE,
+                to='api.featurelayer',
+            ),
         ),
     ]
