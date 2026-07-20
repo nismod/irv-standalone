@@ -16,13 +16,14 @@ class Command(BaseCommand):
     help = "Ingest raster files into a Terracotta metadata database."
 
     def add_arguments(self, parser):
+        BASE_PATH = os.environ.get("RASTER_BASE_PATH", "/data/raster")
         parser.add_argument(
             "base_path",
             nargs="?",
-            default=os.environ.get("RASTER_BASE_PATH", "/data"),
+            default=BASE_PATH,
             help=(
                 "base directory for a relative path template "
-                "(default: RASTER_BASE_PATH or /data)"
+                "(default: RASTER_BASE_PATH or /data/raster)"
             ),
         )
         parser.add_argument(
@@ -37,7 +38,10 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--database",
-            default=os.environ.get("TC_DRIVER_PATH"),
+            default=os.environ.get(
+                "TC_DRIVER_PATH",
+                str(Path(BASE_PATH) / "terracotta.sqlite"),
+            ),
             help=(
                 "SQLite path or SQL URL "
                 "(default: TC_DRIVER_PATH or BASE_PATH/terracotta.sqlite)"
