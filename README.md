@@ -89,13 +89,17 @@ docker compose -f docker-compose.dev.yml build raster-tileserver
 Prepare the raster tileserver database:
 
 ```bash
-docker run \
-  --rm \
-  -it \
-  --workdir / \
-  --mount type=bind,source="$(pwd)"/tileserver/raster/data,target=/data \
-  jamaica-raster-tileserver:latest \
-  terracotta ingest "/data/{type}__rp_{rp}__rcp_{rcp}__epoch_{epoch}__conf_{confidence}.tif" -o /data/terracotta.sqlite
+docker compose -f docker-compose.dev.yml run --rm raster-tile-ingester
+```
+
+The ingester reads `RASTER_BASE_PATH`, `RASTER_PATH_TEMPLATE`, `TC_DRIVER_PATH`,
+and optionally `TC_DRIVER_PROVIDER`. For example, a PostgreSQL-backed ingest can
+be run with:
+
+```bash
+python irvapp/manage.py ingest_rasters tileserver/raster/data \
+  --path-template '{type}__rp_{rp}__rcp_{rcp}__epoch_{epoch}__conf_{confidence}.tif' \
+  --database 'postgresql://user:password@localhost/terracotta'
 ```
 
 Run the raster tileserver:
