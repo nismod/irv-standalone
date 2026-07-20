@@ -43,28 +43,12 @@ services:
       - ./tileserver/vector/data:/data
       - ./tileserver/vector/config.json:/config.json
 
-  raster-tileserver:
-    image: ghcr.io/nismod/jsrat-raster-tileserver:0.2
-    platform: linux/amd64
-    build: ./tileserver/raster
-    ports:
-      - "3003:5000"
-    volumes:
-      - ./tileserver/raster/data:/data
-      - ./tileserver/raster/config.toml:/config.toml
-    environment:
-      - TC_DRIVER_PATH=/data/terracotta.sqlite
-      - TC_RESAMPLING_METHOD=nearest
-      - TC_REPROJECTION_METHOD=nearest
-      - TC_PNG_COMPRESS_LEVEL=1
-
   raster-tile-ingester:
     image: ghcr.io/nismod/jsrat-backend:0.2
     build: ./irvapp
     profiles: ["raster-tile-ingester"]
     volumes:
       - ./tileserver/raster/data:/data
-      - ./tileserver/raster/config.toml:/config.toml
     environment:
       - RASTER_BASE_PATH=/data
       - RASTER_PATH_TEMPLATE={type}__rp_{rp}__rcp_{rcp}__epoch_{epoch}__conf_{confidence}.tif

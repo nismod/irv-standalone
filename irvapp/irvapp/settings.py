@@ -205,10 +205,5 @@ VECTOR_TILESERVER_INTERNAL_URL = os.environ.get(
     'http://vector-tileserver:8080',
 )
 
-RASTER_TILESERVER_INTERNAL_URL = os.environ.get(
-    'RASTER_TILESERVER_INTERNAL_URL',
-    'http://raster-tileserver:5000',
-)
-
 # Disable markdown image upload functionality
 MARTOR_UPLOAD_URL = ''
