@@ -97,6 +97,4 @@ services:
       - ./tileserver/raster/data:/data/raster:rw
     environment:
       - RASTER_BASE_PATH=/data/raster
-      - RASTER_PATH_TEMPLATE={type}__rp_{rp}__rcp_{rcp}__epoch_{epoch}__conf_{confidence}.tif
-      - TC_DRIVER_PATH=/data/raster/terracotta.sqlite
     command: ["python", "manage.py", "ingest_rasters"]
