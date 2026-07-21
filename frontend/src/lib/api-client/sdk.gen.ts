@@ -295,7 +295,7 @@ export const tilesRasterPngRetrieve = <ThrowOnError extends boolean = false>(opt
             name: 'sessionid',
             type: 'apiKey'
         }, { scheme: 'basic', type: 'http' }],
-    url: '/tiles/raster/{domain}/{keys}/{tile_z}/{tile_x}/{tile_y}.png',
+    url: '/tiles/raster/{dataset_id}/{keys}/{tile_z}/{tile_x}/{tile_y}.png',
     ...options
 });
 
@@ -325,7 +325,7 @@ export const rasterTileSourceDomains = <ThrowOnError extends boolean = false>(op
             name: 'sessionid',
             type: 'apiKey'
         }, { scheme: 'basic', type: 'http' }],
-    url: '/tiles/raster/sources/{domain}/domains',
+    url: '/tiles/raster/sources/{dataset_id}/domains',
     ...options
 });
 

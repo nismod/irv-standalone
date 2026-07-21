@@ -5,6 +5,7 @@ from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import Point
 from django.test import TestCase
 from rest_framework.test import APIClient
+from raster.models import RasterTileSource
 
 from api.models import (
     AdaptationCostBenefit,
@@ -486,6 +487,9 @@ class DatasetRouteTests(TestCase):
         self.access_group = Group.objects.create(name="dataset-access")
         self.user.groups.add(self.access_group)
         self.client.force_authenticate(user=self.user)
+        self.tile_source = RasterTileSource.objects.create(
+            keys=["type", "epoch"],
+        )
         datasets = [
             Dataset.objects.create(
                 id="flood_extent",
@@ -499,8 +503,10 @@ class DatasetRouteTests(TestCase):
                 id="storm_track",
                 label="Storm track",
                 group="hazards",
+                quantity="wind speed",
                 unit="n/a",
                 license="CC-BY",
+                tile_source=self.tile_source,
                 stacking_order=2,
                 display_order=2,
             ),
@@ -528,6 +534,11 @@ class DatasetRouteTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["license"], "CC-BY")
+        self.assertEqual(response.json()["quantity"], "wind speed")
+        self.assertEqual(
+            response.json()["tile_source"],
+            self.tile_source.pk,
+        )
 
     def test_datasets_route_filters_by_group(self):
         response = self.client.get("/map/datasets", {"group": "hazards"})

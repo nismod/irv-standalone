@@ -15,6 +15,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from terracotta.exceptions import DatasetNotFoundError
 
+from api.models import Dataset
 from api.permissions import HasDatasetAccess
 
 from ..internal.colormaps import CATEGORICAL_COLOR_MAPS
@@ -63,14 +64,22 @@ class RasterTileImageView(APIView):
         responses={
             200: OpenApiResponse(description="Rendered raster tile response."),
             400: OpenApiResponse(description="Invalid tile parameters."),
-            403: OpenApiResponse(description="Raster source access denied."),
-            404: OpenApiResponse(description="Raster source not found."),
+            403: OpenApiResponse(description="Access denied."),
+            404: OpenApiResponse(description="Not found."),
             500: OpenApiResponse(
                 description="Unexpected tile rendering error."
             ),
         },
     )
-    def get(self, request, domain="", keys="", tile_z=0, tile_x=0, tile_y=0):
+    def get(
+        self,
+        request,
+        dataset_id="",
+        keys="",
+        tile_z=0,
+        tile_x=0,
+        tile_y=0,
+    ):
         parsed_keys = []
         source_db = "unknown"
 
@@ -98,16 +107,23 @@ class RasterTileImageView(APIView):
 
         try:
             parsed_keys = _parse_keys(keys)
-            source = RasterTileSource.objects.get(domain=domain)
-            self.check_object_permissions(request, source)
+            dataset = Dataset.objects.select_related("tile_source").get(
+                pk=dataset_id
+            )
+            self.check_object_permissions(request, dataset)
+            source = dataset.tile_source
+            if source is None:
+                raise RasterTileSource.DoesNotExist
             source_db = source.database
             logger.debug("source DB for tile path: %s", source_db)
 
             options = {}
             if colormap_name:
                 if colormap_name == "explicit":
-                    if domain in CATEGORICAL_COLOR_MAPS.keys():
-                        options["colormap"] = CATEGORICAL_COLOR_MAPS[domain]
+                    if dataset_id in CATEGORICAL_COLOR_MAPS.keys():
+                        options["colormap"] = CATEGORICAL_COLOR_MAPS[
+                            dataset_id
+                        ]
                     elif not explicit_color_map:
                         raise MissingExplicitColourMapException()
                     else:
@@ -161,7 +177,7 @@ class RasterTileImageView(APIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        except RasterTileSource.DoesNotExist:
+        except (Dataset.DoesNotExist, RasterTileSource.DoesNotExist):
             return Response(
                 {
                     "detail": "Not found."

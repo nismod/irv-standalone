@@ -110,8 +110,10 @@ export type Dataset = {
     id: string;
     label: string;
     group: string;
+    quantity: string;
     unit: string;
     license?: string | null;
+    tile_source?: number | null;
     stacking_order: number;
     display_order: number;
     readonly has_access: boolean;
@@ -283,9 +285,6 @@ export type ProtectedFeature = {
 
 export type RasterTileSource = {
     readonly id: number;
-    domain: string;
-    name: string;
-    group: string;
     description?: string | null;
     keys: Array<string>;
 };
@@ -480,9 +479,6 @@ export type PaginatedInfrastructureNodeListWritable = {
 };
 
 export type RasterTileSourceWritable = {
-    domain: string;
-    name: string;
-    group: string;
     description?: string | null;
     keys: Array<string>;
 };
@@ -1057,7 +1053,7 @@ export type PixelRetrieveResponse = PixelRetrieveResponses[keyof PixelRetrieveRe
 export type TilesRasterPngRetrieveData = {
     body?: never;
     path: {
-        domain: string;
+        dataset_id: string;
         keys: string;
         tile_x: number;
         tile_y: number;
@@ -1077,7 +1073,7 @@ export type TilesRasterPngRetrieveData = {
          */
         stretch_range?: string;
     };
-    url: '/tiles/raster/{domain}/{keys}/{tile_z}/{tile_x}/{tile_y}.png';
+    url: '/tiles/raster/{dataset_id}/{keys}/{tile_z}/{tile_x}/{tile_y}.png';
 };
 
 export type TilesRasterPngRetrieveErrors = {
@@ -1159,10 +1155,10 @@ export type RasterTileSourcesResponse = RasterTileSourcesResponses[keyof RasterT
 export type RasterTileSourceDomainsData = {
     body?: never;
     path: {
-        domain: string;
+        dataset_id: string;
     };
     query?: never;
-    url: '/tiles/raster/sources/{domain}/domains';
+    url: '/tiles/raster/sources/{dataset_id}/domains';
 };
 
 export type RasterTileSourceDomainsErrors = {
