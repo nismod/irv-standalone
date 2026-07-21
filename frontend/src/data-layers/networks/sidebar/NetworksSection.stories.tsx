@@ -4,6 +4,35 @@ import { HttpResponse, http } from 'msw';
 
 import { NetworksSection } from './NetworksSection';
 import rasterSourceDomains from 'mocks/raster_source_domains.json';
+import { type PaginatedDatasetList } from 'lib/api-client';
+
+const hazardsResponse: PaginatedDatasetList = {
+  count: 2,
+  next: null,
+  previous: null,
+  results: [
+    {
+      id: 'fluvial',
+      label: 'River Flooding',
+      group: 'hazards',
+      quantity: 'depth',
+      unit: 'm',
+      stacking_order: 1,
+      display_order: 1,
+      has_access: true,
+    },
+    {
+      id: 'coastal',
+      label: 'Coastal Flooding',
+      group: 'hazards',
+      quantity: 'depth',
+      unit: 'm',
+      stacking_order: 2,
+      display_order: 2,
+      has_access: false,
+    },
+  ],
+};
 
 const mockInfrastructureTree = {
   count: 2,
@@ -98,7 +127,10 @@ const meta = {
         http.get('/api/map/infrastructure-tree', () => {
           return HttpResponse.json(mockInfrastructureTree);
         }),
-        http.get('/api/tiles/raster/sources/1/domains', () => {
+        http.get('/api/map/datasets', () => {
+          return HttpResponse.json(hazardsResponse);
+        }),
+        http.get('/api/tiles/raster/sources/:datasetId/domains', () => {
           return HttpResponse.json(rasterSourceDomains);
         }),
       ],
@@ -128,7 +160,7 @@ export const Risk: Story = {
   args: {
     view: 'risk',
   },
-  play: ({ canvasElement }) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(canvas.queryByText('Infrastructure')).toBeTruthy();
     expect(
@@ -136,6 +168,8 @@ export const Risk: Story = {
         'Infrastructure layers are currently following the Adaptation Options selection',
       ),
     ).toBeFalsy();
+    expect(await canvas.findByRole('radio', { name: 'River Flooding' })).toBeEnabled();
+    expect(await canvas.findByRole('radio', { name: 'Coastal Flooding' })).toBeDisabled();
   },
 };
 

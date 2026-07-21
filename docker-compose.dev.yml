@@ -96,12 +96,8 @@ services:
     profiles: ["raster-tile-ingester"]
     volumes:
       - ./tileserver/raster/data:/data/raster:rw
-      - ./tileserver/raster/config.toml:/config.toml
-    command:
-      [
-        "terracotta",
-        "ingest",
-        "/data/raster/{type}__rp_{rp}__rcp_{rcp}__epoch_{epoch}__conf_{confidence}.tif",
-        "-o",
-        "/data/raster/terracotta.sqlite",
-      ]
+    environment:
+      - RASTER_BASE_PATH=/data/raster
+      - RASTER_PATH_TEMPLATE={type}__rp_{rp}__rcp_{rcp}__epoch_{epoch}__conf_{confidence}.tif
+      - TC_DRIVER_PATH=/data/raster/terracotta.sqlite
+    command: ["python", "manage.py", "ingest_rasters"]

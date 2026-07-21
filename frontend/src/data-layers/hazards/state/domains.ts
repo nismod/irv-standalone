@@ -17,18 +17,23 @@ export type HazardDomains = Record<HazardType, HazardParamGroupConfig>;
 const hazardTypes: HazardType[] = ['fluvial', 'surface', 'coastal', 'cyclone'];
 
 async function fetchRasterSourceDomains() {
-  const { data, error } = await rasterTileSourceDomains({
-    baseUrl: '/api',
-    path: {
-      source_id: 1,
-    },
-    credentials: 'include',
+  const responses = await Promise.all(
+    hazardTypes.map((domain) =>
+      rasterTileSourceDomains({
+        baseUrl: '/api',
+        path: { dataset_id: domain },
+        credentials: 'include',
+      }),
+    ),
+  );
+
+  return responses.flatMap(({ data, error }, index) => {
+    if (error) {
+      console.error(`Error fetching ${hazardTypes[index]} raster source domains:`, error);
+      return [];
+    }
+    return data.domains;
   });
-  if (error) {
-    console.error('Error fetching raster source domains:', error);
-    return [];
-  }
-  return data.domains;
 }
 
 const rasterSourceQuery = atom(fetchRasterSourceDomains);

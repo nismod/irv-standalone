@@ -1,2 +1,0 @@
-terracotta==0.9.1
-gunicorn

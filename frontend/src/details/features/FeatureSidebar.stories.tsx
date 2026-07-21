@@ -62,7 +62,7 @@ export const Default: Story = {
         http.get('/api/map/features/1000036526', () => {
           return HttpResponse.json(mockFeatureDetails);
         }),
-        http.get('/api/tiles/raster/sources/1/domains', () => {
+        http.get('/api/tiles/raster/sources/:datasetId/domains', () => {
           return HttpResponse.json(rasterSourceDomains);
         }),
       ],

@@ -1,4 +1,6 @@
 from rest_framework import serializers
+
+from .permissions import user_has_dataset_access
 from .models import (
     AdaptationCostBenefit,
     DamagesExpected,
@@ -34,10 +36,34 @@ class DamagesNpvSerializer(serializers.ModelSerializer):
 
 
 class DatasetSerializer(serializers.ModelSerializer):
+    has_access = serializers.SerializerMethodField()
+
+    def get_has_access(self, dataset):
+        user = self.context["request"].user
+        if not hasattr(self, "_user_group_ids"):
+            self._user_group_ids = set(
+                user.groups.values_list("pk", flat=True)
+            )
+        return user_has_dataset_access(
+            user,
+            dataset,
+            user_group_ids=self._user_group_ids,
+        )
 
     class Meta:
         model = Dataset
-        fields = '__all__'
+        fields = [
+            "id",
+            "label",
+            "group",
+            "quantity",
+            "unit",
+            "license",
+            "tile_source",
+            "stacking_order",
+            "display_order",
+            "has_access",
+        ]
 
 
 class FeatureSerializer(serializers.ModelSerializer):

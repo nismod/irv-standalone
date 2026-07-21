@@ -53,11 +53,7 @@ class RasterTileSourceSerializer(serializers.ModelSerializer):
         model = RasterTileSource
         fields = [
             "id",
-            "domain",
-            "name",
-            "group",
             "description",
-            "license",
             "keys",
         ]
 

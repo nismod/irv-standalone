@@ -1,15 +1,17 @@
 import json
 
 from allauth.account.models import EmailAddress
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import Point
 from django.test import TestCase
 from rest_framework.test import APIClient
+from raster.models import RasterTileSource
 
 from api.models import (
     AdaptationCostBenefit,
     DamagesExpected,
     DamagesRp,
+    Dataset,
     Feature,
     FeatureLayer,
 )
@@ -474,3 +476,144 @@ class FeatureRouteTests(TestCase):
         self.assertEqual(len(payload["damages_return_period"]), 1)
         self.assertEqual(payload["damages_return_period"][0]["rp"], 100)
         self.assertEqual(payload["damages_npv"], [])
+
+
+class DatasetRouteTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user = User.objects.create_user(
+            username="testuser", password="testpass"
+        )
+        self.access_group = Group.objects.create(name="dataset-access")
+        self.user.groups.add(self.access_group)
+        self.client.force_authenticate(user=self.user)
+        self.tile_source = RasterTileSource.objects.create(
+            keys=["type", "epoch"],
+        )
+        datasets = [
+            Dataset.objects.create(
+                id="flood_extent",
+                label="Flood extent",
+                group="hazards",
+                unit="n/a",
+                stacking_order=1,
+                display_order=1,
+            ),
+            Dataset.objects.create(
+                id="storm_track",
+                label="Storm track",
+                group="hazards",
+                quantity="wind speed",
+                unit="n/a",
+                license="CC-BY",
+                tile_source=self.tile_source,
+                stacking_order=2,
+                display_order=2,
+            ),
+            Dataset.objects.create(
+                id="roads",
+                label="Road network",
+                group="networks",
+                unit="n/a",
+                stacking_order=1,
+                display_order=1,
+            ),
+        ]
+        for dataset in datasets:
+            dataset.access_groups.add(self.access_group)
+
+    def test_datasets_route_returns_all_datasets_without_group_filter(self):
+        response = self.client.get("/map/datasets")
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()["results"]
+        self.assertEqual(len(payload), 3)
+
+    def test_datasets_route_returns_license(self):
+        response = self.client.get("/map/datasets/storm_track")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["license"], "CC-BY")
+        self.assertEqual(response.json()["quantity"], "wind speed")
+        self.assertEqual(
+            response.json()["tile_source"],
+            self.tile_source.pk,
+        )
+
+    def test_datasets_route_filters_by_group(self):
+        response = self.client.get("/map/datasets", {"group": "hazards"})
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()["results"]
+        self.assertEqual(len(payload), 2)
+        self.assertEqual(
+            sorted(item["id"] for item in payload),
+            ["flood_extent", "storm_track"],
+        )
+
+    def test_datasets_route_filters_by_group_case_insensitive(self):
+        response = self.client.get("/map/datasets", {"group": "HAZARDS"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()["results"]), 2)
+
+    def test_datasets_route_marks_restricted_datasets(self):
+        access_group = Group.objects.create(name="hazard-data")
+        restricted = Dataset.objects.get(pk="storm_track")
+        restricted.access_groups.clear()
+        restricted.access_groups.add(access_group)
+
+        response = self.client.get("/map/datasets")
+
+        self.assertEqual(response.status_code, 200)
+        payload = {
+            item["id"]: item for item in response.json()["results"]
+        }
+        self.assertEqual(set(payload), {"flood_extent", "storm_track", "roads"})
+        self.assertTrue(payload["flood_extent"]["has_access"])
+        self.assertFalse(payload["storm_track"]["has_access"])
+        self.assertNotIn("access_groups", payload["storm_track"])
+
+    def test_group_member_can_list_and_retrieve_restricted_dataset(self):
+        access_group = Group.objects.create(name="hazard-data")
+        restricted = Dataset.objects.get(pk="storm_track")
+        restricted.access_groups.clear()
+        restricted.access_groups.add(access_group)
+        self.user.groups.add(access_group)
+
+        list_response = self.client.get("/map/datasets")
+        detail_response = self.client.get("/map/datasets/storm_track")
+
+        self.assertEqual(len(list_response.json()["results"]), 3)
+        storm_track = next(
+            item
+            for item in list_response.json()["results"]
+            if item["id"] == "storm_track"
+        )
+        self.assertTrue(storm_track["has_access"])
+        self.assertEqual(detail_response.status_code, 200)
+
+    def test_restricted_dataset_detail_returns_forbidden(self):
+        access_group = Group.objects.create(name="hazard-data")
+        restricted = Dataset.objects.get(pk="storm_track")
+        restricted.access_groups.clear()
+        restricted.access_groups.add(access_group)
+
+        response = self.client.get("/map/datasets/storm_track")
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_dataset_without_access_groups_is_denied(self):
+        dataset = Dataset.objects.get(pk="roads")
+        dataset.access_groups.clear()
+
+        list_response = self.client.get("/map/datasets")
+        detail_response = self.client.get("/map/datasets/roads")
+
+        roads = next(
+            item
+            for item in list_response.json()["results"]
+            if item["id"] == "roads"
+        )
+        self.assertFalse(roads["has_access"])
+        self.assertEqual(detail_response.status_code, 403)

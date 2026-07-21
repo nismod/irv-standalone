@@ -9,12 +9,6 @@ from ..serializers import ColorMapSerializer
 logger = logging.getLogger(__name__)
 
 
-class SourceDBDoesNotExistException(Exception):
-    def __init__(self, source_db):
-        super().__init__(source_db)
-        self.source_db = source_db
-
-
 class MissingExplicitColourMapException(Exception):
     pass
 
@@ -70,23 +64,7 @@ def _get_singleband_image(
     return singleband(driver_path, keys, tile_xyz=tile_xyz, **(options or {}))
 
 
-def _tile_db_from_domain(domain):
-    """
-    Map a tile domain to its Terracotta database name.
-    """
-
-    domain_to_db = {
-        "hazards": "terracotta.sqlite",
-        "hotspots": "terracotta.sqlite",
-    }
-
-    try:
-        return domain_to_db[domain]
-    except KeyError as err:
-        raise SourceDBDoesNotExistException(domain) from err
-
-
-def _source_options(source_db):
+def _source_options(source_db, filters=None):
     """
     Gather all URL key combinations available in the given source.
     """
@@ -101,4 +79,13 @@ def _source_options(source_db):
     datasets = driver.get_datasets()
     keys = driver.get_keys()
 
-    return [dict(zip(keys, values)) for values in datasets.keys()]
+    options = [dict(zip(keys, values)) for values in datasets.keys()]
+    if filters:
+        filtered_options = [
+            option
+            for option in options
+            if all(option.get(key) == value for key, value in filters.items())
+        ]
+        if filtered_options:
+            options = filtered_options
+    return options

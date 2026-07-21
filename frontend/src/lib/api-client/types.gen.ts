@@ -110,9 +110,13 @@ export type Dataset = {
     id: string;
     label: string;
     group: string;
+    quantity: string;
     unit: string;
+    license?: string | null;
+    tile_source?: number | null;
     stacking_order: number;
     display_order: number;
+    readonly has_access: boolean;
 };
 
 export type Feature = {
@@ -160,7 +164,7 @@ export type Logo = {
      * The named page slot in which this logo should appear.
      */
     slot: string;
-    src: string;
+    readonly src: string;
     href: string;
     alt: string;
     /**
@@ -182,6 +186,16 @@ export type MapConfig = {
 export type MarkdownBlock = {
     slot: string;
     markdown: string;
+};
+
+export type Page = {
+    name: string;
+    title: string;
+    readonly background_image: string | null;
+    /**
+     * Optional credit for the background image.
+     */
+    background_credit?: string | null;
 };
 
 export type PaginatedAdaptationCostBenefitList = {
@@ -271,11 +285,7 @@ export type ProtectedFeature = {
 
 export type RasterTileSource = {
     readonly id: number;
-    domain: string;
-    name: string;
-    group: string;
     description?: string | null;
-    license?: string | null;
     keys: Array<string>;
 };
 
@@ -411,6 +421,28 @@ export type LoginRequestWritable = {
     password: string;
 };
 
+export type LogoWritable = {
+    /**
+     * The named page slot in which this logo should appear.
+     */
+    slot: string;
+    href: string;
+    alt: string;
+    /**
+     * Displayed logo height in pixels.
+     */
+    height?: number;
+};
+
+export type PageWritable = {
+    name: string;
+    title: string;
+    /**
+     * Optional credit for the background image.
+     */
+    background_credit?: string | null;
+};
+
 export type PaginatedAdaptationCostBenefitListWritable = {
     count: number;
     next?: string | null;
@@ -447,11 +479,7 @@ export type PaginatedInfrastructureNodeListWritable = {
 };
 
 export type RasterTileSourceWritable = {
-    domain: string;
-    name: string;
-    group: string;
     description?: string | null;
-    license?: string | null;
     keys: Array<string>;
 };
 
@@ -586,6 +614,21 @@ export type ContentLogosListResponses = {
 };
 
 export type ContentLogosListResponse = ContentLogosListResponses[keyof ContentLogosListResponses];
+
+export type ContentMetadataRetrieveData = {
+    body?: never;
+    path: {
+        page: string;
+    };
+    query?: never;
+    url: '/content/{page}/metadata';
+};
+
+export type ContentMetadataRetrieveResponses = {
+    200: Page;
+};
+
+export type ContentMetadataRetrieveResponse = ContentMetadataRetrieveResponses[keyof ContentMetadataRetrieveResponses];
 
 export type MapAdaptationCostBenefitsListData = {
     body?: never;
@@ -786,6 +829,10 @@ export type MapDatasetsListData = {
     path?: never;
     query?: {
         /**
+         * Optional dataset group filter (for example, hazards).
+         */
+        group?: string;
+        /**
          * Number of results to return per page.
          */
         limit?: number;
@@ -813,6 +860,17 @@ export type MapDatasetsRetrieveData = {
     };
     query?: never;
     url: '/map/datasets/{id}';
+};
+
+export type MapDatasetsRetrieveErrors = {
+    /**
+     * Dataset access denied.
+     */
+    403: unknown;
+    /**
+     * Dataset not found.
+     */
+    404: unknown;
 };
 
 export type MapDatasetsRetrieveResponses = {
@@ -995,7 +1053,7 @@ export type PixelRetrieveResponse = PixelRetrieveResponses[keyof PixelRetrieveRe
 export type TilesRasterPngRetrieveData = {
     body?: never;
     path: {
-        domain: string;
+        dataset_id: string;
         keys: string;
         tile_x: number;
         tile_y: number;
@@ -1015,7 +1073,7 @@ export type TilesRasterPngRetrieveData = {
          */
         stretch_range?: string;
     };
-    url: '/tiles/raster/{domain}/{keys}/{tile_z}/{tile_x}/{tile_y}.png';
+    url: '/tiles/raster/{dataset_id}/{keys}/{tile_z}/{tile_x}/{tile_y}.png';
 };
 
 export type TilesRasterPngRetrieveErrors = {
@@ -1023,6 +1081,14 @@ export type TilesRasterPngRetrieveErrors = {
      * Invalid tile parameters.
      */
     400: unknown;
+    /**
+     * Raster source access denied.
+     */
+    403: unknown;
+    /**
+     * Raster source not found.
+     */
+    404: unknown;
     /**
      * Unexpected tile rendering error.
      */
@@ -1086,6 +1152,32 @@ export type RasterTileSourcesResponses = {
 
 export type RasterTileSourcesResponse = RasterTileSourcesResponses[keyof RasterTileSourcesResponses];
 
+export type RasterTileSourceDomainsData = {
+    body?: never;
+    path: {
+        dataset_id: string;
+    };
+    query?: never;
+    url: '/tiles/raster/sources/{dataset_id}/domains';
+};
+
+export type RasterTileSourceDomainsErrors = {
+    /**
+     * Raster source access denied.
+     */
+    403: unknown;
+    /**
+     * Raster source not found.
+     */
+    404: unknown;
+};
+
+export type RasterTileSourceDomainsResponses = {
+    200: RasterTileSourceDomains;
+};
+
+export type RasterTileSourceDomainsResponse = RasterTileSourceDomainsResponses[keyof RasterTileSourceDomainsResponses];
+
 export type RasterTileSourceData = {
     body?: never;
     path: {
@@ -1095,26 +1187,22 @@ export type RasterTileSourceData = {
     url: '/tiles/raster/sources/{source_id}';
 };
 
+export type RasterTileSourceErrors = {
+    /**
+     * Raster source access denied.
+     */
+    403: unknown;
+    /**
+     * Raster source not found.
+     */
+    404: unknown;
+};
+
 export type RasterTileSourceResponses = {
     200: RasterTileSource;
 };
 
 export type RasterTileSourceResponse = RasterTileSourceResponses[keyof RasterTileSourceResponses];
-
-export type RasterTileSourceDomainsData = {
-    body?: never;
-    path: {
-        source_id: number;
-    };
-    query?: never;
-    url: '/tiles/raster/sources/{source_id}/domains';
-};
-
-export type RasterTileSourceDomainsResponses = {
-    200: RasterTileSourceDomains;
-};
-
-export type RasterTileSourceDomainsResponse = RasterTileSourceDomainsResponses[keyof RasterTileSourceDomainsResponses];
 
 export type TilesVectorRetrieveData = {
     body?: never;

@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthLoginCreateData, AuthLoginCreateErrors, AuthLoginCreateResponses, AuthLogoutCreateData, AuthLogoutCreateErrors, AuthLogoutCreateResponses, AuthMeRetrieveData, AuthMeRetrieveResponses, AuthRegisterCreateData, AuthRegisterCreateErrors, AuthRegisterCreateResponses, ContentListData, ContentListResponses, ContentLogosListData, ContentLogosListResponses, MapAdaptationCostBenefitsListData, MapAdaptationCostBenefitsListResponses, MapAdaptationCostBenefitsRetrieveData, MapAdaptationCostBenefitsRetrieveResponses, MapAttributesCreateData, MapAttributesCreateResponses, MapConfigListData, MapConfigListResponses, MapConfigRetrieveData, MapConfigRetrieveResponses, MapDamagesExpectedListData, MapDamagesExpectedListResponses, MapDamagesExpectedRetrieveData, MapDamagesExpectedRetrieveResponses, MapDamagesRpListData, MapDamagesRpListResponses, MapDamagesRpRetrieveData, MapDamagesRpRetrieveResponses, MapDatasetsListData, MapDatasetsListResponses, MapDatasetsRetrieveData, MapDatasetsRetrieveResponses, MapFeaturesListData, MapFeaturesListResponses, MapFeaturesProtectedByListData, MapFeaturesProtectedByListResponses, MapFeaturesRetrieveData, MapFeaturesRetrieveResponses, MapFeaturesSortedByRetrieveData, MapFeaturesSortedByRetrieveResponses, MapInfrastructureTreeListData, MapInfrastructureTreeListResponses, MapInfrastructureTreeRetrieveData, MapInfrastructureTreeRetrieveResponses, PixelRetrieveData, PixelRetrieveResponses, RasterColormapData, RasterColormapErrors, RasterColormapResponses, RasterTileSourceData, RasterTileSourceDomainsData, RasterTileSourceDomainsResponses, RasterTileSourceResponses, RasterTileSourcesData, RasterTileSourcesResponses, TilesRasterPngRetrieveData, TilesRasterPngRetrieveErrors, TilesRasterPngRetrieveResponses, TilesVectorRetrieve2Data, TilesVectorRetrieve2Errors, TilesVectorRetrieve2Responses, TilesVectorRetrieveData, TilesVectorRetrieveErrors, TilesVectorRetrieveResponses } from './types.gen';
+import type { AuthLoginCreateData, AuthLoginCreateErrors, AuthLoginCreateResponses, AuthLogoutCreateData, AuthLogoutCreateErrors, AuthLogoutCreateResponses, AuthMeRetrieveData, AuthMeRetrieveResponses, AuthRegisterCreateData, AuthRegisterCreateErrors, AuthRegisterCreateResponses, ContentListData, ContentListResponses, ContentLogosListData, ContentLogosListResponses, ContentMetadataRetrieveData, ContentMetadataRetrieveResponses, MapAdaptationCostBenefitsListData, MapAdaptationCostBenefitsListResponses, MapAdaptationCostBenefitsRetrieveData, MapAdaptationCostBenefitsRetrieveResponses, MapAttributesCreateData, MapAttributesCreateResponses, MapConfigListData, MapConfigListResponses, MapConfigRetrieveData, MapConfigRetrieveResponses, MapDamagesExpectedListData, MapDamagesExpectedListResponses, MapDamagesExpectedRetrieveData, MapDamagesExpectedRetrieveResponses, MapDamagesRpListData, MapDamagesRpListResponses, MapDamagesRpRetrieveData, MapDamagesRpRetrieveResponses, MapDatasetsListData, MapDatasetsListResponses, MapDatasetsRetrieveData, MapDatasetsRetrieveErrors, MapDatasetsRetrieveResponses, MapFeaturesListData, MapFeaturesListResponses, MapFeaturesProtectedByListData, MapFeaturesProtectedByListResponses, MapFeaturesRetrieveData, MapFeaturesRetrieveResponses, MapFeaturesSortedByRetrieveData, MapFeaturesSortedByRetrieveResponses, MapInfrastructureTreeListData, MapInfrastructureTreeListResponses, MapInfrastructureTreeRetrieveData, MapInfrastructureTreeRetrieveResponses, PixelRetrieveData, PixelRetrieveResponses, RasterColormapData, RasterColormapErrors, RasterColormapResponses, RasterTileSourceData, RasterTileSourceDomainsData, RasterTileSourceDomainsErrors, RasterTileSourceDomainsResponses, RasterTileSourceErrors, RasterTileSourceResponses, RasterTileSourcesData, RasterTileSourcesResponses, TilesRasterPngRetrieveData, TilesRasterPngRetrieveErrors, TilesRasterPngRetrieveResponses, TilesVectorRetrieve2Data, TilesVectorRetrieve2Errors, TilesVectorRetrieve2Responses, TilesVectorRetrieveData, TilesVectorRetrieveErrors, TilesVectorRetrieveResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean> = Options2<TData, ThrowOnError> & {
     /**
@@ -83,6 +83,16 @@ export const contentLogosList = <ThrowOnError extends boolean = false>(options: 
             type: 'apiKey'
         }, { scheme: 'basic', type: 'http' }],
     url: '/content/{page}/logos',
+    ...options
+});
+
+export const contentMetadataRetrieve = <ThrowOnError extends boolean = false>(options: Options<ContentMetadataRetrieveData, ThrowOnError>) => (options.client ?? client).get<ContentMetadataRetrieveResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/content/{page}/metadata',
     ...options
 });
 
@@ -193,7 +203,7 @@ export const mapDatasetsList = <ThrowOnError extends boolean = false>(options?: 
     ...options
 });
 
-export const mapDatasetsRetrieve = <ThrowOnError extends boolean = false>(options: Options<MapDatasetsRetrieveData, ThrowOnError>) => (options.client ?? client).get<MapDatasetsRetrieveResponses, unknown, ThrowOnError>({
+export const mapDatasetsRetrieve = <ThrowOnError extends boolean = false>(options: Options<MapDatasetsRetrieveData, ThrowOnError>) => (options.client ?? client).get<MapDatasetsRetrieveResponses, MapDatasetsRetrieveErrors, ThrowOnError>({
     security: [{
             in: 'cookie',
             name: 'sessionid',
@@ -285,7 +295,7 @@ export const tilesRasterPngRetrieve = <ThrowOnError extends boolean = false>(opt
             name: 'sessionid',
             type: 'apiKey'
         }, { scheme: 'basic', type: 'http' }],
-    url: '/tiles/raster/{domain}/{keys}/{tile_z}/{tile_x}/{tile_y}.png',
+    url: '/tiles/raster/{dataset_id}/{keys}/{tile_z}/{tile_x}/{tile_y}.png',
     ...options
 });
 
@@ -309,23 +319,23 @@ export const rasterTileSources = <ThrowOnError extends boolean = false>(options?
     ...options
 });
 
-export const rasterTileSource = <ThrowOnError extends boolean = false>(options: Options<RasterTileSourceData, ThrowOnError>) => (options.client ?? client).get<RasterTileSourceResponses, unknown, ThrowOnError>({
+export const rasterTileSourceDomains = <ThrowOnError extends boolean = false>(options: Options<RasterTileSourceDomainsData, ThrowOnError>) => (options.client ?? client).get<RasterTileSourceDomainsResponses, RasterTileSourceDomainsErrors, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }, { scheme: 'basic', type: 'http' }],
+    url: '/tiles/raster/sources/{dataset_id}/domains',
+    ...options
+});
+
+export const rasterTileSource = <ThrowOnError extends boolean = false>(options: Options<RasterTileSourceData, ThrowOnError>) => (options.client ?? client).get<RasterTileSourceResponses, RasterTileSourceErrors, ThrowOnError>({
     security: [{
             in: 'cookie',
             name: 'sessionid',
             type: 'apiKey'
         }, { scheme: 'basic', type: 'http' }],
     url: '/tiles/raster/sources/{source_id}',
-    ...options
-});
-
-export const rasterTileSourceDomains = <ThrowOnError extends boolean = false>(options: Options<RasterTileSourceDomainsData, ThrowOnError>) => (options.client ?? client).get<RasterTileSourceDomainsResponses, unknown, ThrowOnError>({
-    security: [{
-            in: 'cookie',
-            name: 'sessionid',
-            type: 'apiKey'
-        }, { scheme: 'basic', type: 'http' }],
-    url: '/tiles/raster/sources/{source_id}/domains',
     ...options
 });
 

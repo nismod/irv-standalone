@@ -1,6 +1,15 @@
 from django.contrib import admin
 
-from content.models import Logo, MarkdownBlock
+from content.models import Logo, MarkdownBlock, Page
+
+
+@admin.register(Page)
+class PageAdmin(admin.ModelAdmin):
+    list_display = ["name", "title"]
+    search_fields = ["name", "title"]
+
+    class Media:
+        css = {"all": ("content/admin.css",)}
 
 
 @admin.register(MarkdownBlock)

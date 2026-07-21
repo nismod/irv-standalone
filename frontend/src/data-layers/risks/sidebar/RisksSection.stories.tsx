@@ -20,7 +20,7 @@ const meta = {
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/tiles/raster/sources/1/domains', () => {
+        http.get('/api/tiles/raster/sources/:datasetId/domains', () => {
           return HttpResponse.json(rasterSourceDomains);
         }),
       ],
