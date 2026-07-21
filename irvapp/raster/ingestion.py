@@ -9,9 +9,6 @@ import string
 from pathlib import Path
 from typing import Sequence
 
-DEFAULT_PATH_TEMPLATE = (
-    "{type}__rp_{rp}__rcp_{rcp}__epoch_{epoch}__conf_{confidence}.tif"
-)
 SUPPORTED_DATABASE_PROVIDERS = ("sqlite", "mysql", "postgresql")
 
 
@@ -191,4 +188,3 @@ def ingest_rasters(
             driver.insert(key_values, raster_path, skip_metadata=skip_metadata)
 
     return len(rasters)
-

@@ -5,11 +5,8 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
 
-from raster.ingestion import (
-    DEFAULT_PATH_TEMPLATE,
-    SUPPORTED_DATABASE_PROVIDERS,
-    ingest_rasters,
-)
+from raster.ingestion import ingest_rasters
+from raster.models import RasterTileSource
 
 
 class Command(BaseCommand):
@@ -24,36 +21,6 @@ class Command(BaseCommand):
             help=(
                 "base directory for a relative path template "
                 "(default: RASTER_BASE_PATH or /data/raster)"
-            ),
-        )
-        parser.add_argument(
-            "--path-template",
-            default=os.environ.get(
-                "RASTER_PATH_TEMPLATE", DEFAULT_PATH_TEMPLATE
-            ),
-            help=(
-                "Python-style raster path template "
-                "(default: RASTER_PATH_TEMPLATE)"
-            ),
-        )
-        parser.add_argument(
-            "--database",
-            default=os.environ.get(
-                "TC_DRIVER_PATH",
-                str(Path(BASE_PATH) / "terracotta.sqlite"),
-            ),
-            help=(
-                "SQLite path or SQL URL "
-                "(default: TC_DRIVER_PATH or BASE_PATH/terracotta.sqlite)"
-            ),
-        )
-        parser.add_argument(
-            "--database-provider",
-            choices=SUPPORTED_DATABASE_PROVIDERS,
-            default=os.environ.get("TC_DRIVER_PROVIDER"),
-            help=(
-                "Terracotta database provider "
-                "(default: TC_DRIVER_PROVIDER or auto-detect)"
             ),
         )
         parser.add_argument(
@@ -74,21 +41,35 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         base_path = Path(options["base_path"]).expanduser().resolve()
-        path_template = Path(options["path_template"]).expanduser()
-        if not path_template.is_absolute():
-            path_template = base_path / path_template
+        sources = (
+            RasterTileSource.objects.order_by("path_template", "database")
+            .values_list("path_template", "database")
+            .distinct()
+        )
 
-        database = options["database"] or str(base_path / "terracotta.sqlite")
+        count = 0
         try:
-            count = ingest_rasters(
-                path_template=str(path_template),
-                database=database,
-                database_provider=options["database_provider"],
-                rgb_key=options["rgb_key"],
-                skip_existing=options["skip_existing"],
-                skip_metadata=options["skip_metadata"],
-                quiet=options["quiet"],
-            )
+            for path_template, database in sources:
+                path_template = Path(path_template).expanduser()
+                if not path_template.is_absolute():
+                    path_template = base_path / path_template
+
+                database_str = str(database)
+                if "://" not in database_str:
+                    database_path = Path(database_str).expanduser()
+                    if not database_path.is_absolute():
+                        database_path = base_path / database_path
+                    database_str = str(database_path)
+
+                count += ingest_rasters(
+                    path_template=str(path_template),
+                    database=database_str,
+                    database_provider=None,
+                    rgb_key=options["rgb_key"],
+                    skip_existing=options["skip_existing"],
+                    skip_metadata=options["skip_metadata"],
+                    quiet=options["quiet"],
+                )
         except Exception as exc:
             raise CommandError(str(exc)) from exc
 
