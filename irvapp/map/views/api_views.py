@@ -15,13 +15,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.serializers import (
+from map.serializers import (
     SortedFeatureSerializer,
     ProtectedFeatureSerializer,
     AttributeLookupRequestSerializer,
     AttributeLookupResponseSerializer,
 )
-from api.models import (
+from map.models import (
     Feature,
     AdaptationCostBenefit,
     DamagesExpected,

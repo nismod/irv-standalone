@@ -53,7 +53,7 @@ INSTALLED_APPS = [
     'martor',
     # Local apps
     'irv_auth',
-    'api',
+    'map',
     'content',
     'vector_proxy',
     'raster',

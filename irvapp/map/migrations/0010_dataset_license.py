@@ -2,7 +2,7 @@ from django.db import migrations, models
 
 
 def copy_source_licenses_to_datasets(apps, schema_editor):
-    Dataset = apps.get_model("api", "Dataset")
+    Dataset = apps.get_model("map", "Dataset")
     RasterTileSource = apps.get_model("raster", "RasterTileSource")
 
     source_rows = (
@@ -28,7 +28,7 @@ def copy_source_licenses_to_datasets(apps, schema_editor):
     Dataset.objects.bulk_update(datasets, ["license"])
 
 def copy_dataset_licenses_to_sources(apps, schema_editor):
-    Dataset = apps.get_model("api", "Dataset")
+    Dataset = apps.get_model("map", "Dataset")
     RasterTileSource = apps.get_model("raster", "RasterTileSource")
 
     for dataset in Dataset.objects.exclude(license__isnull=True):
@@ -40,7 +40,7 @@ def copy_dataset_licenses_to_sources(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("api", "0009_dataset_access_groups"),
+        ("map", "0009_dataset_access_groups"),
         ("raster", "0004_rastertilesource_dataset"),
     ]
 

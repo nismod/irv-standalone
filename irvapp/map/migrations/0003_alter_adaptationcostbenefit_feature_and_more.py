@@ -7,7 +7,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0002_rename_features_feature_and_more'),
+        ('map', '0002_rename_features_feature_and_more'),
     ]
 
     operations = [
@@ -15,25 +15,25 @@ class Migration(migrations.Migration):
             model_name='adaptationcostbenefit',
             name='feature',
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to='api.feature'),
+                on_delete=django.db.models.deletion.CASCADE, to='map.feature'),
         ),
         migrations.AlterField(
             model_name='damagesexpected',
             name='feature',
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to='api.feature'),
+                on_delete=django.db.models.deletion.CASCADE, to='map.feature'),
         ),
         migrations.AlterField(
             model_name='damagesnpv',
             name='feature',
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to='api.feature'),
+                on_delete=django.db.models.deletion.CASCADE, to='map.feature'),
         ),
         migrations.AlterField(
             model_name='damagesrp',
             name='feature',
             field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to='api.feature'),
+                on_delete=django.db.models.deletion.CASCADE, to='map.feature'),
         ),
         migrations.AlterField(
             model_name='feature',
@@ -41,7 +41,7 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(
                 db_column='layer',
                 on_delete=django.db.models.deletion.CASCADE,
-                to='api.featurelayer',
+                to='map.featurelayer',
             ),
         ),
     ]
