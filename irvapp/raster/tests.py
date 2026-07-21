@@ -9,9 +9,10 @@ from rest_framework.test import APIClient
 
 from api.models import Dataset
 from raster import ingestion as ingest
+from raster.management.commands.ingest_rasters import Command
 
 from .internal.colormaps import CATEGORICAL_COLOR_MAPS
-from .models import RasterTileSource
+from .models import DEFAULT_PATH_TEMPLATE, RasterTileSource
 from .views import _parse_keys
 
 
@@ -84,6 +85,74 @@ class ParseKeysTests(TestCase):
     def test_raises_for_slash_only_keys(self):
         with self.assertRaises(ValueError):
             _parse_keys("///")
+
+
+class RasterTileSourceModelTests(TestCase):
+    def test_path_template_defaults_from_model(self):
+        source = RasterTileSource.objects.create(keys=["type", "epoch"])
+
+        self.assertEqual(source.path_template, DEFAULT_PATH_TEMPLATE)
+
+
+class IngestRasterCommandTests(TestCase):
+    @patch("raster.management.commands.ingest_rasters.ingest_rasters")
+    def test_ingests_each_unique_tile_source_configuration(
+        self,
+        mock_ingest_rasters,
+    ):
+        Command().handle(
+            base_path="/data/raster",
+            rgb_key=None,
+            skip_existing=False,
+            skip_metadata=False,
+            quiet=True,
+        )
+
+        self.assertEqual(mock_ingest_rasters.call_count, 0)
+
+        RasterTileSource.objects.create(
+            keys=["type", "epoch"],
+            database="terracotta_a.sqlite",
+            path_template="hazards/{type}.tif",
+        )
+        RasterTileSource.objects.create(
+            keys=["type", "epoch"],
+            database="terracotta_a.sqlite",
+            path_template="hazards/{type}.tif",
+        )
+        RasterTileSource.objects.create(
+            keys=["type", "epoch"],
+            database="terracotta_b.sqlite",
+            path_template="/abs/{type}.tif",
+        )
+
+        Command().handle(
+            base_path="/base",
+            rgb_key="type",
+            skip_existing=True,
+            skip_metadata=True,
+            quiet=True,
+        )
+
+        self.assertEqual(mock_ingest_rasters.call_count, 2)
+        mock_ingest_rasters.assert_any_call(
+            path_template="/base/hazards/{type}.tif",
+            database="/base/terracotta_a.sqlite",
+            database_provider=None,
+            rgb_key="type",
+            skip_existing=True,
+            skip_metadata=True,
+            quiet=True,
+        )
+        mock_ingest_rasters.assert_any_call(
+            path_template="/abs/{type}.tif",
+            database="/base/terracotta_b.sqlite",
+            database_provider=None,
+            rgb_key="type",
+            skip_existing=True,
+            skip_metadata=True,
+            quiet=True,
+        )
 
 
 class RasterTileImageViewTests(TestCase):
