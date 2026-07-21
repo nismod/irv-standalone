@@ -16,7 +16,7 @@ def seed_map_config(apps, schema_editor):
     MapConfig = apps.get_model("map", "MapConfig")
 
     for config_name, config_value, config_type in INITIAL_MAP_CONFIG:
-        MapConfig.objects.update_or_create(
+        MapConfig.objects.get_or_create(
             config_name=config_name,
             defaults={
                 "config_value": config_value,
@@ -27,8 +27,13 @@ def seed_map_config(apps, schema_editor):
 
 def unseed_map_config(apps, schema_editor):
     MapConfig = apps.get_model("map", "MapConfig")
-    config_names = [config_name for config_name, _, _ in INITIAL_MAP_CONFIG]
-    MapConfig.objects.filter(config_name__in=config_names).delete()
+
+    for config_name, config_value, config_type in INITIAL_MAP_CONFIG:
+        MapConfig.objects.filter(
+            config_name=config_name,
+            config_value=config_value,
+            config_type=config_type,
+        ).delete()
 
 
 class Migration(migrations.Migration):
