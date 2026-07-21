@@ -8,7 +8,8 @@ INITIAL_MAP_CONFIG = (
     ("zoom", "9", "number"),
     ("minZoom", "3", "number"),
     ("maxZoom", "16", "number"),
-    ("pitch", "0", "number"),
+    ("minPitch", "0", "number"),
+    ("maxPitch", "0", "number"),
 )
 
 
