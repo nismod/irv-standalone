@@ -37,12 +37,15 @@ class DatasetAdmin(admin.ModelAdmin):
         "id",
         "label",
         "group",
+        "quantity",
         "unit",
         "license",
+        "tile_source",
         "stacking_order",
         "display_order",
     ]
     filter_horizontal = ["access_groups"]
+    autocomplete_fields = ["tile_source"]
     search_fields = ["id", "label"]
 
 

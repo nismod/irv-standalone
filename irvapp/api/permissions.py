@@ -20,9 +20,12 @@ class HasDatasetAccess(BasePermission):
     message = "You do not have permission to access this dataset."
 
     def has_object_permission(self, request, view, obj):
-        dataset = getattr(obj, "dataset", obj)
-        if hasattr(obj, "dataset"):
+        if hasattr(obj, "datasets"):
             self.message = (
                 "You do not have permission to access this raster source."
             )
-        return user_has_dataset_access(request.user, dataset)
+            if not request.user.is_authenticated:
+                return False
+            return obj.datasets.visible_to(request.user).exists()
+
+        return user_has_dataset_access(request.user, obj)

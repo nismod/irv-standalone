@@ -95,11 +95,20 @@ class RasterTileImageViewTests(TestCase):
         )
         self.access_group = Group.objects.create(name="tile-access")
         self.user.groups.add(self.access_group)
+        land_cover_source = RasterTileSource.objects.create(
+            keys=["region", "year"],
+            database="terracotta_land_cover",
+        )
+        aqueduct_source = RasterTileSource.objects.create(
+            keys=["region", "year"],
+            database="terracotta_aqueduct",
+        )
         land_cover_dataset = Dataset.objects.create(
             id="land_cover",
             label="Land Cover",
             group="exposure",
             unit="class",
+            tile_source=land_cover_source,
             stacking_order=1,
             display_order=1,
         )
@@ -109,26 +118,11 @@ class RasterTileImageViewTests(TestCase):
             label="Aqueduct",
             group="hazards",
             unit="m",
+            tile_source=aqueduct_source,
             stacking_order=2,
             display_order=2,
         )
         aqueduct_dataset.access_groups.add(self.access_group)
-        RasterTileSource.objects.create(
-            domain="land_cover",
-            name="Land Cover",
-            group="Exposure",
-            keys=["region", "year"],
-            database="terracotta_land_cover",
-            dataset=land_cover_dataset,
-        )
-        RasterTileSource.objects.create(
-            domain="aqueduct",
-            name="Aqueduct",
-            group="Hazards",
-            keys=["region", "year"],
-            database="terracotta_aqueduct",
-            dataset=aqueduct_dataset,
-        )
 
     def test_requires_authentication(self):
         response = self.client.get(
@@ -179,8 +173,8 @@ class RasterTileImageViewTests(TestCase):
         self,
         mock_get_singleband_image,
     ):
-        source = RasterTileSource.objects.get(domain="land_cover")
-        dataset = source.dataset
+        source = Dataset.objects.get(pk="land_cover").tile_source
+        dataset = source.datasets.get()
         dataset.access_groups.clear()
         dataset.access_groups.add(Group.objects.create(name="restricted"))
         self.client.force_authenticate(user=self.user)
@@ -192,7 +186,7 @@ class RasterTileImageViewTests(TestCase):
         self.assertEqual(response.status_code, 403)
         self.assertEqual(
             response.json()["detail"],
-            "You do not have permission to access this raster source.",
+            "You do not have permission to access this dataset.",
         )
         mock_get_singleband_image.assert_not_called()
 
@@ -208,6 +202,29 @@ class RasterTileImageViewTests(TestCase):
         self.assertEqual(response.status_code, 404)
         mock_get_singleband_image.assert_not_called()
 
+    @patch("raster.views.tiles._get_singleband_image")
+    def test_dataset_without_tile_source_returns_not_found(
+        self,
+        mock_get_singleband_image,
+    ):
+        dataset = Dataset.objects.create(
+            id="vector_only",
+            label="Vector only",
+            group="networks",
+            unit="n/a",
+            stacking_order=3,
+            display_order=3,
+        )
+        dataset.access_groups.add(self.access_group)
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(
+            "/tiles/raster/vector_only/a/b/3/1/2.png"
+        )
+
+        self.assertEqual(response.status_code, 404)
+        mock_get_singleband_image.assert_not_called()
+
 
 class RasterTileSourceViewTests(TestCase):
     def setUp(self):
@@ -218,25 +235,22 @@ class RasterTileSourceViewTests(TestCase):
         )
         self.access_group = Group.objects.create(name="source-access")
         self.user.groups.add(self.access_group)
-        dataset = Dataset.objects.create(
+        self.source = RasterTileSource.objects.create(
+            description="Land cover tiles",
+            keys=["region", "year"],
+            database="terracotta_land_cover",
+        )
+        self.dataset = Dataset.objects.create(
             id="land_cover",
             label="Land Cover",
             group="exposure",
             unit="class",
             license="CC-BY",
+            tile_source=self.source,
             stacking_order=1,
             display_order=1,
         )
-        dataset.access_groups.add(self.access_group)
-        self.source = RasterTileSource.objects.create(
-            domain="land_cover",
-            name="Land Cover",
-            group="Exposure",
-            description="Land cover tiles",
-            keys=["region", "year"],
-            database="terracotta_land_cover",
-            dataset=dataset,
-        )
+        self.dataset.access_groups.add(self.access_group)
 
     def test_sources_requires_authentication(self):
         response = self.client.get("/tiles/raster/sources")
@@ -249,7 +263,10 @@ class RasterTileSourceViewTests(TestCase):
         response = self.client.get("/tiles/raster/sources")
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()[0]["domain"], "land_cover")
+        self.assertEqual(response.json()[0]["id"], self.source.pk)
+        self.assertNotIn("domain", response.json()[0])
+        self.assertNotIn("name", response.json()[0])
+        self.assertNotIn("group", response.json()[0])
         self.assertNotIn("license", response.json()[0])
 
     def test_returns_single_tile_source(self):
@@ -291,23 +308,20 @@ class RasterTileSourceViewTests(TestCase):
         mock_source_options,
     ):
         self.client.force_authenticate(user=self.user)
+        source = RasterTileSource.objects.create(
+            database="terracotta.sqlite",
+            keys=["type", "rp", "rcp", "epoch", "confidence"],
+        )
         dataset = Dataset.objects.create(
             id="coastal",
             label="Coastal",
             group="hazards",
             unit="m",
+            tile_source=source,
             stacking_order=2,
             display_order=2,
         )
         dataset.access_groups.add(self.access_group)
-        RasterTileSource.objects.create(
-            domain="coastal",
-            name="Coastal",
-            group="Hazards",
-            database="terracotta.sqlite",
-            keys=["type", "rp", "rcp", "epoch", "confidence"],
-            dataset=dataset,
-        )
         mock_source_options.return_value = []
 
         response = self.client.get(
@@ -324,7 +338,7 @@ class RasterTileSourceViewTests(TestCase):
         self,
         mock_source_options,
     ):
-        dataset = self.source.dataset
+        dataset = self.dataset
         dataset.access_groups.clear()
         dataset.access_groups.add(Group.objects.create(name="restricted"))
         self.client.force_authenticate(user=self.user)
@@ -346,13 +360,36 @@ class RasterTileSourceViewTests(TestCase):
         )
         self.assertEqual(
             domains_response.json()["detail"],
-            "You do not have permission to access this raster source.",
+            "You do not have permission to access this dataset.",
         )
+        mock_source_options.assert_not_called()
+
+    @patch("raster.views.sources._source_options")
+    def test_dataset_without_tile_source_returns_not_found(
+        self,
+        mock_source_options,
+    ):
+        dataset = Dataset.objects.create(
+            id="vector_only",
+            label="Vector only",
+            group="networks",
+            unit="n/a",
+            stacking_order=2,
+            display_order=2,
+        )
+        dataset.access_groups.add(self.access_group)
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(
+            "/tiles/raster/sources/vector_only/domains"
+        )
+
+        self.assertEqual(response.status_code, 404)
         mock_source_options.assert_not_called()
 
     def test_group_member_can_access_restricted_source(self):
         access_group = Group.objects.create(name="restricted")
-        dataset = self.source.dataset
+        dataset = self.dataset
         dataset.access_groups.clear()
         dataset.access_groups.add(access_group)
         self.user.groups.add(access_group)
@@ -361,13 +398,54 @@ class RasterTileSourceViewTests(TestCase):
         response = self.client.get("/tiles/raster/sources")
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json()[0]["domain"], "land_cover")
+        self.assertEqual(response.json()[0]["id"], self.source.pk)
+
+    def test_tile_source_can_serve_multiple_datasets(self):
+        second_dataset = Dataset.objects.create(
+            id="land_cover_change",
+            label="Land Cover Change",
+            group="exposure",
+            unit="class",
+            tile_source=self.source,
+            stacking_order=2,
+            display_order=2,
+        )
+        second_dataset.access_groups.add(self.access_group)
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get("/tiles/raster/sources")
+
+        self.assertEqual(self.source.datasets.count(), 2)
+        self.assertEqual(len(response.json()), 1)
+
+    @patch("raster.views.sources._source_options")
+    def test_shared_source_does_not_bypass_dataset_access(
+        self,
+        mock_source_options,
+    ):
+        restricted = Dataset.objects.create(
+            id="restricted_land_cover",
+            label="Restricted Land Cover",
+            group="exposure",
+            unit="class",
+            tile_source=self.source,
+            stacking_order=2,
+            display_order=2,
+        )
+        restricted.access_groups.add(
+            Group.objects.create(name="other-source-access")
+        )
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(
+            "/tiles/raster/sources/restricted_land_cover/domains"
+        )
+
+        self.assertEqual(response.status_code, 403)
+        mock_source_options.assert_not_called()
 
     def test_unlinked_source_is_hidden(self):
         unlinked = RasterTileSource.objects.create(
-            domain="legacy",
-            name="Legacy",
-            group="Exposure",
             keys=["region", "year"],
         )
         self.client.force_authenticate(user=self.user)
@@ -378,8 +456,8 @@ class RasterTileSourceViewTests(TestCase):
         )
 
         self.assertEqual(
-            [source["domain"] for source in list_response.json()],
-            ["land_cover"],
+            [source["id"] for source in list_response.json()],
+            [self.source.pk],
         )
         self.assertEqual(detail_response.status_code, 403)
 

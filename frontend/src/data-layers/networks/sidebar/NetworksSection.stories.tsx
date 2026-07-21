@@ -15,6 +15,7 @@ const hazardsResponse: PaginatedDatasetList = {
       id: 'fluvial',
       label: 'River Flooding',
       group: 'hazards',
+      quantity: 'depth',
       unit: 'm',
       stacking_order: 1,
       display_order: 1,
@@ -24,6 +25,7 @@ const hazardsResponse: PaginatedDatasetList = {
       id: 'coastal',
       label: 'Coastal Flooding',
       group: 'hazards',
+      quantity: 'depth',
       unit: 'm',
       stacking_order: 2,
       display_order: 2,
@@ -128,7 +130,7 @@ const meta = {
         http.get('/api/map/datasets', () => {
           return HttpResponse.json(hazardsResponse);
         }),
-        http.get('/api/tiles/raster/sources/:domain/domains', () => {
+        http.get('/api/tiles/raster/sources/:datasetId/domains', () => {
           return HttpResponse.json(rasterSourceDomains);
         }),
       ],

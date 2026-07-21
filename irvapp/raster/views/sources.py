@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from api.models import Dataset
 from api.permissions import HasDatasetAccess
 
 from ..internal.helpers import handle_exception
@@ -69,21 +70,28 @@ class RasterTileSourceDomainsView(APIView):
         operation_id="raster_tile_source_domains",
         responses={
             200: RasterTileSourceDomainsSerializer,
-            403: OpenApiResponse(description="Raster source access denied."),
-            404: OpenApiResponse(description="Raster source not found."),
+            403: OpenApiResponse(description="Access denied."),
+            404: OpenApiResponse(description="Not found."),
         },
     )
-    def get(self, request, domain):
+    def get(self, request, dataset_id):
         try:
-            source = RasterTileSource.objects.get(domain=domain)
-            self.check_object_permissions(request, source)
-            filters = {"type": domain} if "type" in source.keys else None
+            dataset = Dataset.objects.select_related("tile_source").get(
+                pk=dataset_id
+            )
+            self.check_object_permissions(request, dataset)
+            source = dataset.tile_source
+            if source is None:
+                raise RasterTileSource.DoesNotExist
+            filters = (
+                {"type": dataset_id} if "type" in source.keys else None
+            )
             domains = _source_options(source.database, filters=filters)
             serializer = RasterTileSourceDomainsSerializer(
                 {"domains": domains}
             )
             return Response(serializer.data)
-        except RasterTileSource.DoesNotExist:
+        except (Dataset.DoesNotExist, RasterTileSource.DoesNotExist):
             return Response(status=status.HTTP_404_NOT_FOUND)
         except PermissionDenied:
             raise

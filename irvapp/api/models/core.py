@@ -66,8 +66,16 @@ class Dataset(models.Model):
     id = models.CharField(primary_key=True)
     label = models.CharField()
     group = models.CharField()
+    quantity = models.CharField()
     unit = models.CharField()
     license = models.CharField(max_length=255, blank=True, null=True)
+    tile_source = models.ForeignKey(
+        "raster.RasterTileSource",
+        models.PROTECT,
+        blank=True,
+        null=True,
+        related_name="datasets",
+    )
     stacking_order = models.IntegerField()
     display_order = models.IntegerField()
     access_groups = models.ManyToManyField(

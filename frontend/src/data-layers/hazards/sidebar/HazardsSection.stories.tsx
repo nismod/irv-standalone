@@ -15,6 +15,7 @@ const hazardsResponse: PaginatedDatasetList = {
       id: 'fluvial',
       label: 'River Flooding',
       group: 'hazards',
+      quantity: 'depth',
       unit: 'm',
       stacking_order: 2,
       display_order: 0,
@@ -24,6 +25,7 @@ const hazardsResponse: PaginatedDatasetList = {
       id: 'surface',
       label: 'Surface Flooding',
       group: 'hazards',
+      quantity: 'depth',
       unit: 'm',
       stacking_order: 3,
       display_order: 1,
@@ -33,6 +35,7 @@ const hazardsResponse: PaginatedDatasetList = {
       id: 'coastal',
       label: 'Coastal Flooding',
       group: 'hazards',
+      quantity: 'depth',
       unit: 'm',
       stacking_order: 4,
       display_order: 2,
@@ -42,6 +45,7 @@ const hazardsResponse: PaginatedDatasetList = {
       id: 'cyclone',
       label: 'Tropical cyclone wind speed',
       group: 'hazards',
+      quantity: 'wind speed',
       unit: 'm/s',
       stacking_order: 1,
       display_order: 3,
@@ -51,6 +55,7 @@ const hazardsResponse: PaginatedDatasetList = {
       id: 'storm',
       label: 'Tropical cyclone return period',
       group: 'hazards',
+      quantity: 'return period',
       unit: 'yrs',
       stacking_order: 0,
       display_order: 4,
@@ -77,7 +82,7 @@ const meta = {
         http.get('/api/map/datasets', () => {
           return HttpResponse.json(hazardsResponse);
         }),
-        http.get('/api/tiles/raster/sources/:domain/domains', () => {
+        http.get('/api/tiles/raster/sources/:datasetId/domains', () => {
           return HttpResponse.json(rasterSourceDomains);
         }),
       ],

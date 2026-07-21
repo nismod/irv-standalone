@@ -21,7 +21,7 @@ async function fetchRasterSourceDomains() {
     hazardTypes.map((domain) =>
       rasterTileSourceDomains({
         baseUrl: '/api',
-        path: { domain },
+        path: { dataset_id: domain },
         credentials: 'include',
       }),
     ),
