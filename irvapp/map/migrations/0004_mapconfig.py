@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('api', '0003_alter_adaptationcostbenefit_feature_and_more'),
+        ('map', '0003_alter_adaptationcostbenefit_feature_and_more'),
     ]
 
     operations = [

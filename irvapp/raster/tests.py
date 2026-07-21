@@ -7,7 +7,7 @@ from django.contrib.auth.models import Group, User
 from django.test import SimpleTestCase, TestCase
 from rest_framework.test import APIClient
 
-from api.models import Dataset
+from map.models import Dataset
 from raster import ingestion as ingest
 from raster.management.commands.ingest_rasters import Command
 

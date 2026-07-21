@@ -1,7 +1,7 @@
 import json
 from typing import cast
 
-from api.serializers import (
+from map.serializers import (
     ExpectedDamagesDimensionsSerializer,
     AdaptationDimensionsSerializer,
     AdaptationCostBenefitRatioParametersSerializer,

@@ -4,7 +4,7 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("api", "0010_dataset_license"),
+        ("map", "0010_dataset_license"),
         ("raster", "0004_rastertilesource_dataset"),
     ]
 

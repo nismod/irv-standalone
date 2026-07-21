@@ -44,7 +44,7 @@ class Migration(migrations.Migration):
                 ('layer', models.ForeignKey(
                     db_column='layer',
                     on_delete=django.db.models.deletion.DO_NOTHING,
-                    to='api.featurelayers'
+                    to='map.featurelayers'
                 )),
             ],
             options={
@@ -72,7 +72,7 @@ class Migration(migrations.Migration):
                 ('loss_amax', models.FloatField(blank=True, null=True)),
                 ('feature', models.ForeignKey(
                     on_delete=django.db.models.deletion.DO_NOTHING,
-                    to='api.features'
+                    to='map.features'
                 )),
             ],
             options={
@@ -97,7 +97,7 @@ class Migration(migrations.Migration):
                 ('eael_amax', models.FloatField(blank=True, null=True)),
                 ('feature', models.ForeignKey(
                     on_delete=django.db.models.deletion.DO_NOTHING,
-                    to='api.features'
+                    to='map.features'
                 )),
             ],
             options={
@@ -125,7 +125,7 @@ class Migration(migrations.Migration):
                 ('eael_amax', models.FloatField(blank=True, null=True)),
                 ('feature', models.ForeignKey(
                     on_delete=django.db.models.deletion.DO_NOTHING,
-                    to='api.features'
+                    to='map.features'
                 )),
             ],
             options={
@@ -163,7 +163,7 @@ class Migration(migrations.Migration):
                 )),
                 ('feature', models.ForeignKey(
                     on_delete=django.db.models.deletion.DO_NOTHING,
-                    to='api.features'
+                    to='map.features'
                 )),
             ],
             options={

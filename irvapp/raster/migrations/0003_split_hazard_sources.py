@@ -2,7 +2,7 @@ from django.db import migrations
 
 
 def split_hazard_source(apps, schema_editor):
-    Dataset = apps.get_model("api", "Dataset")
+    Dataset = apps.get_model("map", "Dataset")
     RasterTileSource = apps.get_model("raster", "RasterTileSource")
 
     try:
@@ -36,7 +36,7 @@ def split_hazard_source(apps, schema_editor):
 
 
 def combine_hazard_sources(apps, schema_editor):
-    Dataset = apps.get_model("api", "Dataset")
+    Dataset = apps.get_model("map", "Dataset")
     RasterTileSource = apps.get_model("raster", "RasterTileSource")
 
     hazard_ids = list(
@@ -66,7 +66,7 @@ def combine_hazard_sources(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("api", "0008_mapconfig_config_type"),
+        ("map", "0008_mapconfig_config_type"),
         ("raster", "0002_rastertilesource_database"),
     ]
 

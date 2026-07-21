@@ -7,7 +7,7 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 from raster.models import RasterTileSource
 
-from api.models import (
+from map.models import (
     AdaptationCostBenefit,
     DamagesExpected,
     DamagesRp,

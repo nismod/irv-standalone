@@ -4,7 +4,7 @@ from django.db import migrations
 
 
 def merge_duplicate_raster_tile_sources(apps, schema_editor):
-    Dataset = apps.get_model("api", "Dataset")
+    Dataset = apps.get_model("map", "Dataset")
     RasterTileSource = apps.get_model("raster", "RasterTileSource")
 
     canonical_by_signature = {}
@@ -35,7 +35,7 @@ def merge_duplicate_raster_tile_sources(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("api", "0012_dataset_quantity"),
+        ("map", "0012_dataset_quantity"),
         ("raster", "0008_remove_rastertilesource_domain"),
     ]
 
