@@ -18,7 +18,7 @@ def create_raster(
         file_path (str): Path to save the raster.
         width (int): Width of the raster.
         height (int): Height of the raster.
-        value (int or None): Constant value for the raster.
+        value (int or float): Constant value for the raster.
         crs (str): Coordinate Reference System for the raster.
     """
     transform = from_origin(0, 0, 1, 1)  # Arbitrary transform

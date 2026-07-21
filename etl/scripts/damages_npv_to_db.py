@@ -97,8 +97,9 @@ if __name__ == "__main__":
 
     network_layers = pandas.read_csv(network_layers_fname)
     try:
-        network_layer = network_layers[network_layers.damage_ref ==
-            layer_name].iloc[0]
+        network_layer = network_layers.loc[
+            network_layers.damage_ref == layer_name
+        ].iloc[0]
     except IndexError as e:
         print(f"Could not find {layer_name} in network layers.")
         raise e

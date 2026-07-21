@@ -31,5 +31,8 @@ if __name__ == "__main__":
     df = df.explode("levels").rename(
         columns={"levels": "adaptation_protection_level"})
 
-    df.to_json("adaptation-options-coastal-defence.json",
-               orient="records", indent=2)
+    df.to_json(
+        "adaptation-options-coastal-defence.json",
+        orient="records",
+        indent=2,
+    )

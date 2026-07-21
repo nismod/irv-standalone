@@ -130,8 +130,9 @@ def ensure_columns(data, expected_columns):
 
 
 def match_asset_to_protector(asset_ids, p_ids, protector_dict):
-    flood_id_col = [
-        col for col in protector_dict.columns if col.startswith('flood_id')][0]
+    flood_id_col = next(
+        col for col in protector_dict.columns if col.startswith('flood_id')
+    )
     flood_ids = protector_dict.loc[asset_ids, flood_id_col]
     protector_uids = p_ids.loc[flood_ids, 'uid']
     return protector_uids.values
@@ -153,8 +154,9 @@ if __name__ == "__main__":
 
     network_layers = pandas.read_csv(network_layers_fname)
     try:
-        network_layer = network_layers[network_layers.damage_ref ==
-            layer_name].iloc[0]
+        network_layer = network_layers.loc[
+            network_layers.damage_ref == layer_name
+        ].iloc[0]
     except IndexError as e:
         print(f"Could not find {layer_name} in network layers.")
         raise e

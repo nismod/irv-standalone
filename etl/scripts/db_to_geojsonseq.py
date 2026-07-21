@@ -19,8 +19,10 @@ def feature_as_geojson(feature: Feature):
         "asset_type": feature.properties["asset_type"],
     }
     # sort so any higher protection standard will overwrite
-    damages = sorted(feature.damages_expected,
-                     key=attrgetter("protection_standard"))
+    damages = sorted(
+        feature.damages_expected,
+        key=attrgetter("protection_standard"),
+    )
     for damage in damages:
         key = (
             f"{damage.hazard}__rcp_{damage.rcp}"
