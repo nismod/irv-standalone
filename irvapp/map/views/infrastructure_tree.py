@@ -1,7 +1,7 @@
 from rest_framework import serializers, viewsets
 from rest_framework.permissions import IsAuthenticated
 
-from api.models import InfrastructureNode
+from map.models import InfrastructureNode
 
 
 class InfrastructureNodeSerializer(serializers.ModelSerializer):

@@ -7,8 +7,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from api.models import Dataset
-from api.permissions import HasDatasetAccess
+from map.models import Dataset
+from map.permissions import HasDatasetAccess
 
 from ..internal.helpers import handle_exception
 from ..models import RasterTileSource
@@ -19,6 +19,7 @@ from ..serializers import (
 from .shared import _source_options
 
 logger = logging.getLogger(__name__)
+
 
 class RasterTileSourceListView(APIView):
     permission_classes = [IsAuthenticated, HasDatasetAccess]

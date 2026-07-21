@@ -1,4 +1,4 @@
-from api.views import (
+from map.views import (
     FeatureViewset,
     AdaptationCostBenefitViewset,
     DamagesExpectedViewset,

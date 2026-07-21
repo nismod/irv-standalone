@@ -15,8 +15,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from terracotta.exceptions import DatasetNotFoundError
 
-from api.models import Dataset
-from api.permissions import HasDatasetAccess
+from map.models import Dataset
+from map.permissions import HasDatasetAccess
 
 from ..internal.colormaps import CATEGORICAL_COLOR_MAPS
 from ..internal.helpers import handle_exception

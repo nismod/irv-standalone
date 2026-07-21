@@ -65,7 +65,8 @@ def parse_exp_damage_batch(batch):
     else:
         data.loc[data.defended == "undefended", "protection_standard"] = 0
 
-    # pivot back up so we end with a row per uid, hazard etc. (see index columns below)
+    # Pivot back up so we end with a row per uid, hazard, etc.
+    # See the index columns below.
     # and columns for each damage type, each with min/mean/max
     data = (
         data.drop(columns="variable")

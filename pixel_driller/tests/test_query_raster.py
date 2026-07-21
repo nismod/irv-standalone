@@ -41,16 +41,20 @@ class QueryRasterTestCase(unittest.TestCase):
     def test_assertDictEqual(self):
         self.assertTrue(self.assertDictEqual({}, {}))
         self.assertTrue(self.assertDictEqual({"a": [1,2,3]}, {"a": [1,2,3]}))
-        self.assertTrue(self.assertDictEqual({"a": 1, "b": 2}, {"b": 2, "a": 1}))
+        self.assertTrue(self.assertDictEqual(
+            {"a": 1, "b": 2}, {"b": 2, "a": 1}))
         self.assertFalse(self.assertDictEqual({"a": [1,2,3]}, {"a": [1,2,4]}))
-        self.assertTrue(self.assertDictEqual({"a": {"b": [1,2,3]}}, {"a": {"b": [1,2,3]}}))
-        self.assertFalse(self.assertDictEqual({"a": {"b": [1,2,3]}}, {"a": {"b": [1,2,4]}}))
+        self.assertTrue(self.assertDictEqual(
+            {"a": {"b": [1,2,3]}}, {"a": {"b": [1,2,3]}}))
+        self.assertFalse(self.assertDictEqual(
+            {"a": {"b": [1,2,3]}}, {"a": {"b": [1,2,4]}}))
 
     def test_query_raster(self):
 
         datasets = [
             RasterStackMetadata(
-                "test", Path(__file__).parent / "fixtures" / "test.zarr", "EPSG:4326"
+                "test", Path(__file__).parent / "fixtures" / \
+                             "test.zarr", "EPSG:4326"
             )
         ]
         actual = point_query(datasets, self.layer_metadata, 0.0, 0.0)
@@ -73,7 +77,8 @@ class QueryRasterTestCase(unittest.TestCase):
     def test_query_raster_out_of_bounds(self):
         datasets = [
             RasterStackMetadata(
-                "test", Path(__file__).parent / "fixtures" / "test.zarr", "EPSG:4326"
+                "test", Path(__file__).parent / "fixtures" / \
+                             "test.zarr", "EPSG:4326"
             )
         ]
         actual = point_query(datasets, self.layer_metadata, -1.0, 0.0)

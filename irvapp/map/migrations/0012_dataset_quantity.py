@@ -4,7 +4,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("api", "0011_dataset_tile_source"),
+        ("map", "0011_dataset_tile_source"),
     ]
 
     operations = [

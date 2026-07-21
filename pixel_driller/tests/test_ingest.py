@@ -18,7 +18,8 @@ class IngestTestCase(unittest.TestCase):
 
         # layers created by make_fixtures
         layers = pd.DataFrame(
-            {"path": ["a.tif", "b.tif", "c.tif", "d.tif"], "key": ["a", "b", "c", "d"]}
+            {"path": ["a.tif", "b.tif", "c.tif", "d.tif"],
+                "key": ["a", "b", "c", "d"]}
         )
         layers["grid_id"] = "test"
         grids = pd.DataFrame({"grid_id": ["test"], "fname": ["test.zarr"]})

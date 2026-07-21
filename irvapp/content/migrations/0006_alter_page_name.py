@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='page',
             name='name',
-            field=models.SlugField(max_length=20, primary_key=True, serialize=False),
+            field=models.SlugField(
+                max_length=20, primary_key=True, serialize=False),
         ),
     ]

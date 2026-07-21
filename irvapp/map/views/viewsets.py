@@ -7,7 +7,7 @@ from drf_spectacular.utils import (
     extend_schema,
 )
 
-from api.serializers import (
+from map.serializers import (
     FeatureSerializer,
     FeatureDetailSerializer,
     AdaptationCostBenefitSerializer,
@@ -15,14 +15,14 @@ from api.serializers import (
     DamagesRpSerializer,
     DatasetSerializer,
 )
-from api.models import (
+from map.models import (
     Feature,
     AdaptationCostBenefit,
     DamagesExpected,
     DamagesRp,
     Dataset,
 )
-from api.permissions import HasDatasetAccess
+from map.permissions import HasDatasetAccess
 
 
 class FeatureViewset(viewsets.ReadOnlyModelViewSet):

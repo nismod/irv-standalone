@@ -3,7 +3,7 @@ from django.db import migrations, models
 
 
 def move_tile_source_relationship(apps, schema_editor):
-    Dataset = apps.get_model("api", "Dataset")
+    Dataset = apps.get_model("map", "Dataset")
     RasterTileSource = apps.get_model("raster", "RasterTileSource")
 
     datasets_by_id = Dataset.objects.in_bulk()
@@ -26,7 +26,7 @@ def move_tile_source_relationship(apps, schema_editor):
 
 
 def restore_tile_source_relationship(apps, schema_editor):
-    Dataset = apps.get_model("api", "Dataset")
+    Dataset = apps.get_model("map", "Dataset")
     RasterTileSource = apps.get_model("raster", "RasterTileSource")
 
     datasets = Dataset.objects.exclude(tile_source__isnull=True).order_by("pk")
@@ -50,7 +50,7 @@ def restore_tile_source_relationship(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("api", "0010_dataset_license"),
+        ("map", "0010_dataset_license"),
         ("raster", "0006_remove_rastertilesource_name_and_group"),
     ]
 
