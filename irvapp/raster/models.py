@@ -17,7 +17,6 @@ class RasterTileSource(models.Model):
     name = models.CharField(max_length=255)
     group = models.CharField(max_length=255)
     description = models.CharField(max_length=1024, blank=True, null=True)
-    license = models.CharField(max_length=255, blank=True, null=True)
     keys = models.JSONField()
     database = models.CharField(max_length=255, default="terracotta.sqlite")
     dataset = models.ForeignKey(

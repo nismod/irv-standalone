@@ -500,6 +500,7 @@ class DatasetRouteTests(TestCase):
                 label="Storm track",
                 group="hazards",
                 unit="n/a",
+                license="CC-BY",
                 stacking_order=2,
                 display_order=2,
             ),
@@ -521,6 +522,12 @@ class DatasetRouteTests(TestCase):
         self.assertEqual(response.status_code, 200)
         payload = response.json()["results"]
         self.assertEqual(len(payload), 3)
+
+    def test_datasets_route_returns_license(self):
+        response = self.client.get("/map/datasets/storm_track")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["license"], "CC-BY")
 
     def test_datasets_route_filters_by_group(self):
         response = self.client.get("/map/datasets", {"group": "hazards"})

@@ -67,6 +67,7 @@ class Dataset(models.Model):
     label = models.CharField()
     group = models.CharField()
     unit = models.CharField()
+    license = models.CharField(max_length=255, blank=True, null=True)
     stacking_order = models.IntegerField()
     display_order = models.IntegerField()
     access_groups = models.ManyToManyField(
