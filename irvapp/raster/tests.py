@@ -223,6 +223,7 @@ class RasterTileSourceViewTests(TestCase):
             label="Land Cover",
             group="exposure",
             unit="class",
+            license="CC-BY",
             stacking_order=1,
             display_order=1,
         )
@@ -232,7 +233,6 @@ class RasterTileSourceViewTests(TestCase):
             name="Land Cover",
             group="Exposure",
             description="Land cover tiles",
-            license="CC-BY",
             keys=["region", "year"],
             database="terracotta_land_cover",
             dataset=dataset,
@@ -250,6 +250,7 @@ class RasterTileSourceViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()[0]["domain"], "land_cover")
+        self.assertNotIn("license", response.json()[0])
 
     def test_returns_single_tile_source(self):
         self.client.force_authenticate(user=self.user)

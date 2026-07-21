@@ -38,6 +38,7 @@ class DatasetAdmin(admin.ModelAdmin):
         "label",
         "group",
         "unit",
+        "license",
         "stacking_order",
         "display_order",
     ]

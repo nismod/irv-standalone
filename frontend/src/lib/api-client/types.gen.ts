@@ -111,6 +111,7 @@ export type Dataset = {
     label: string;
     group: string;
     unit: string;
+    license?: string | null;
     stacking_order: number;
     display_order: number;
     readonly has_access: boolean;
@@ -286,7 +287,6 @@ export type RasterTileSource = {
     name: string;
     group: string;
     description?: string | null;
-    license?: string | null;
     keys: Array<string>;
 };
 
@@ -484,7 +484,6 @@ export type RasterTileSourceWritable = {
     name: string;
     group: string;
     description?: string | null;
-    license?: string | null;
     keys: Array<string>;
 };
 

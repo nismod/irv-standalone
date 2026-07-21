@@ -57,6 +57,7 @@ class DatasetSerializer(serializers.ModelSerializer):
             "label",
             "group",
             "unit",
+            "license",
             "stacking_order",
             "display_order",
             "has_access",

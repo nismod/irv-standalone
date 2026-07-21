@@ -57,7 +57,6 @@ class RasterTileSourceSerializer(serializers.ModelSerializer):
             "name",
             "group",
             "description",
-            "license",
             "keys",
         ]
 
