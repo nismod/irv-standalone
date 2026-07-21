@@ -32,7 +32,7 @@ def read_grids(
             grid_id = grid_lookup[grid]
         layer_grid_ids.append(grid_id)
 
-    # Transform unique grid definitions into data table for reference as metadata
+    # Transform unique grid definitions into a metadata reference table.
     grid_data = []
     for grid, grid_id in grid_lookup.items():
         grid_data.append(
@@ -51,7 +51,10 @@ def read_grids(
 
 
 def stack(
-    source_path: Path, target_path: Path, layers: pd.DataFrame, grids: pd.DataFrame
+    source_path: Path,
+    target_path: Path,
+    layers: pd.DataFrame,
+    grids: pd.DataFrame,
 ):
     grid_fname_lookup = grids.set_index("grid_id")
 
@@ -62,7 +65,10 @@ def stack(
         ds = (
             xr.concat(
                 [
-                    xr.open_dataset(source_path / layer_path, engine="rasterio")
+                    xr.open_dataset(
+                        source_path / layer_path,
+                        engine="rasterio",
+                    )
                     for layer_path in layer_paths
                 ],
                 dim=var,
@@ -71,7 +77,8 @@ def stack(
             .drop_vars("spatial_ref")
         )
         # Trade-off in chunk size vs number of files
-        # (smaller chunks -> more files -> slower to write, unknown effect on reads)
+        # Smaller chunks mean more files and slower writes.
+        # The effect on reads is still unknown.
         # 10 10 100 wrote in 1m10 - 180byte to 22k chunk files
         # 100 100 100 wrote in 1.9s - 11k to 1.1M chunk files
         # 1000 1000 100 wrote in 1.5s - 1.1M to 9.4M chunk files
@@ -90,13 +97,18 @@ if __name__ == "__main__":
         print("Usage: python ingest.py <source_path> <target_path>")
         sys.exit()
 
-    logging.basicConfig(format="%(asctime)s %(filename)s %(message)s", level=logging.INFO)
+    logging.basicConfig(
+        format="%(asctime)s %(filename)s %(message)s",
+        level=logging.INFO,
+    )
 
     # CSV is structured like this:
     #   hazard,path,rp,rcp,epoch,confidence,variable,unit,key
-    #   coastal,hazards/Coastal_flood_data/Flood_maps_future_climate/RCP26_2050/JamaicaJAM001RCP262050_epsg_32618_RP_1.tif,1,2.6,2050,,depth,m,coastal__rp_1__rcp_2x6__epoch_2050__conf_None
+    #   coastal,hazards/.../RCP26_2050/..._RP_1.tif,
+    #   1,2.6,2050,,depth,m,coastal__rp_1__rcp_2x6__epoch_2050__conf_None
     # path is relative to "source_path"
-    # key is a unique compound string key that encodes (hazard,rp,rcp,epoch,confidence)
+    # key is a unique compound string key encoding
+    # (hazard, rp, rcp, epoch, confidence)
     layers_without_grid_ids = pd.read_csv(
         Path(__file__).parent / ".." / "etl" / "hazard_layers.csv"
     )

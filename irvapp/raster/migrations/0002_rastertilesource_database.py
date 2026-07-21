@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='rastertilesource',
             name='database',
-            field=models.CharField(default='terracotta.sqlite', max_length=255),
+            field=models.CharField(
+                default='terracotta.sqlite', max_length=255),
         ),
     ]

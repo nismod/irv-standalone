@@ -64,12 +64,15 @@ def point_query(
             float(ds.y.max()),
         )
         logging.debug(
-            f"Query for {lon=}, {lat=} in {dataset.name=} {dataset.crs.to_string()} at {tx=}, {ty=} bounds {xmin=} {xmax=} {ymin=} {ymax=}"
+            f"Query for {lon=}, {lat=} in {dataset.name=} "
+            f"{dataset.crs.to_string()} at {tx=}, {ty=} "
+            f"bounds {xmin=} {xmax=} {ymin=} {ymax=}"
         )
 
         if tx < xmin or tx > xmax or ty < ymin or ty > ymax:
             # out of bounds for this dataset
-            logging.debug(f"Point {lon=}, {lat=} outside bounds for {dataset.name=}")
+            logging.debug(
+                f"Point {lon=}, {lat=} outside bounds for {dataset.name=}")
             continue
 
         dfs.append(

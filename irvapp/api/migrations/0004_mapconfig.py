@@ -13,7 +13,10 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='MapConfig',
             fields=[
-                ('config_name', models.CharField(primary_key=True, serialize=False)),
+                (
+                    'config_name',
+                    models.CharField(primary_key=True, serialize=False),
+                ),
                 ('config_value', models.CharField()),
             ],
             options={

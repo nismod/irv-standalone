@@ -14,10 +14,26 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='InfrastructureNode',
             fields=[
-                ('position', models.PositiveIntegerField(db_index=True, default=0)),
-                ('node_id', models.CharField(primary_key=True, serialize=False)),
+                (
+                    'position',
+                    models.PositiveIntegerField(db_index=True, default=0),
+                ),
+                (
+                    'node_id',
+                    models.CharField(primary_key=True, serialize=False),
+                ),
                 ('node_name', models.CharField()),
-                ('parent', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='children', to='api.infrastructurenode', verbose_name='parent')),
+                (
+                    'parent',
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='children',
+                        to='api.infrastructurenode',
+                        verbose_name='parent',
+                    ),
+                ),
             ],
             options={
                 'db_table': 'infrastructure_nodes',
