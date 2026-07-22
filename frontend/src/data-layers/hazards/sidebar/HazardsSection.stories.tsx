@@ -4,7 +4,7 @@ import { HttpResponse, http } from 'msw';
 
 import { HazardsSection } from './HazardsSection';
 import rasterSourceDomains from 'mocks/raster_source_domains.json';
-import { type PaginatedDatasetList } from 'lib/api-client';
+import { type PaginatedDatasetList, type RasterTileSource } from 'lib/api-client';
 
 const hazardsResponse: PaginatedDatasetList = {
   count: 5,
@@ -17,6 +17,7 @@ const hazardsResponse: PaginatedDatasetList = {
       group: 'hazards',
       quantity: 'depth',
       unit: 'm',
+      tile_source: 1,
       stacking_order: 2,
       display_order: 0,
       has_access: true,
@@ -27,6 +28,7 @@ const hazardsResponse: PaginatedDatasetList = {
       group: 'hazards',
       quantity: 'depth',
       unit: 'm',
+      tile_source: 1,
       stacking_order: 3,
       display_order: 1,
       has_access: true,
@@ -37,6 +39,7 @@ const hazardsResponse: PaginatedDatasetList = {
       group: 'hazards',
       quantity: 'depth',
       unit: 'm',
+      tile_source: 1,
       stacking_order: 4,
       display_order: 2,
       has_access: true,
@@ -47,6 +50,7 @@ const hazardsResponse: PaginatedDatasetList = {
       group: 'hazards',
       quantity: 'wind speed',
       unit: 'm/s',
+      tile_source: 1,
       stacking_order: 1,
       display_order: 3,
       has_access: true,
@@ -57,11 +61,17 @@ const hazardsResponse: PaginatedDatasetList = {
       group: 'hazards',
       quantity: 'return period',
       unit: 'yrs',
+      tile_source: 1,
       stacking_order: 0,
       display_order: 4,
       has_access: true,
     },
   ],
+};
+
+const rasterSourceResponse: RasterTileSource = {
+  id: 1,
+  keys: ['type', 'rp', 'rcp', 'epoch', 'confidence'],
 };
 
 function fixedWidthDecorator(Story) {
@@ -84,6 +94,9 @@ const meta = {
         }),
         http.get('/api/tiles/raster/sources/:datasetId/domains', () => {
           return HttpResponse.json(rasterSourceDomains);
+        }),
+        http.get('/api/tiles/raster/sources/:sourceId', () => {
+          return HttpResponse.json(rasterSourceResponse);
         }),
       ],
     },

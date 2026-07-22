@@ -10,40 +10,23 @@ import * as HAZARD_COLOR_MAPS from './color-maps';
 import { HAZARD_SOURCE } from './source';
 import { type HazardParams } from './state/data-selection';
 
-export function getHazardId<
-  F extends string, //'fluvial' | 'surface' | 'coastal' | 'cyclone',
-  RP extends number,
-  RCP extends string,
-  E extends number,
-  C extends number | string,
->({
-  hazardType,
-  returnPeriod,
-  rcp,
-  epoch,
-  confidence,
-}: {
-  hazardType: F;
-  returnPeriod: RP;
-  rcp: RCP;
-  epoch: E;
-  confidence: C;
-}) {
-  return `${hazardType}__rp_${returnPeriod}__rcp_${rcp}__epoch_${epoch}__conf_${confidence}` as const;
+export function getHazardId(hazardType: string, hazardParams: HazardParams) {
+  const serialisedParams = Object.entries(hazardParams)
+    .filter(([, value]) => value != null)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => `${key}_${value}`)
+    .join('__');
+
+  return [hazardType, serialisedParams].filter(Boolean).join('__');
 }
 
-export function hazardViewLayer(hazardType: string, hazardParams: HazardParams): ViewLayer {
+export function hazardViewLayer(
+  hazardType: string,
+  hazardParams: HazardParams,
+  sourceKeys?: string[] | null,
+): ViewLayer {
   const magFilter = ['cyclone', 'storm'].includes(hazardType) ? 'nearest' : 'linear';
-
-  const { returnPeriod, rcp, epoch, confidence, speed } = hazardParams;
-
-  const deckId = getHazardId({
-    hazardType: hazardType === 'storm' ? `storm${speed}` : hazardType,
-    returnPeriod,
-    rcp,
-    epoch,
-    confidence,
-  });
+  const deckId = getHazardId(hazardType, hazardParams);
 
   return {
     id: hazardType,
@@ -64,7 +47,7 @@ export function hazardViewLayer(hazardType: string, hazardParams: HazardParams):
         deckProps,
         {
           id: `${hazardType}@${deckId}`, // follow the convention viewLayerId@deckLayerId
-          data: HAZARD_SOURCE.getDataUrl({ hazardType, hazardParams }, { scheme, range }),
+          data: HAZARD_SOURCE.getDataUrl({ hazardType, hazardParams, sourceKeys }, { scheme, range }),
           refinementStrategy: 'no-overlap',
         },
       );

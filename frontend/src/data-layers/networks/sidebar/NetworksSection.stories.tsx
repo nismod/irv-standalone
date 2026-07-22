@@ -4,7 +4,7 @@ import { HttpResponse, http } from 'msw';
 
 import { NetworksSection } from './NetworksSection';
 import rasterSourceDomains from 'mocks/raster_source_domains.json';
-import { type PaginatedDatasetList } from 'lib/api-client';
+import { type PaginatedDatasetList, type RasterTileSource } from 'lib/api-client';
 
 const hazardsResponse: PaginatedDatasetList = {
   count: 2,
@@ -17,6 +17,7 @@ const hazardsResponse: PaginatedDatasetList = {
       group: 'hazards',
       quantity: 'depth',
       unit: 'm',
+      tile_source: 1,
       stacking_order: 1,
       display_order: 1,
       has_access: true,
@@ -27,11 +28,17 @@ const hazardsResponse: PaginatedDatasetList = {
       group: 'hazards',
       quantity: 'depth',
       unit: 'm',
+      tile_source: 1,
       stacking_order: 2,
       display_order: 2,
       has_access: false,
     },
   ],
+};
+
+const rasterSourceResponse: RasterTileSource = {
+  id: 1,
+  keys: ['type', 'rp', 'rcp', 'epoch', 'confidence'],
 };
 
 const mockInfrastructureTree = {
@@ -132,6 +139,9 @@ const meta = {
         }),
         http.get('/api/tiles/raster/sources/:datasetId/domains', () => {
           return HttpResponse.json(rasterSourceDomains);
+        }),
+        http.get('/api/tiles/raster/sources/:sourceId', () => {
+          return HttpResponse.json(rasterSourceResponse);
         }),
       ],
     },
