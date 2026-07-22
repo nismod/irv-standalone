@@ -1,0 +1,187 @@
+from django.db import migrations
+
+
+DATA_PAGE_NAME = "data"
+DATA_BLOCKS = [
+    {
+        "title": "Access notice",
+        "slot": "access_notice",
+        "markdown": (
+            "The systemic risk analysis results shown in this tool contain "
+            "licensed data that must not be shared outside the Government "
+            "of Jamaica. By accessing the tool, you acknowledge that you "
+            "understand this and agree not to download any data or share "
+            "your access credentials with anyone else.\n"
+        ),
+    },
+    {
+        "title": "Release notice",
+        "slot": "release_notice",
+        "markdown": (
+            "The tool has recently been released. Please tell us if "
+            "anything is not working as it should and suggest potential "
+            "improvements.\n"
+        ),
+    },
+    {
+        "title": "Data page content",
+        "slot": "content",
+        "markdown": (
+            "The modelling and analysis presented here aim to support "
+            "climate adaptation decision-making by identifying spatial "
+            "criticalities and risks under current and future climate "
+            "scenarios.\n\n"
+            "The following table summarises the data and model results "
+            "presented.\n\n"
+            "| Infrastructure Sector | Assets | Expected Annual Damages "
+            "(EAD) | Expected Annual Economic Losses (EAEL) |\n"
+            "| --- | --- | --- | --- |\n"
+            "| Transport | Road links and railway lines, ports and "
+            "airports | Cost of rehabilitation/reinstating damaged assets "
+            "| Rerouting costs + wider effects of service disruption |\n"
+            "| Energy | Electricity transmission and distribution: "
+            "generation, lines, poles and substations | Cost of "
+            "rehabilitation/reinstating damaged assets | Wider effects of "
+            "service disruption |\n"
+            "| Water | Water supply and wastewater networks, wells and "
+            "irrigation canals | Cost of rehabilitation/reinstating damaged "
+            "assets | Wider effects of service disruption |\n\n"
+            "For more details on the infrastructure and hazard data used, "
+            "see below.\n\n"
+            "The primary output metrics from the analysis are:\n\n"
+            "- Expected Annual Damages (EAD) (direct physical risks) "
+            "estimated as the area under the direct damage vs exceedance "
+            "probability curve\n"
+            "- Expected Annual Economic Losses (EAEL) (indirect economic "
+            "risks) estimated as the area under the economic loss vs "
+            "exceedance probability curve\n\n"
+            "## Open-source code\n\n"
+            "This tool to visualize the model outputs is developed and "
+            "documented here:\n\n"
+            "- [github.com/nismod/irv-jamaica]"
+            "(https://github.com/nismod/irv-jamaica)\n\n"
+            "The analytics for Jamaica are produced using the code and "
+            "models here:\n\n"
+            "- [github.com/nismod/jamaica-infrastructure]"
+            "(https://github.com/nismod/jamaica-infrastructure)\n\n"
+            "# Data Sources and Access\n\n"
+            "Data comes from multiple sources, including Government of "
+            "Jamaica bodies, private sector entities, and open data "
+            "sources.\n\n"
+            "[[access-notice]]\n\n"
+            "## Hazard Data\n\n"
+            "| Hazard type | Data source | Exceedance Probabilities "
+            "(1/return periods in years) | Intensities and spatial extents "
+            "| Climate scenario information |\n"
+            "| --- | --- | --- | --- | --- |\n"
+            "| Fluvial (river) and pluvial (surface) flooding | ![JBA Risk "
+            "Management. The Flood People (R).](/logo-jba.png) [JBA global "
+            "flood map product](https://www.jbarisk.com/flood-services/"
+            "maps-and-analytics/global-flood-maps/) | 1/20, 1/50, 1/100, "
+            "1/200, 1/500, and 1/1500 | Flood depths in meters over 30m "
+            "grid squares | RCP 2.6, 4.5 & 8.5 emission scenarios. Current "
+            "+ future maps in 2050 and 2080 |\n"
+            "| Coastal flooding (storm surge) | [Deltares NL Caribbean "
+            "product](http://web.archive.org/web/20200418050005/https://"
+            "www.deltares.nl/en/news/regional-study-assess-effects-sea-"
+            "level-rise-resilience-caribbean/) | 1/1, 1/2, 1/5, 1/10, "
+            "1/50, 1/100 | Flood depths in meters over 90m grid squares | "
+            "RCP 2.6, 4.5 & 8.5 emission scenarios. Current + future maps "
+            "in 2030, 2050, 2070 and 2100 |\n"
+            "| Tropical cyclones (winds) | [STORM IBTrACS model](https://"
+            "data.4tu.nl/articles/dataset/STORM_IBTrACS_present_climate_"
+            "synthetic_tropical_cyclone_tracks/12706085/2) | 26 different "
+            "exceedance probabilities from 1/1 to 1/10000 | 10 minute "
+            "sustained maximum wind speeds in m/s at 10km grid squares | "
+            "RCP 4.5 & 8.5 emission scenarios. Current + future maps in "
+            "2050 and 2100 |\n"
+            "| Droughts | REGCM4 | No exceedance probabilities | Daily "
+            "rainfall and precipitation | RCP 2.6, 4.5 & 8.5 emission "
+            "scenarios |\n\n"
+            "## Infrastructure Network Data\n\n"
+            "| Sector | Sub-sector | Asset highlights | Important failure "
+            "attributes | Data sources |\n"
+            "| --- | --- | --- | --- | --- |\n"
+            "| Energy | Generation | 9 Power plants | Damage costs (J$), "
+            "Population served, GDP disrupted (J$/day) | NSDMD, JPS, MSET, "
+            "OUR, OpenStreetMap, STATIN |\n"
+            "| Energy | Transmission & Distribution | 59 Substations, "
+            "30,000 Poles, 11,440 kms of overhead lines | Damage costs "
+            "(J$ or J$/m), Population served, GDP disrupted (J$/day) | "
+            "NSDMD, JPS, MSET, OUR, OpenStreetMap, STATIN |\n"
+            "| Transport | Airports | 7 airports areas | Damage costs "
+            "(J$/m2), Annual passengers, Annual freight (tonnes) | NSDMD, "
+            "NWA, NROCC, MTM, STATIN |\n"
+            "| Transport | Ports | 13 Port dock areas | Damage costs "
+            "(J$/m2), Annual passengers, Annual freight (tonnes) | NSDMD, "
+            "NWA, NROCC, MTM, STATIN |\n"
+            "| Transport | Railways | 20 functional stations, 201 kms of "
+            "functional tracks | Damage costs (J$ or J$/m), Trade flow "
+            "disruptions (J$/day) | NSDMD, NWA, NROCC, MTM, STATIN |\n"
+            "| Transport | Roads | 572 bridges, 23,200 kms of roads | "
+            "Damage costs (J$ or J$/m), Reopening costs (J$ or J$/m), Road "
+            "traffic counts, Trade flow disruptions (J$/day) | NSDMD, NWA, "
+            "NROCC, MTM, STATIN |\n"
+            "| Water | Potable water | 1,208 point assets, 10,500 kms of "
+            "pipelines | Damage costs (J$ or J$/m), Population served, GDP "
+            "disrupted (J$/day) | NSDMD, WRA, NWC, NIC, STATIN |\n"
+            "| Water | Irrigation | 178 Wells, 248 kms of canals and 220 "
+            "kms of pipelines | Damage costs (J$ or J$/m), Agriculture GDP "
+            "disrupted (J$/day) | NSDMD, WRA, NWC, NIC, STATIN |\n"
+            "| Water | Wastewater | 151 Point assets | Damage costs (J$ or "
+            "J$/m) | NSDMD, WRA, NWC, NIC, STATIN |\n"
+            "| Buildings | Commercial, Industrial, Institutional, Mixed "
+            "Use, Other, Recreation, Residential, Resort | 996,682 "
+            "buildings | Damage costs (J$/m2), GDP disrupted (J$/day) | "
+            "OpenStreetMap, NLA, STATIN |\n\n"
+            "## Contextual Map Data\n\n"
+            "Background map data is copyright [OpenStreetMap]"
+            "(https://www.openstreetmap.org/copyright) contributors, style "
+            "copyright [CARTO](https://carto.com/attributions).\n\n"
+            "Satellite imagery background is derived from [Sentinel-2 "
+            "cloudless - https://s2maps.eu](https://s2maps.eu) by [EOX IT "
+            "Services GmbH](https://eox.at) (Contains modified Copernicus "
+            "Sentinel data 2020).\n"
+        ),
+    },
+]
+
+
+def add_data_blocks(apps, schema_editor):
+    MarkdownBlock = apps.get_model("content", "MarkdownBlock")
+    Page = apps.get_model("content", "Page")
+
+    page, _ = Page.objects.get_or_create(
+        name=DATA_PAGE_NAME,
+        defaults={"title": "Data"},
+    )
+
+    for block in DATA_BLOCKS:
+        MarkdownBlock.objects.update_or_create(
+            page=page,
+            slot=block["slot"],
+            defaults={
+                "title": block["title"],
+                "markdown": block["markdown"],
+            },
+        )
+
+
+def remove_data_blocks(apps, schema_editor):
+    MarkdownBlock = apps.get_model("content", "MarkdownBlock")
+
+    MarkdownBlock.objects.filter(
+        page=DATA_PAGE_NAME,
+        slot__in=[block["slot"] for block in DATA_BLOCKS],
+    ).delete()
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ("content", "0006_alter_page_name"),
+    ]
+
+    operations = [
+        migrations.RunPython(add_data_blocks, remove_data_blocks),
+    ]

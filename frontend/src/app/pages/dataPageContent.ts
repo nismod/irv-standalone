@@ -4,13 +4,10 @@ import { unwrap } from 'jotai/utils';
 import { contentList, type MarkdownBlock } from 'lib/api-client';
 
 async function fetchPageContent(): Promise<DataPageContent> {
-  const [{ default: defaultPageContent }, { data: blocks, error }] = await Promise.all([
-    import('./dataPageContent.json'),
-    contentList({
-      baseUrl: '/api',
-      path: { page: 'data' },
-    }),
-  ]);
+  const { data: blocks, error } = await contentList({
+    baseUrl: '/api',
+    path: { page: 'data' },
+  });
 
   if (error) {
     throw new Error(`Failed to load data page content: ${JSON.stringify(error)}`);
@@ -22,13 +19,13 @@ async function fetchPageContent(): Promise<DataPageContent> {
 
   return {
     accessNotice: {
-      markdown: markdownBySlot.get('access_notice') ?? defaultPageContent.accessNotice.markdown,
+      markdown: markdownBySlot.get('access_notice') ?? '',
     },
     releaseNotice: {
-      markdown: markdownBySlot.get('release_notice') ?? defaultPageContent.releaseNotice.markdown,
+      markdown: markdownBySlot.get('release_notice') ?? '',
     },
     content: {
-      markdown: markdownBySlot.get('content') ?? defaultPageContent.content.markdown,
+      markdown: markdownBySlot.get('content') ?? '',
     },
   };
 }
