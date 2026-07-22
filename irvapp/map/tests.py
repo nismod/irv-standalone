@@ -4,6 +4,7 @@ from allauth.account.models import EmailAddress
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import Point
 from django.test import TestCase
+from rest_framework.test import APIRequestFactory
 from rest_framework.test import APIClient
 from raster.models import RasterTileSource
 
@@ -15,6 +16,7 @@ from map.models import (
     Feature,
     FeatureLayer,
 )
+from map.serializers import DatasetSerializer
 
 
 class AttributeLookupViewTests(TestCase):
@@ -618,3 +620,15 @@ class DatasetRouteTests(TestCase):
         )
         self.assertFalse(roads["has_access"])
         self.assertEqual(detail_response.status_code, 403)
+
+    def test_dataset_serializer_supports_dict_rows(self):
+        dataset = Dataset.objects.get(pk="storm_track")
+        request = APIRequestFactory().get("/map/datasets")
+        request.user = self.user
+
+        serializer = DatasetSerializer(
+            dataset.__class__.objects.values().get(pk=dataset.pk),
+            context={"request": request},
+        )
+
+        self.assertTrue(serializer.data["has_access"])
