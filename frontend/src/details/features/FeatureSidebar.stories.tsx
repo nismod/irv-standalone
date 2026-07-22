@@ -10,6 +10,12 @@ import mockFeatureDetails from 'mocks/details/features/mockFeatureDetails.json';
 import rasterSourceDomains from 'mocks/raster_source_domains.json';
 import { FeatureSidebar } from './FeatureSidebar';
 import { Layer } from 'deck.gl';
+import { type RasterTileSource } from 'lib/api-client';
+
+const rasterSourceResponse: RasterTileSource = {
+  id: 1,
+  keys: ['type', 'rp', 'rcp', 'epoch', 'confidence'],
+};
 
 function FixedWidthDecorator(Story) {
   return (
@@ -64,6 +70,9 @@ export const Default: Story = {
         }),
         http.get('/api/tiles/raster/sources/:datasetId/domains', () => {
           return HttpResponse.json(rasterSourceDomains);
+        }),
+        http.get('/api/tiles/raster/sources/:sourceId', () => {
+          return HttpResponse.json(rasterSourceResponse);
         }),
       ],
     },

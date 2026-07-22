@@ -1,7 +1,28 @@
 from rest_framework.permissions import BasePermission
 
 
+def _coerce_dataset_instance(dataset, *, prefetch_access_groups=False):
+    if not isinstance(dataset, dict):
+        return dataset
+
+    dataset_id = dataset.get("id")
+    if dataset_id is None:
+        return None
+
+    from .models import Dataset
+
+    qs = Dataset.objects.all()
+    if prefetch_access_groups:
+        qs = qs.prefetch_related("access_groups")
+
+    return qs.filter(pk=dataset_id).first()
+
+
 def user_has_dataset_access(user, dataset, user_group_ids=None):
+    dataset = _coerce_dataset_instance(
+        dataset,
+        prefetch_access_groups=user_group_ids is not None,
+    )
     if dataset is None or not user.is_authenticated:
         return False
     if user.is_superuser:
