@@ -92,6 +92,14 @@ Prepare the raster tileserver database:
 docker compose -f docker-compose.dev.yml run --rm raster-tile-ingester
 ```
 
+Prepare the pixel stack data:
+
+```bash
+python irvapp/manage.py ingest_pixel_stacks \
+  /path/to/jamaica-infrastructure/processed_data \
+  tileserver/stacks
+```
+
 The ingester reads `RASTER_BASE_PATH`, `RASTER_PATH_TEMPLATE`, `TC_DRIVER_PATH`,
 and optionally `TC_DRIVER_PROVIDER`. For example, a PostgreSQL-backed ingest can
 be run with:

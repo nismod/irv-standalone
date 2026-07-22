@@ -4,11 +4,14 @@ django-tree-queries[admin]~=0.24.0
 djangorestframework~=3.17.1
 drf-spectacular~=0.29.0
 martor~=1.8.2
+dask~=2026.6.0
 pandas~=3.0.3
 pillow~=11.3.0
 psycopg[binary]~=3.3.4
 psycopg2-binary~=2.9
 pyproj~=3.7.2
+rasterio~=1.4.3
 terracotta==0.9.1
+tqdm~=4.67.1
 xarray~=2026.4.0
 zarr~=3.2.1
