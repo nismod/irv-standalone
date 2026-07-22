@@ -4,14 +4,14 @@ volumes:
 
 services:
   frontend:
-    image: ghcr.io/nismod/jsrat-frontend:0.1
+    image: ghcr.io/nismod/irvapp-frontend:0.1
     build: ./frontend
     ports:
       - "3000:80"
 
   backend:
-    image: ghcr.io/nismod/jsrat-backend:0.2
-    build: ./backend
+    image: ghcr.io/nismod/irvapp-backend:0.2
+    build: ./irvapp
     ports:
       - "3001:80"
     env_file:

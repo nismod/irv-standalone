@@ -4,16 +4,16 @@ volumes:
 
 services:
   frontend:
-    image: ghcr.io/nismod/jsrat-frontend:canary
+    image: ghcr.io/nismod/irvapp-frontend:canary
     platform: linux/amd64
     build: ./frontend
     ports:
       - "3000:80"
 
   backend:
-    image: ghcr.io/nismod/jsrat-backend:0.2
+    image: ghcr.io/nismod/irvapp-backend:canary
     platform: linux/amd64
-    build: ./backend
+    build: ./irvapp
     ports:
       - "3001:80"
     env_file:
