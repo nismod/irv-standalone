@@ -5,6 +5,7 @@ import { http, HttpResponse } from 'msw';
 import mockItemSearch from 'mocks/details/adaptations/mockItemSearch.json';
 import mockItem from 'mocks/details/adaptations/mockItem.json';
 import rasterSourceDomains from 'mocks/raster_source_domains.json';
+import { type RasterTileSource } from 'lib/api-client';
 
 const API_SEARCH_PATH =
   location.hostname === 'nismod.github.io'
@@ -15,6 +16,11 @@ const meta = {
   title: 'Details/AdaptationsSidebar',
   component: AdaptationsSidebar,
 } as Meta;
+
+const rasterSourceResponse: RasterTileSource = {
+  id: 1,
+  keys: ['type', 'rp', 'rcp', 'epoch', 'confidence'],
+};
 
 export default meta;
 
@@ -41,6 +47,9 @@ export const Default: Story = {
         }),
         http.get('/api/tiles/raster/sources/:datasetId/domains', () => {
           return HttpResponse.json(rasterSourceDomains);
+        }),
+        http.get('/api/tiles/raster/sources/:sourceId', () => {
+          return HttpResponse.json(rasterSourceResponse);
         }),
       ],
     },

@@ -5,10 +5,11 @@ import fromPairs from 'lodash/fromPairs';
 import { atomWithStoredBool } from 'lib/state/map-view/map-url';
 
 export interface HazardParams {
-  returnPeriod: number;
-  epoch: number;
-  rcp: string;
-  confidence: string | number;
+  [key: string]: string | number | undefined;
+  returnPeriod?: number;
+  epoch?: number;
+  rcp?: string;
+  confidence?: string | number;
   speed?: number;
 }
 
