@@ -24,7 +24,7 @@ services:
       - "./traefik/certs:/certs"
 
   frontend:
-    image: ghcr.io/nismod/jsrat-frontend:0.1
+    image: ghcr.io/nismod/irvapp-frontend:0.1
     build: ./frontend
     labels:
       - "traefik.enable=true"
