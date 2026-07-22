@@ -107,6 +107,11 @@ def ingest_pixel_stacks(
     target_path.mkdir(parents=True, exist_ok=True)
 
     layers = pd.read_csv(layers_path)
+    missing = {"path", "key"} - set(layers.columns)
+    if missing:
+        raise ValueError(
+            f"layers CSV at {layers_path} is missing required column(s): {', '.join(sorted(missing))}"
+        )
     layers, grids = read_grids(source_path, layers, quiet=quiet)
     grids["fname"] = grids.grid_id.apply(lambda grid_id: f"{grid_id}.zarr")
 
