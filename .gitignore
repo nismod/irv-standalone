@@ -58,3 +58,6 @@ proxy-table.json
 
 *storybook.log
 storybook-static/
+
+# Django static files
+staticfiles/
