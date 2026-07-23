@@ -15,6 +15,5 @@ class MapConfigSerializer(serializers.ModelSerializer):
 
 
 class MapConfigViewSet(viewsets.ReadOnlyModelViewSet):
-    permission_classes = [IsAuthenticated]
     queryset = MapConfig.objects.all()
     serializer_class = MapConfigSerializer
