@@ -1,4 +1,5 @@
 from rest_framework import serializers, viewsets
+from rest_framework.permissions import AllowAny
 
 from map.models import MapConfig
 
@@ -14,5 +15,6 @@ class MapConfigSerializer(serializers.ModelSerializer):
 
 
 class MapConfigViewSet(viewsets.ReadOnlyModelViewSet):
+    permission_classes = [AllowAny]
     queryset = MapConfig.objects.all()
     serializer_class = MapConfigSerializer
