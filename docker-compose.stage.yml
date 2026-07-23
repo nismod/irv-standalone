@@ -35,6 +35,7 @@ services:
       - ./tileserver/stacks:/data/pixel:ro
       - ./tileserver/raster/data:/data/raster:ro
       - ./etl:/data/pixel:ro
+      - ./staticfiles:/code/staticfiles
       - django-media:/code/media
 
   vector-tileserver:
