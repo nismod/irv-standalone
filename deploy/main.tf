@@ -158,10 +158,8 @@ resource "aws_instance" "standalone" {
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.access_vpc.id]
 
-  # Encrypted root volume. NB: enabling encryption on an instance that was
-  # created without it forces the instance to be destroyed and recreated -
   # check `terraform plan` and be ready to re-run provisioning and deployment
-  # (provision.sh, deploy.sh) before applying.
+  # (provision.sh and the deployment steps in README.md) before applying.
   root_block_device {
     encrypted   = true
     volume_type = "gp3"

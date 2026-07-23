@@ -123,7 +123,7 @@ Operational notes:
 - The root volume is configured with encryption. Applying this to an instance
   originally created without encryption **destroys and recreates the
   server** - check `terraform plan`, and be ready to re-run `provision.sh`
-  and `deploy.sh` and restore data afterwards.
+  and the deployment steps in this README and restore data afterwards.
 - The AMI lookup tracks the latest Ubuntu LTS image but the running instance
   is not replaced when a new image is released (`ignore_changes = [ami]`). To
   rebuild the server on a fresh image, run
@@ -309,7 +309,8 @@ The backend (django) container reads its configuration from an environment
 file which holds secrets and environment-specific values, so it must **not**
 be committed to this repository (the `envs` directory is git-ignored). It
 lives at `envs/prod/.backend.env` locally (`envs/stage/.backend.env` for
-staging) and is uploaded to the server by `deploy.sh` / `deploy_stage.sh`.
+staging) and must be uploaded to the server before starting/restarting the
+compose stack (see "Deployment" below).
 
 Expected contents, to be replaced with actual details:
 
