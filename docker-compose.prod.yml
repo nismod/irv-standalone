@@ -4,7 +4,7 @@
 # - no traefik: nginx on the host reverse-proxies to the published ports
 # - no db: the database is a separate server (RDS on AWS)
 # - environment variables are read from ./envs/prod/.backend.env, which is
-#   uploaded to the server by deploy/deploy.sh and must not be committed
+#   uploaded to the server (e.g. via rsync) and must not be committed
 #   (see deploy/README.md for the expected contents)
 volumes:
   django-media:
