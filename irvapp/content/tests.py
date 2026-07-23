@@ -101,8 +101,8 @@ class MarkdownBlockPageViewTests(TestCase):
             title="Test intro",
         )
         self.guide_page = Page.objects.create(
-            name="guide",
-            title="Guide",
+            name="test-guide",
+            title="Test guide",
         )
         MarkdownBlock.objects.create(
             title="Test intro summary",
@@ -144,6 +144,15 @@ class MarkdownBlockPageViewTests(TestCase):
             {"access_notice", "release_notice", "content"},
         )
 
+    def test_seeded_guide_page_contains_every_markdown_slot(self):
+        response = self.client.get("/content/guide")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            {block["slot"] for block in response.json()},
+            {"content"},
+        )
+
 
 class LogoPageViewTests(TestCase):
     def setUp(self):
@@ -156,8 +165,8 @@ class LogoPageViewTests(TestCase):
             title="Test intro",
         )
         self.guide_page = Page.objects.create(
-            name="guide",
-            title="Guide",
+            name="test-guide",
+            title="Test guide",
         )
 
     def tearDown(self):
