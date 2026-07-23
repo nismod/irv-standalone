@@ -40,4 +40,4 @@ sudo -u postgres createuser irvdev --pwprompt
 sudo -u postgres psql -c 'alter user irvdev with superuser;'
 # Create read-only user for app connection
 sudo -u postgres createuser jsratapp --pwprompt
-sudo -u postgres psql -c 'GRANT pg_read_all_data TO jsratapp;''
+sudo -u postgres psql -c 'GRANT pg_read_all_data TO jsratapp;'
