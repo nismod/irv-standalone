@@ -59,6 +59,8 @@ class DatasetSerializer(serializers.ModelSerializer):
             "quantity",
             "unit",
             "license",
+            "color_scheme",
+            "color_range",
             "tile_source",
             "stacking_order",
             "display_order",

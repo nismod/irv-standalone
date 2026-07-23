@@ -9,21 +9,18 @@ import {
   inferDomainsFromData,
 } from 'lib/controls/data-params';
 import { type DataParamGroupConfig, type ParamDomain } from 'lib/controls/data-params';
+import { hazardsMetadataState } from './metadata';
 
-type HazardType = 'fluvial' | 'surface' | 'coastal' | 'cyclone';
 type HazardParamGroupConfig = DataParamGroupConfig<HazardParams>;
-export type HazardDomains = Record<HazardType, HazardParamGroupConfig>;
+export type HazardDomains = Record<string, HazardParamGroupConfig | null>;
 type RasterSourceDomainEntry = Record<string, string>;
-type RasterSourceDomainsByType = Record<HazardType, RasterSourceDomainEntry[]>;
 
-const hazardTypes: HazardType[] = ['fluvial', 'surface', 'coastal', 'cyclone'];
-
-async function fetchRasterSourceDomains() {
+async function fetchRasterSourceDomains(hazardIds: string[]) {
   const responses = await Promise.all(
-    hazardTypes.map((domain) =>
+    hazardIds.map((datasetId) =>
       rasterTileSourceDomains({
         baseUrl: '/api',
-        path: { dataset_id: domain },
+        path: { dataset_id: datasetId },
         credentials: 'include',
       }),
     ),
@@ -31,24 +28,28 @@ async function fetchRasterSourceDomains() {
 
   return Object.fromEntries(
     responses.map(({ data, error }, index) => {
-      const hazardType = hazardTypes[index];
+      const hazardType = hazardIds[index];
       if (error) {
         console.error(`Error fetching ${hazardType} raster source domains:`, error);
         return [hazardType, []];
       }
       return [hazardType, data.domains];
     }),
-  ) as RasterSourceDomainsByType;
+  ) as Record<string, RasterSourceDomainEntry[]>;
 }
 
-const rasterSourceQuery = atom(fetchRasterSourceDomains);
+const rasterSourceQuery = atom(async (get) => {
+  const metadata = get(hazardsMetadataState);
+  const hazardIds = Object.keys(metadata);
+  return fetchRasterSourceDomains(hazardIds);
+});
 
 const rasterSourceData = unwrap(
   rasterSourceQuery,
-  (prev) => prev ?? Object.fromEntries(hazardTypes.map((type) => [type, []])) as RasterSourceDomainsByType,
+  (prev) => prev ?? {},
 );
 
-function getEntriesForType(data: RasterSourceDomainsByType, type: HazardType) {
+function getEntriesForType(data: Record<string, RasterSourceDomainEntry[]>, type: string) {
   const entries = data[type] ?? [];
   if (entries.length === 0) {
     return [];
@@ -122,7 +123,7 @@ function buildParamDomains(entries: RasterSourceDomainEntry[]) {
   return withDefinedDomains(paramDomains as Record<string, ParamDomain | undefined>);
 }
 
-function buildParamDefaults(type: HazardType, paramDomains: Record<string, ParamDomain>) {
+function buildParamDefaults(type: string, paramDomains: Record<string, ParamDomain>) {
   return withDefinedDefaults(
     Object.fromEntries(
       Object.entries(paramDomains).map(([key, values]) => {
@@ -155,7 +156,7 @@ function normaliseDependencyEntries(entries: RasterSourceDomainEntry[]) {
   );
 }
 
-const rasterDomainsByType = atomFamily((type: HazardType) => {
+const rasterDomainsByType = atomFamily((type: string) => {
   return atom((get) => {
     const data = get(rasterSourceData);
     const entriesOfType = getEntriesForType(data, type);
@@ -163,7 +164,7 @@ const rasterDomainsByType = atomFamily((type: HazardType) => {
   });
 });
 
-const rasterDependenciesByType = atomFamily((type: HazardType) => {
+const rasterDependenciesByType = atomFamily((type: string) => {
   return atom((get) => {
     const data = get(rasterSourceData);
     const entriesOfType = normaliseDependencyEntries(getEntriesForType(data, type));
@@ -185,7 +186,7 @@ const rasterDependenciesByType = atomFamily((type: HazardType) => {
   });
 });
 
-const hazardParamGroup = atomFamily((type: HazardType) => {
+const hazardParamGroup = atomFamily((type: string) => {
   return atom((get) => {
     const paramDomains = get(rasterDomainsByType(type));
     if (!paramDomains) {
@@ -202,8 +203,9 @@ const hazardParamGroup = atomFamily((type: HazardType) => {
 });
 
 export const hazardDomainState = atom<HazardDomains | null>((get) => {
+  const metadata = get(hazardsMetadataState);
   const baseState = {} as HazardDomains;
-  hazardTypes.forEach((type) => {
+  Object.keys(metadata).forEach((type) => {
     baseState[type] = get(hazardParamGroup(type));
   });
   return baseState;

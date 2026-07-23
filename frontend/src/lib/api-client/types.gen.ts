@@ -113,6 +113,8 @@ export type Dataset = {
     quantity: string;
     unit: string;
     license?: string | null;
+    color_scheme?: string | null;
+    color_range?: Array<number> | null;
     tile_source?: number | null;
     stacking_order: number;
     display_order: number;
