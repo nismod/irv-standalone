@@ -58,9 +58,12 @@ server {
 
 		# Pass to upstream
 		proxy_pass http://backend;
-		expires 1y;
-		access_log off;
-		add_header Cache-Control "public";
+		
+		proxy_set_header Host $http_host;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
+		proxy_redirect off;
+		proxy_buffering off;
 
 		# allow CORS with auth
 		add_header Access-Control-Allow-Origin "$http_origin" always;
