@@ -1,3 +1,8 @@
+# Staging environment - as production except for domain and canary image tags
+#
+# Environment variables are read from ./envs/.backend.env, which is uploaded
+# to the server by deploy/deploy_stage.sh and must not be committed (see
+# deploy/README.md for the expected contents)
 # Staging environment - as production except for domain
 volumes:
   django-media:
@@ -7,38 +12,38 @@ services:
     image: ghcr.io/nismod/irvapp-frontend:canary
     platform: linux/amd64
     build: ./frontend
+    restart: unless-stopped
     ports:
-      - "3000:80"
+      - "127.0.0.1:3000:80"
 
-  backend:
+  django:
     image: ghcr.io/nismod/irvapp-backend:canary
     platform: linux/amd64
     build: ./irvapp
+    restart: unless-stopped
     ports:
-      - "3001:80"
+      - "127.0.0.1:3001:8000"
     env_file:
+      # PG* connection details, DJANGO_SECRET_KEY, DJANGO_DEBUG,
+      # DJANGO_ALLOWED_HOSTS, CSRF_TRUSTED_ORIGINS - not committed
       - ./envs/.backend.env
+    environment:
+      - PIXEL_STACK_DATA_DIR=/data/pixel
+      - LAYER_METADATA_PATH=/data/pixel/hazard_layers.csv
+      - TILEDB_URI=/data/raster
     volumes:
+      - ./tileserver/stacks:/data/pixel:ro
+      - ./tileserver/raster/data:/data/raster:ro
+      - ./etl:/data/pixel:ro
       - django-media:/code/media
 
   vector-tileserver:
     image: ghcr.io/nismod/jsrat-vector-tileserver:0.1
     platform: linux/amd64
-    build:
-      context: ./tileserver/vector
-    command:
-      [
-        "tileserver-gl-light",
-        "-c",
-        "config.json",
-        "-p",
-        "8080",
-        "--verbose",
-        "-u",
-        "https://jamaica.infrastructureresilience.org/vector", #this matches the URL of the hosting server
-      ]
-    ports:
-      - "3002:8080"
+    build: ./tileserver/vector
+    restart: unless-stopped
+    # no published ports: django proxies to http://vector-tileserver:8080
+    # over the compose network (see VECTOR_TILESERVER_INTERNAL_URL)
     volumes:
       - ./tileserver/vector/data:/data
       - ./tileserver/vector/config.json:/config.json
