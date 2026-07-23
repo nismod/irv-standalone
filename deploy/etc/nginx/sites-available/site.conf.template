@@ -57,7 +57,7 @@ server {
 		auth_basic_user_file /etc/nginx/.htpasswd;
 
 		# Pass to upstream
-		proxy_pass http://frontend;
+		proxy_pass http://backend;
 		expires 1y;
 		access_log off;
 		add_header Cache-Control "public";
@@ -76,6 +76,66 @@ server {
 
 		proxy_pass http://backend;
 		rewrite ^/api/(.+) /$1 break;
+
+		proxy_set_header Host $http_host;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
+		proxy_redirect off;
+		proxy_buffering off;
+
+		# allow CORS with auth
+		add_header Access-Control-Allow-Origin "$http_origin" always;
+		add_header 'Access-Control-Allow-Credentials' 'true' always;
+		add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+		add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+	}
+
+	location /admin {
+		# basic authentication - use htpasswd to add users
+		auth_basic "Access restricted";
+		auth_basic_user_file /etc/nginx/.htpasswd;
+
+		proxy_pass http://backend;
+
+		proxy_set_header Host $http_host;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
+		proxy_redirect off;
+		proxy_buffering off;
+
+		# allow CORS with auth
+		add_header Access-Control-Allow-Origin "$http_origin" always;
+		add_header 'Access-Control-Allow-Credentials' 'true' always;
+		add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+		add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+	}
+
+	location /media {
+		# basic authentication - use htpasswd to add users
+		auth_basic "Access restricted";
+		auth_basic_user_file /etc/nginx/.htpasswd;
+
+		proxy_pass http://backend;
+
+		proxy_set_header Host $http_host;
+		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+		proxy_set_header X-Forwarded-Proto $scheme;
+		proxy_redirect off;
+		proxy_buffering off;
+
+		# allow CORS with auth
+		add_header Access-Control-Allow-Origin "$http_origin" always;
+		add_header 'Access-Control-Allow-Credentials' 'true' always;
+		add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS';
+		add_header 'Access-Control-Allow-Headers' 'DNT,X-CustomHeader,Keep-Alive,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type';
+	}
+
+	location /martor {
+		# basic authentication - use htpasswd to add users
+		auth_basic "Access restricted";
+		auth_basic_user_file /etc/nginx/.htpasswd;
+
+		proxy_pass http://backend;
 
 		proxy_set_header Host $http_host;
 		proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
