@@ -2,16 +2,19 @@
 
 The site can run on a single Linux virtual machine, with a separate database server.
 
-The virtual machine runs several services, coordinated by docker-compose:
+The virtual machine runs several services, coordinated by docker compose
+(mirroring `docker-compose.dev.yml`, without traefik or the dev database):
 
 - Frontend React application, built using node and npm. In production this is
   stored and served as static files (HTML/JS/CSS).
-- Vector tileserver, tileserver-gl-light, depends on node
-- Raster tileserver, terracotta, depends on gunicorn and Python 3.10
-- Backend Python application, depends on uvicorn, fastapi and Python 3.10
+- Backend Django application (`irvapp`), which serves the API - including
+  raster tiles (from tiledb) and pixel data - and proxies the vector
+  tileserver
+- Vector tileserver, tileserver-gl-light - not exposed directly, reached by
+  the backend over the compose network
 
 The application source code is held in [this
-repository](https://github.com/nismod/irv-jamaica/) and this guide assumes that
+repository](https://github.com/nismod/irv-standalone/) and this guide assumes that
 it is built using node and npm locally on a development machine. It would be
 possible to build directly on the server in a working directory.
 
@@ -43,13 +46,91 @@ then run:
 aws configure   # one-off to set your AWS credentials
 ```
 
-Install [terraform](https://www.terraform.io/) then run:
+Install [terraform](https://www.terraform.io/) (>= 1.10).
+
+Terraform state is stored in a shared S3 bucket, which must exist before the
+main configuration can be initialised. If the bucket does not exist yet
+(one-off, first person only):
 
 ```bash
-terraform init  # one-off to fetch provider from terraform registry
-terraform plan  # to see what actions will be taken in detail
-terraform apply # rerun after any change to main.tf
+cd state-bootstrap
+terraform init
+terraform apply  # creates the versioned, encrypted state bucket
+cd ..
 ```
+
+Then, from this `deploy` directory:
+
+```bash
+terraform init  # one-off; add -migrate-state if you have existing local state
+terraform plan  # to see what actions will be taken in detail
+terraform apply # rerun after any change to the *.tf files
+```
+
+The configuration is split across several files:
+
+- `versions.tf` - required terraform and provider versions, and the S3 remote
+  state backend
+- `variables.tf` - input variables (site domain name, instance type, SSH key
+  and allowed SSH source ranges, AMI filter, database sizing)
+- `main.tf` - the application server: EC2 instance, key pair, security group,
+  DNS record
+- `database.tf` - RDS PostgreSQL database and its security group
+- `outputs.tf` - outputs (server public IP, site URL, database address and
+  credentials secret)
+- `state-bootstrap/` - separate one-off configuration that creates the state
+  bucket
+
+All variables have working defaults. To override them, pass `-var` flags or
+copy `terraform.tfvars.example` to `terraform.tfvars` (git-ignored, as it may
+hold environment-specific or sensitive values) and edit. In particular,
+consider restricting SSH access to a trusted network range - strongly
+recommended:
+
+```conf
+# terraform.tfvars
+ssh_ingress_cidr_blocks = ["192.0.2.0/24"]
+```
+
+Example SSH client config for the AWS host:
+
+```sshconfig
+Host mauritius
+  HostName <terraform public_ip output>
+  User ubuntu
+  IdentityFile ~/.ssh/opsis-irv-mauritius
+```
+
+With that in place, you can connect directly with:
+
+```bash
+ssh mauritius
+```
+
+Or, without a local SSH config entry:
+
+```bash
+ssh -i ~/.ssh/opsis-irv-mauritius ubuntu@"$(terraform output -raw public_ip)"
+```
+
+Operational notes:
+
+- `.terraform.lock.hcl` pins the exact provider version and is committed. It
+  currently holds hashes for `linux_amd64` only: if you work on another
+  platform, run e.g.
+  `terraform providers lock -platform=linux_amd64 -platform=darwin_arm64`
+  and commit the result.
+- The root volume is configured with encryption. Applying this to an instance
+  originally created without encryption **destroys and recreates the
+  server** - check `terraform plan`, and be ready to re-run `provision.sh`
+  and the deployment steps in this README and restore data afterwards.
+- The AMI lookup tracks the latest Ubuntu LTS image but the running instance
+  is not replaced when a new image is released (`ignore_changes = [ami]`). To
+  rebuild the server on a fresh image, run
+  `terraform apply -replace=aws_instance.standalone` - note this destroys the
+  server and its disk. If a planned rebuild shows the *old* AMI id being
+  reused, temporarily comment out the `ignore_changes` line in `main.tf` for
+  that apply to pick up the latest image.
 
 ## On-premises (optional)
 
@@ -68,21 +149,93 @@ The service requires two virtual machines with similar specifications:
 
 ## VM provisioning
 
-`provision.sh` contains installation instructions for an Ubuntu 20.04 server to
-install docker and docker-compose.
+`provision.sh` sets up an Ubuntu LTS server to run the application:
+
+- docker and the docker compose plugin, to run the app containers (started on
+  boot; the compose services are marked `restart: unless-stopped` so they come
+  back after a reboot)
+- nginx as a reverse proxy terminating incoming connections, with HTTP basic
+  authentication (installed from `etc/nginx/sites-available/site.conf.template`)
+- Let's Encrypt ([certbot](https://certbot.eff.org/)) to acquire an SSL
+  certificate and renew it automatically (via the `certbot.timer` systemd
+  timer, which reloads nginx on renewal)
 
 > This is relevant in either AWS or on-premises setup.
+
+Copy the `deploy` directory to the server (or clone this repository there)
+
+```bash
+rsync -Pavr --exclude='*/.terraform/*' deploy mauritius:'~/'
+```
+
+Then run:
+
+```bash
+SITE_DOMAIN=mauritius.infrastructureresilience.org \
+CERTBOT_EMAIL=you@example.org \
+  bash deploy/provision.sh
+```
+
+Notes:
+
+- DNS for `SITE_DOMAIN` must already resolve to the server, or the Let's
+  Encrypt HTTP challenge fails. On AWS, run `terraform apply` first - it
+  creates the DNS record. If DNS is not ready, leave `CERTBOT_EMAIL` unset and
+  the script prints the `certbot` command to run later.
+- The script is idempotent: rerunning it is safe.
+- docker group membership takes effect at next login, so log out and in (or
+  `newgrp docker`) before running `docker compose` as your own user.
 
 ## Database provisioning
 
 `provision-database-server.sh` contains installation instructions for an Ubuntu
 20.04 server to install a PostgreSQL database server with the PostGIS extension.
 
-> If running on AWS, this should be handled by terraform as an RDS database.
+> This is only relevant on-premises. On AWS, terraform provisions an RDS
+> PostgreSQL database instead (see `database.tf`) - do not run the script.
+
+On AWS, get the database address from terraform and save as `PGHOST` in the `.env` file:
+
+```bash
+terraform output -raw database_address
+```
+
+On AWS, the database master password is generated and stored by RDS in AWS
+Secrets Manager; it is not in terraform configuration or state. To retrieve
+it:
+
+```bash
+aws secretsmanager get-secret-value \
+  --secret-id "$(terraform output -raw database_master_user_secret_arn)" \
+  --query SecretString --output text
+```
+
+The database only accepts connections from the application server's security
+group, so connect from the application server (over SSH), with `PGHOST` set to
+the `database_address` terraform output.
+
+Enable PostGIS once per database:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS postgis;
+```
+
+If setting up from scratch, login as postgres, then set up user with database privileges.
+
+```sql
+CREATE ROLE irv_rw;
+GRANT USAGE, CREATE ON SCHEMA public to irv_rw;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO irv_rw;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE ON SEQUENCES TO irv_rw;
+
+CREATE USER irvadmin WITH PASSWORD 'replace-me';
+GRANT irv_rw TO irvadmin;
+```
+
 
 ## Basic authentication
 
-The J-SRAT app can be configured to use [HTTP Basic
+The app can be configured to use [HTTP Basic
 Authentication](https://developer.mozilla.org/en-US/docs/Web/HTTP/Authentication)
 to authenticate users. In this case, the connection must always use HTTPS, to
 ensure that credentials are protected.
@@ -93,11 +246,12 @@ to the other app services. See the
 [Nginx docs](https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-http-basic-authentication/)
 for more on this configuration.
 
-Create a password file for HTTP Basic Authentication if it doesn't already
+The password file lives at `/etc/nginx/.htpasswd` (referenced by the site
+config, and created empty by `provision.sh`). Create it if it doesn't already
 exist:
 
 ```bash
-sudo touch /var/www/auth/.htpasswd
+sudo touch /etc/nginx/.htpasswd
 ```
 
 ### Add a user account
@@ -110,7 +264,7 @@ passwords. E.g. run the following to generate three 16-character passwords:
 To add or update a user in the password file (will prompt for password):
 
 ```bash
-sudo htpasswd -B /var/www/auth/.htpasswd new-username
+sudo htpasswd -B /etc/nginx/.htpasswd new-username
 ```
 
 Test that it worked by visiting the site in a private tab, and entering the new
@@ -127,27 +281,53 @@ the old username and password when prompted, which should fail to authenticate.
 
 ### Certificate renewal
 
-The server can be configured to manage its own SSL certificate, and should
-auto-renew every 90 days, but this may fail. If the certificate is outdated,
-users will see a security warning in the browser when they visit the site.
+Certificates are renewed automatically: `provision.sh` sets up certbot with
+the nginx plugin, and the `certbot.timer` systemd timer renews the certificate
+before its 90-day expiry and reloads nginx, with no downtime. If the
+certificate is outdated, users will see a security warning in the browser when
+they visit the site.
 
-To renew:
+To check that auto-renewal is working (over SSH on the server):
 
-1. Log in to the J-SRAT server via SSH
-2. Stop the NGINX server process: `service nginx stop`
-3. Renew the certificate: `sudo certbot renew`
-4. Start NGINX again: `service nginx start`
-5. Visit the site (hard browser refresh) to check the certificate comes through.
+```bash
+systemctl list-timers certbot.timer   # next scheduled run
+sudo certbot renew --dry-run          # test a renewal without changing anything
+```
 
-## Database connection
+To renew manually (nginx does not need to be stopped):
 
-The `PG*` variables for connection to database, to be replaced with actual details:
+```bash
+sudo certbot renew
+```
+
+Then visit the site (hard browser refresh) to check the certificate comes
+through.
+
+## Backend environment file
+
+The backend (django) container reads its configuration from an environment
+file which holds secrets and environment-specific values, so it must **not**
+be committed to this repository (the `envs` directory is git-ignored). It
+lives at `envs/prod/.backend.env` locally (`envs/stage/.backend.env` for
+staging) and must be uploaded to the server before starting/restarting the
+compose stack (see "Deployment" below).
+
+Expected contents, to be replaced with actual details:
 
 ```conf
-PGDATABASE=jamaica
+# Database connection
+PGHOST=localhost
+PGDATABASE=irvdev
 PGUSER=docker
 PGPASSWORD=docker
-PGHOST=localhost
+
+# Django settings
+# generate a secret key with e.g.:
+#   python3 -c "import secrets; print(secrets.token_urlsafe(50))"
+DJANGO_SECRET_KEY=change-me
+DJANGO_DEBUG=false
+DJANGO_ALLOWED_HOSTS=mauritius.infrastructureresilience.org
+CSRF_TRUSTED_ORIGINS=https://mauritius.infrastructureresilience.org
 ```
 
 Testing database connection:
@@ -171,23 +351,30 @@ pg_restore -cC -d postgres /path/to/backup.dump
 
 ## Deployment
 
-Run `deploy.sh` to upload data and docker-compose config.
-
-### Manage production
+Create a GitHub access token with `read:packages` - use this to log into the
+GitHub package registry. For more information, see these [instructions for
+authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
+and use a token with `read:packages` scope to read from the GHCR.
 
 On remote, to first start the application:
 
 ```bash
+# on remote
+docker login ghcr.io  # use GitHub username for username, GitHub access token for password
 cd /var/www
 docker compose -f docker-compose.prod.yml up -d
 ```
 
-For pulling from the GitHub container registry (GHCR), you will need to follow these
-[instructions for authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
-and use a token with `read:packages` scope to read from the GHCR.
+Run `deploy/deploy_stage.sh` to upload data and docker-compose config, pull the
+published images and (re)start the services.
 
-The docker compose setup runs frontend, backend, vector and raster tileservers
-and exposes these on high-numbered ports within the machine.
+### Manage staging/production
+
+
+The docker compose setup runs the frontend, the django backend and the vector
+tileserver. Frontend and backend are exposed on high-numbered ports bound to
+localhost; the vector tileserver is reached by the backend over the compose
+network.
 
 [Nginx](https://nginx.org/en/) is used as a reverse-proxy to terminate incoming
 connections and pass them on to the containerised services.
@@ -203,24 +390,17 @@ for instructions on setting up or renewing SSL certificates.
 For pushing to the GitHub container registry, you will need to follow these
 [instructions for authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) and use a token with `write:packages` scope.
 
-Build and publish all images:
+Build and publish all images (versions as set in `docker-compose.prod.yml`;
+the backend image is built from `./irvapp`):
 
 ```bash
 # Build images locally
 docker compose -f docker-compose.prod.yml build
 
 # Push to GitHub container registry
-docker push ghcr.io/nismod/jsrat-frontend:0.1
-docker push ghcr.io/nismod/jsrat-backend:0.2
+docker push ghcr.io/nismod/irvapp-frontend:0.1
+docker push ghcr.io/nismod/irvapp-backend:0.1
 docker push ghcr.io/nismod/jsrat-vector-tileserver:0.1
-docker push ghcr.io/nismod/jsrat-raster-tileserver:0.1
-```
-
-```bash
-docker push ghcr.io/nismod/jsrat-frontend:0.1
-docker push ghcr.io/nismod/jsrat-backend:0.2
-docker push ghcr.io/nismod/jsrat-vector-tileserver:0.1
-docker push ghcr.io/nismod/jsrat-raster-tileserver:0.1
 ```
 
 ### Updating a service
@@ -230,23 +410,25 @@ Update a specific image, then build and push:
 ```bash
 # Edit the image version in `docker-compose.prod.yml`
 # in this example it's on line 33:
-#     image: ghcr.io/nismod/jsrat-frontend:0.1
+#     image: ghcr.io/nismod/irvapp-frontend:0.1
 
 # Build
 docker compose -f docker-compose.prod.yml build frontend
 
 # Push
-docker push ghcr.io/nismod/jsrat-frontend:0.1
+docker push ghcr.io/nismod/irvapp-frontend:0.1
 ```
 
-Run `deploy.sh` to update the docker-compose config on the server.
+Run `deploy.sh` to update the docker-compose config on the server, pull
+images and restart services.
 
-On the remote server, pull the image, then restart the specific service:
+Alternatively, on the remote server, pull the image, then restart the
+specific service:
 
 ```bash
 # Pull image
-docker pull ghcr.io/nismod/jsrat-frontend:0.1
+docker pull ghcr.io/nismod/irvapp-frontend:0.1
 
 # Restart service
-docker compose up -d frontend
+docker compose -f docker-compose.prod.yml up -d frontend
 ```

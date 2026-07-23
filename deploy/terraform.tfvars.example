@@ -1,0 +1,17 @@
+# Example terraform variable overrides.
+#
+# Copy to terraform.tfvars (git-ignored) and edit, or pass individual values
+# with -var / TF_VAR_* environment variables. See variables.tf for the full
+# list of variables and their defaults.
+
+# Restrict SSH access to a trusted range (office/VPN) - strongly recommended:
+# ssh_ingress_cidr_blocks = ["203.0.113.0/24"]
+
+# Application server sizing:
+# instance_type       = "t3.small"
+# root_volume_size_gb = 20
+
+# Database server sizing:
+# db_instance_class        = "db.t3.small"
+# db_allocated_storage     = 20
+# db_max_allocated_storage = 100
