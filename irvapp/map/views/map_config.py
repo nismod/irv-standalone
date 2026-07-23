@@ -1,5 +1,4 @@
 from rest_framework import serializers, viewsets
-from rest_framework.permissions import IsAuthenticated
 
 from map.models import MapConfig
 
