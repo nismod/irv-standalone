@@ -5,6 +5,7 @@ from unittest.mock import patch
 
 from django.contrib.auth.models import Group, User
 from django.test import SimpleTestCase, TestCase
+from django.utils.cache import has_vary_header
 from rest_framework.test import APIClient
 
 from map.models import Dataset
@@ -216,7 +217,9 @@ class RasterTileImageViewTests(TestCase):
         )
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(b"".join(response.streaming_content), b"png-bytes")
+        self.assertEqual(response.content, b"png-bytes")
+        self.assertEqual(response["Cache-Control"], "private, max-age=60")
+        self.assertTrue(has_vary_header(response, "Cookie"))
         mock_get_singleband_image.assert_called_once_with(
             "terracotta_land_cover",
             ["a", "b"],
@@ -236,6 +239,24 @@ class RasterTileImageViewTests(TestCase):
             response.json()["detail"],
             "colormap=explicit requires explicit_color_map to be included",
         )
+
+    @patch("raster.views.tiles._get_singleband_image")
+    def test_invalid_stretch_range_returns_bad_request(
+        self,
+        mock_get_singleband_image,
+    ):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get(
+            "/tiles/raster/land_cover/a/b/3/1/2.png?stretch_range=not-json"
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json()["detail"],
+            "Invalid JSON in tile query parameters.",
+        )
+        mock_get_singleband_image.assert_not_called()
 
     @patch("raster.views.tiles._get_singleband_image")
     def test_restricted_tile_is_not_rendered_for_non_member(
