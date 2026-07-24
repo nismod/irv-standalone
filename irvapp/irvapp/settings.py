@@ -219,5 +219,9 @@ VECTOR_TILESERVER_INTERNAL_URL = os.environ.get(
     'http://vector-tileserver:8080',
 )
 
+RASTER_TILE_CACHE_TIMEOUT = int(
+    os.environ.get('RASTER_TILE_CACHE_TIMEOUT', '300')
+)
+
 # Disable markdown image upload functionality
 MARTOR_UPLOAD_URL = ''

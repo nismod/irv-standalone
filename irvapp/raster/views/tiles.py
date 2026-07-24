@@ -1,7 +1,8 @@
 import json
 import logging
 
-from django.http import StreamingHttpResponse
+from django.http import HttpResponse
+from django.utils.cache import patch_cache_control
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
     OpenApiParameter,
@@ -29,6 +30,7 @@ from .shared import (
 )
 
 logger = logging.getLogger(__name__)
+
 
 class RasterTileImageView(APIView):
     permission_classes = [IsAuthenticated, HasDatasetAccess]
@@ -86,13 +88,15 @@ class RasterTileImageView(APIView):
         stretch_range = request.query_params.get("stretch_range")
         explicit_color_map = request.query_params.get("explicit_color_map")
         colormap_name = request.query_params.get("colormap")
+        parsed_stretch_range = None
 
         stretch_range_log = stretch_range
         if stretch_range:
             try:
-                stretch_range_log = json.loads(stretch_range)
+                parsed_stretch_range = json.loads(stretch_range)
+                stretch_range_log = parsed_stretch_range
             except json.JSONDecodeError:
-                pass
+                stretch_range_log = stretch_range
 
         logger.debug(
             (
@@ -107,8 +111,10 @@ class RasterTileImageView(APIView):
 
         try:
             parsed_keys = _parse_keys(keys)
-            dataset = Dataset.objects.select_related("tile_source").get(
-                pk=dataset_id
+            dataset = (
+                Dataset.objects.select_related("tile_source")
+                .prefetch_related("access_groups")
+                .get(pk=dataset_id)
             )
             self.check_object_permissions(request, dataset)
             source = dataset.tile_source
@@ -120,7 +126,7 @@ class RasterTileImageView(APIView):
             options = {}
             if colormap_name:
                 if colormap_name == "explicit":
-                    if dataset_id in CATEGORICAL_COLOR_MAPS.keys():
+                    if dataset_id in CATEGORICAL_COLOR_MAPS:
                         options["colormap"] = CATEGORICAL_COLOR_MAPS[
                             dataset_id
                         ]
@@ -131,7 +137,9 @@ class RasterTileImageView(APIView):
                 else:
                     options["colormap"] = colormap_name
 
-            if stretch_range:
+            if parsed_stretch_range is not None:
+                options["stretch_range"] = parsed_stretch_range
+            elif stretch_range:
                 options["stretch_range"] = json.loads(stretch_range)
 
             logger.debug(
@@ -153,7 +161,10 @@ class RasterTileImageView(APIView):
                 type(image),
             )
 
-            return StreamingHttpResponse(image, content_type="image/png")
+            response = HttpResponse(image, content_type="image/png")
+            patch_cache_control(response, private=True, max_age=60)
+            response["Vary"] = "Cookie"
+            return response
         except json.JSONDecodeError as err:
             handle_exception(logger, err)
             return Response(

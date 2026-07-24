@@ -1,6 +1,14 @@
 from rest_framework.permissions import BasePermission
 
 
+def _prefetched_access_group_ids(dataset):
+    prefetched = getattr(dataset, "_prefetched_objects_cache", {})
+    groups = prefetched.get("access_groups")
+    if groups is None:
+        return None
+    return {group.pk for group in groups}
+
+
 def _coerce_dataset_instance(dataset, *, prefetch_access_groups=False):
     if not isinstance(dataset, dict):
         return dataset
@@ -29,6 +37,10 @@ def user_has_dataset_access(user, dataset, user_group_ids=None):
         return True
 
     if user_group_ids is not None:
+        prefetched_group_ids = _prefetched_access_group_ids(dataset)
+        if prefetched_group_ids is not None:
+            return bool(prefetched_group_ids & set(user_group_ids))
+
         return any(
             group.pk in user_group_ids
             for group in dataset.access_groups.all()
@@ -49,4 +61,11 @@ class HasDatasetAccess(BasePermission):
                 return False
             return obj.datasets.visible_to(request.user).exists()
 
-        return user_has_dataset_access(request.user, obj)
+        user_group_ids = set(
+            request.user.groups.values_list("pk", flat=True)
+        )
+        return user_has_dataset_access(
+            request.user,
+            obj,
+            user_group_ids=user_group_ids,
+        )
