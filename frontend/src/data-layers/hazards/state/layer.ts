@@ -8,18 +8,32 @@ import { sectionVisibilityState } from 'lib/state/sections';
 import { hazardVisibilityState } from './hazard-visibility';
 import { hazardsMetadataState, hazardSourceMetadataState } from './metadata';
 import { hazardViewLayer } from '../hazard-view-layer';
+import { type HazardSourceMetadata } from '../source';
 import { type HazardParams } from './data-selection';
+
+function hasHazardSourceMetadata(
+  sourceMetadata: { keys: string[] | null; fixedValues: Record<string, string | null> } | undefined,
+): sourceMetadata is HazardSourceMetadata {
+  return Boolean(sourceMetadata?.keys?.length);
+}
 
 export const hazardsLayerState = atom<ViewLayer[]>((get) =>
   get(sectionVisibilityState('hazards'))
-    ? truthyKeys(get(hazardVisibilityState)).map((hazard) =>
-        hazardViewLayer(
-          hazard,
-          getHazardParams(get, hazard),
-          get(hazardSourceMetadataState)[hazard],
-          get(hazardsMetadataState)[hazard],
-        ),
-      )
+    ? truthyKeys(get(hazardVisibilityState)).flatMap((hazard) => {
+        const sourceMetadata = get(hazardSourceMetadataState)[hazard];
+        if (!hasHazardSourceMetadata(sourceMetadata)) {
+          return [];
+        }
+
+        return [
+          hazardViewLayer(
+            hazard,
+            getHazardParams(get, hazard),
+            sourceMetadata,
+            get(hazardsMetadataState)[hazard],
+          ),
+        ];
+      })
     : [],
 );
 
