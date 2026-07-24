@@ -129,16 +129,9 @@ def _source_options(source_db, filters=None):
         provider=settings.DRIVER_PROVIDER,
     )
 
-    datasets = driver.get_datasets()
-    keys = driver.get_keys()
+    with driver.connect():
+        datasets = driver.get_datasets(where=filters)
+        keys = driver.get_keys()
 
     options = [dict(zip(keys, values)) for values in datasets.keys()]
-    if filters:
-        filtered_options = [
-            option
-            for option in options
-            if all(option.get(key) == value for key, value in filters.items())
-        ]
-        if filtered_options:
-            options = filtered_options
     return options
