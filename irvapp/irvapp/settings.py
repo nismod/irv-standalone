@@ -222,6 +222,12 @@ VECTOR_TILESERVER_INTERNAL_URL = os.environ.get(
 RASTER_TILE_CACHE_TIMEOUT = int(
     os.environ.get('RASTER_TILE_CACHE_TIMEOUT', '300')
 )
+RASTER_TILE_CACHE_MAX_BYTES = int(
+    os.environ.get(
+        'RASTER_TILE_CACHE_MAX_BYTES',
+        str(1024 * 1024 * 1024),
+    )  # default to 1GB
+)
 
 # Disable markdown image upload functionality
 MARTOR_UPLOAD_URL = ''
