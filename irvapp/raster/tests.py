@@ -96,6 +96,14 @@ class RasterTileSourceModelTests(TestCase):
 
         self.assertEqual(source.path_template, DEFAULT_PATH_TEMPLATE)
 
+    def test_display_name_is_database(self):
+        source = RasterTileSource.objects.create(
+            keys=["type", "epoch"],
+            database="terracotta_land_cover",
+        )
+
+        self.assertEqual(str(source), "terracotta_land_cover")
+
 
 class SourceOptionsTests(SimpleTestCase):
     @patch("raster.views.shared.build_driver_path")
