@@ -7,7 +7,7 @@ import { type Dataset } from 'lib/api-client';
 
 import { HazardLegend } from './HazardLegend';
 import { HazardHoverDescription } from './HazardHoverDescription';
-import { HAZARD_SOURCE } from './source';
+import { HAZARD_SOURCE, type HazardSourceMetadata } from './source';
 import { getHazardColorSpec } from './state/metadata';
 import { type HazardParams } from './state/data-selection';
 
@@ -24,7 +24,7 @@ export function getHazardId(hazardType: string, hazardParams: HazardParams) {
 export function hazardViewLayer(
   hazardType: string,
   hazardParams: HazardParams,
-  sourceMetadata?: { keys: string[] | null; fixedValues: Record<string, string | null> },
+  sourceMetadata: HazardSourceMetadata,
   dataset?: Dataset,
 ): ViewLayer {
   const magFilter = ['cyclone', 'storm'].includes(hazardType) ? 'nearest' : 'linear';
@@ -38,6 +38,10 @@ export function hazardViewLayer(
     params: { hazardType, hazardParams },
     fn: ({ deckProps }) => {
       const { scheme, range } = getHazardColorSpec(dataset);
+      const data = HAZARD_SOURCE.getDataUrl({ hazardType, hazardParams, sourceMetadata }, { scheme, range });
+      if (!data) {
+        return [];
+      }
 
       return rasterTileLayer(
         {
@@ -49,7 +53,7 @@ export function hazardViewLayer(
         deckProps,
         {
           id: `${hazardType}@${deckId}`, // follow the convention viewLayerId@deckLayerId
-          data: HAZARD_SOURCE.getDataUrl({ hazardType, hazardParams, sourceMetadata }, { scheme, range }),
+          data,
           refinementStrategy: 'no-overlap',
         },
       );

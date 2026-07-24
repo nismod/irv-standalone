@@ -4,27 +4,16 @@ const API_KEY_ALIASES: Record<string, keyof HazardParams | 'hazardType'> = {
   type: 'hazardType',
   rp: 'returnPeriod',
 };
-const LEGACY_SOURCE_KEYS = ['type', 'rp', 'rcp', 'epoch', 'confidence'];
 
-type HazardSourceMetadata = {
-  keys: string[] | null;
+export type HazardSourceMetadata = {
+  keys: string[];
   fixedValues: Record<string, string | null>;
 };
-
-function getDefaultHazardParams(hazardType: string): HazardParams {
-  return {
-    returnPeriod: hazardType === 'storm' ? 0 : 100,
-    rcp: 'baseline',
-    epoch: 2010,
-    confidence: hazardType === 'cyclone' ? 50 : 'None',
-    speed: hazardType === 'storm' ? 30 : undefined,
-  };
-}
 
 function getRasterSourceValue(
   key: string,
   hazardType: string,
-  hazardParams: HazardParams,
+  hazardParams: Partial<HazardParams>,
   fixedValues: Record<string, string | null> = {},
 ) {
   const fixedValue = fixedValues[key];
@@ -55,19 +44,17 @@ export const HAZARD_SOURCE = {
       hazardType,
       hazardParams = {},
       sourceMetadata,
-    }: { hazardType: string; hazardParams?: Partial<HazardParams>; sourceMetadata?: HazardSourceMetadata },
+    }: { hazardType: string; hazardParams?: Partial<HazardParams>; sourceMetadata: HazardSourceMetadata },
     { scheme, range }: { scheme: string; range: [number, number] },
   ) {
-    const resolvedHazardParams = {
-      ...getDefaultHazardParams(hazardType),
-      ...(Object.fromEntries(
-        Object.entries(hazardParams).filter(([, v]) => v != null),
-      ) as Partial<HazardParams>),
-    };
+    const sourceValues = sourceMetadata.keys.map((key) =>
+      getRasterSourceValue(key, hazardType, hazardParams, sourceMetadata.fixedValues),
+    );
+    if (sourceValues.some((value) => value == null || value === '')) {
+      return null;
+    }
 
-    const serialisedKeys = ((sourceMetadata?.keys?.length ? sourceMetadata.keys : LEGACY_SOURCE_KEYS))
-      .map((key) => getRasterSourceValue(key, hazardType, resolvedHazardParams, sourceMetadata?.fixedValues))
-      .join('/');
+    const serialisedKeys = sourceValues.join('/');
 
     return `/api/tiles/raster/${hazardType}/${serialisedKeys}/{z}/{x}/{y}.png?colormap=${scheme}&stretch_range=[${range[0]},${range[1]}]`;
   },
