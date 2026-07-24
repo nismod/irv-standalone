@@ -28,3 +28,6 @@ class RasterTileSource(models.Model):
 
     class Meta:
         db_table = "raster_tile_sources"
+
+    def __str__(self):
+        return self.database
