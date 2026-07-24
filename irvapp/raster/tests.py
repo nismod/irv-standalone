@@ -1,7 +1,7 @@
 import io
 import tempfile
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import Group, User
 from django.test import SimpleTestCase, TestCase
@@ -14,7 +14,7 @@ from raster.management.commands.ingest_rasters import Command
 
 from .internal.colormaps import CATEGORICAL_COLOR_MAPS
 from .models import DEFAULT_PATH_TEMPLATE, RasterTileSource
-from .views import _parse_keys
+from .views import _parse_keys, _source_options
 
 
 class DiscoverRastersTests(SimpleTestCase):
@@ -93,6 +93,63 @@ class RasterTileSourceModelTests(TestCase):
         source = RasterTileSource.objects.create(keys=["type", "epoch"])
 
         self.assertEqual(source.path_template, DEFAULT_PATH_TEMPLATE)
+
+
+class SourceOptionsTests(SimpleTestCase):
+    @patch("raster.views.shared.build_driver_path")
+    @patch("raster.views.shared.get_settings")
+    @patch("raster.views.shared.get_driver")
+    def test_reads_source_options_inside_driver_connection(
+        self,
+        mock_get_driver,
+        mock_get_settings,
+        mock_build_driver_path,
+    ):
+        mock_build_driver_path.return_value = "/tiles/terracotta.sqlite"
+        mock_get_settings.return_value.DRIVER_PROVIDER = "sqlite"
+        driver = MagicMock()
+        driver.get_datasets.return_value = {
+            ("coastal", "100"): "/rasters/coastal.tif"
+        }
+        driver.get_keys.return_value = {"type": "", "rp": ""}
+        mock_get_driver.return_value = driver
+
+        options = _source_options("terracotta.sqlite")
+
+        self.assertEqual(options, [{"type": "coastal", "rp": "100"}])
+        mock_get_driver.assert_called_once_with(
+            "/tiles/terracotta.sqlite",
+            provider="sqlite",
+        )
+        driver.connect.assert_called_once_with()
+        driver.connect.return_value.__enter__.assert_called_once_with()
+        driver.connect.return_value.__exit__.assert_called_once()
+        driver.get_datasets.assert_called_once_with(where=None)
+        driver.get_keys.assert_called_once_with()
+
+    @patch("raster.views.shared.build_driver_path")
+    @patch("raster.views.shared.get_settings")
+    @patch("raster.views.shared.get_driver")
+    def test_passes_filters_to_terracotta_dataset_query(
+        self,
+        mock_get_driver,
+        mock_get_settings,
+        mock_build_driver_path,
+    ):
+        mock_build_driver_path.return_value = "/tiles/terracotta.sqlite"
+        mock_get_settings.return_value.DRIVER_PROVIDER = "sqlite"
+        driver = MagicMock()
+        driver.get_datasets.return_value = {
+            ("coastal", "100"): "/rasters/coastal.tif"
+        }
+        driver.get_keys.return_value = {"type": "", "rp": ""}
+        mock_get_driver.return_value = driver
+
+        filters = {"type": "coastal"}
+        options = _source_options("terracotta.sqlite", filters=filters)
+
+        self.assertEqual(options, [{"type": "coastal", "rp": "100"}])
+        driver.get_datasets.assert_called_once_with(where=filters)
 
 
 class IngestRasterCommandTests(TestCase):
