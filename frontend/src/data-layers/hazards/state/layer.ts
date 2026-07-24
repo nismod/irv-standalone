@@ -6,14 +6,19 @@ import { dataParamConfigState, dataParamState } from 'lib/state/data-params';
 import { sectionVisibilityState } from 'lib/state/sections';
 
 import { hazardVisibilityState } from './hazard-visibility';
-import { hazardSourceKeysState } from './metadata';
+import { hazardsMetadataState, hazardSourceMetadataState } from './metadata';
 import { hazardViewLayer } from '../hazard-view-layer';
 import { type HazardParams } from './data-selection';
 
 export const hazardsLayerState = atom<ViewLayer[]>((get) =>
   get(sectionVisibilityState('hazards'))
     ? truthyKeys(get(hazardVisibilityState)).map((hazard) =>
-        hazardViewLayer(hazard, getHazardParams(get, hazard), get(hazardSourceKeysState)[hazard]),
+        hazardViewLayer(
+          hazard,
+          getHazardParams(get, hazard),
+          get(hazardSourceMetadataState)[hazard],
+          get(hazardsMetadataState)[hazard],
+        ),
       )
     : [],
 );

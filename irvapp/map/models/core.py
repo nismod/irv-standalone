@@ -69,6 +69,8 @@ class Dataset(models.Model):
     quantity = models.CharField()
     unit = models.CharField()
     license = models.CharField(max_length=255, blank=True, null=True)
+    color_scheme = models.CharField(max_length=255, blank=True, null=True)
+    color_range = models.JSONField(blank=True, null=True)
     tile_source = models.ForeignKey(
         "raster.RasterTileSource",
         models.PROTECT,

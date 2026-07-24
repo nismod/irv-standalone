@@ -4,16 +4,16 @@ import { useAtomValue } from 'jotai';
 import { RasterHoverDescription } from 'lib/data-map/types';
 import { RasterHoverDescription as RasterTooltip } from 'lib/map/tooltip/content/RasterHoverDescription';
 
-import * as HAZARD_COLOR_MAPS from './color-maps';
-import { hazardsMetadataState } from './state/metadata';
+import { getHazardColorSpec, hazardsMetadataState } from './state/metadata';
 
 export const HazardHoverDescription: FC<RasterHoverDescription> = ({ target, viewLayer }) => {
   const HAZARDS_METADATA = useAtomValue(hazardsMetadataState);
   if (!HAZARDS_METADATA[viewLayer.id]) {
     return null;
   }
-  const { label, unit } = HAZARDS_METADATA[viewLayer.id];
-  const { scheme, range } = HAZARD_COLOR_MAPS[viewLayer.id];
+  const dataset = HAZARDS_METADATA[viewLayer.id];
+  const { label, unit } = dataset;
+  const { scheme, range } = getHazardColorSpec(dataset);
   return (
     <RasterTooltip
       color={target.color}
