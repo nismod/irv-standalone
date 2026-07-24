@@ -4,7 +4,8 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import Group, User
-from django.test import SimpleTestCase, TestCase
+from django.core.cache import cache
+from django.test import SimpleTestCase, TestCase, override_settings
 from django.utils.cache import has_vary_header
 from rest_framework.test import APIClient
 
@@ -15,7 +16,7 @@ from raster.management.commands.ingest_rasters import Command
 from .internal.colormaps import CATEGORICAL_COLOR_MAPS
 from .internal.tiles import singleband as singleband_tiles
 from .models import DEFAULT_PATH_TEMPLATE, RasterTileSource
-from .views import _parse_keys, _source_options
+from .views import _get_singleband_image, _parse_keys, _source_options
 
 
 class DiscoverRastersTests(SimpleTestCase):
@@ -206,6 +207,114 @@ class SinglebandDriverHelperTests(SimpleTestCase):
         driver.connect.return_value.__enter__.assert_called_once_with()
         driver.connect.return_value.__exit__.assert_called_once()
         driver.get_datasets.assert_called_once_with()
+
+
+@override_settings(
+    RASTER_TILE_CACHE_TIMEOUT=300,
+    RASTER_TILE_CACHE_MAX_BYTES=10,
+)
+class RasterTileCacheTests(SimpleTestCase):
+    def setUp(self):
+        cache.clear()
+
+    def tearDown(self):
+        cache.clear()
+
+    @patch("raster.views.shared.build_driver_path")
+    @patch("raster.internal.tiles.singleband.singleband")
+    def test_evicts_oldest_tiles_over_size_limit(
+        self,
+        mock_singleband,
+        mock_build_driver_path,
+    ):
+        mock_build_driver_path.return_value = "/tiles/terracotta.sqlite"
+        mock_singleband.side_effect = [
+            io.BytesIO(b"one123"),
+            io.BytesIO(b"two34"),
+            io.BytesIO(b"one12-new"),
+        ]
+
+        first = _get_singleband_image(
+            "terracotta.sqlite",
+            ["coastal"],
+            [1, 2, 3],
+        )
+        second = _get_singleband_image(
+            "terracotta.sqlite",
+            ["inland"],
+            [1, 2, 3],
+        )
+        first_again = _get_singleband_image(
+            "terracotta.sqlite",
+            ["coastal"],
+            [1, 2, 3],
+        )
+
+        self.assertEqual(first.getvalue(), b"one123")
+        self.assertEqual(second.getvalue(), b"two34")
+        self.assertEqual(first_again.getvalue(), b"one12-new")
+        self.assertEqual(mock_singleband.call_count, 3)
+
+    @patch("raster.views.shared.build_driver_path")
+    @patch("raster.internal.tiles.singleband.singleband")
+    def test_cache_hit_refreshes_eviction_order(
+        self,
+        mock_singleband,
+        mock_build_driver_path,
+    ):
+        mock_build_driver_path.return_value = "/tiles/terracotta.sqlite"
+        mock_singleband.side_effect = [
+            io.BytesIO(b"one12"),
+            io.BytesIO(b"two34"),
+            io.BytesIO(b"three"),
+            io.BytesIO(b"two34-new"),
+        ]
+
+        _get_singleband_image("terracotta.sqlite", ["one"], [1, 2, 3])
+        _get_singleband_image("terracotta.sqlite", ["two"], [1, 2, 3])
+        cached_first = _get_singleband_image(
+            "terracotta.sqlite",
+            ["one"],
+            [1, 2, 3],
+        )
+        _get_singleband_image("terracotta.sqlite", ["three"], [1, 2, 3])
+        second_again = _get_singleband_image(
+            "terracotta.sqlite",
+            ["two"],
+            [1, 2, 3],
+        )
+
+        self.assertEqual(cached_first.getvalue(), b"one12")
+        self.assertEqual(second_again.getvalue(), b"two34-new")
+        self.assertEqual(mock_singleband.call_count, 4)
+
+    @patch("raster.views.shared.build_driver_path")
+    @patch("raster.internal.tiles.singleband.singleband")
+    def test_does_not_cache_tile_larger_than_size_limit(
+        self,
+        mock_singleband,
+        mock_build_driver_path,
+    ):
+        mock_build_driver_path.return_value = "/tiles/terracotta.sqlite"
+        mock_singleband.side_effect = [
+            io.BytesIO(b"too-large-tile"),
+            io.BytesIO(b"too-large-again"),
+        ]
+
+        first = _get_singleband_image(
+            "terracotta.sqlite",
+            ["coastal"],
+            [1, 2, 3],
+        )
+        second = _get_singleband_image(
+            "terracotta.sqlite",
+            ["coastal"],
+            [1, 2, 3],
+        )
+
+        self.assertEqual(first.getvalue(), b"too-large-tile")
+        self.assertEqual(second.getvalue(), b"too-large-again")
+        self.assertEqual(mock_singleband.call_count, 2)
 
 
 class IngestRasterCommandTests(TestCase):

@@ -12,6 +12,7 @@ from ..internal.helpers import build_driver_path
 from ..serializers import ColorMapSerializer
 
 logger = logging.getLogger(__name__)
+RASTER_TILE_CACHE_INDEX_KEY = "raster_tile_png:index"
 
 
 class MissingExplicitColourMapException(Exception):
@@ -59,6 +60,7 @@ def _get_singleband_image(
 
     driver_path = build_driver_path(database)
     cache_timeout = getattr(settings, "RASTER_TILE_CACHE_TIMEOUT", 0)
+    cache_max_bytes = getattr(settings, "RASTER_TILE_CACHE_MAX_BYTES", 0)
     tile_options = options or {}
 
     logger.debug(
@@ -77,6 +79,12 @@ def _get_singleband_image(
         )
         cached_image = cache.get(cache_key)
         if cached_image is not None:
+            if cache_max_bytes > 0:
+                _touch_tile_cache_key(
+                    cache_key,
+                    len(cached_image),
+                    cache_timeout,
+                )
             return BytesIO(cached_image)
 
     image = singleband(
@@ -88,7 +96,7 @@ def _get_singleband_image(
     image_bytes = _image_bytes(image)
 
     if cache_timeout > 0:
-        cache.set(cache_key, image_bytes, cache_timeout)
+        _set_cached_tile(cache_key, image_bytes, cache_timeout, cache_max_bytes)
 
     return BytesIO(image_bytes)
 
@@ -101,6 +109,40 @@ def _image_bytes(image):
         cast(Any, image).seek(0)
 
     return cast(Any, image).read()
+
+
+def _set_cached_tile(cache_key, image_bytes, cache_timeout, cache_max_bytes):
+    image_size = len(image_bytes)
+
+    if cache_max_bytes > 0 and image_size > cache_max_bytes:
+        cache.delete(cache_key)
+        return
+
+    cache.set(cache_key, image_bytes, cache_timeout)
+
+    if cache_max_bytes > 0:
+        _touch_tile_cache_key(cache_key, image_size, cache_timeout)
+        _evict_oversize_tile_cache(cache_max_bytes, cache_timeout)
+
+
+def _touch_tile_cache_key(cache_key, image_size, cache_timeout):
+    index = cache.get(RASTER_TILE_CACHE_INDEX_KEY, {})
+    index.pop(cache_key, None)
+    index[cache_key] = image_size
+    cache.set(RASTER_TILE_CACHE_INDEX_KEY, index, cache_timeout)
+
+
+def _evict_oversize_tile_cache(cache_max_bytes, cache_timeout):
+    index = cache.get(RASTER_TILE_CACHE_INDEX_KEY, {})
+    total_size = sum(index.values())
+
+    while total_size > cache_max_bytes and index:
+        evicted_key, evicted_size = next(iter(index.items()))
+        cache.delete(evicted_key)
+        del index[evicted_key]
+        total_size -= evicted_size
+
+    cache.set(RASTER_TILE_CACHE_INDEX_KEY, index, cache_timeout)
 
 
 def _tile_cache_key(database, keys, tile_xyz, options):
