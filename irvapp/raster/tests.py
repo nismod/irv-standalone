@@ -13,6 +13,7 @@ from raster import ingestion as ingest
 from raster.management.commands.ingest_rasters import Command
 
 from .internal.colormaps import CATEGORICAL_COLOR_MAPS
+from .internal.tiles import singleband as singleband_tiles
 from .models import DEFAULT_PATH_TEMPLATE, RasterTileSource
 from .views import _parse_keys, _source_options
 
@@ -150,6 +151,61 @@ class SourceOptionsTests(SimpleTestCase):
 
         self.assertEqual(options, [{"type": "coastal", "rp": "100"}])
         driver.get_datasets.assert_called_once_with(where=filters)
+
+
+class SinglebandDriverHelperTests(SimpleTestCase):
+    @patch("raster.internal.tiles.singleband.get_settings")
+    @patch("raster.internal.tiles.singleband.get_driver")
+    def test_reads_database_keys_inside_driver_connection(
+        self,
+        mock_get_driver,
+        mock_get_settings,
+    ):
+        mock_get_settings.return_value.DRIVER_PROVIDER = "sqlite"
+        driver = MagicMock()
+        driver.get_keys.return_value = {"type": "", "rp": ""}
+        mock_get_driver.return_value = driver
+
+        keys = singleband_tiles.database_keys("/tiles/terracotta.sqlite")
+
+        self.assertEqual(keys, {"type": "", "rp": ""})
+        mock_get_driver.assert_called_once_with(
+            "/tiles/terracotta.sqlite",
+            provider="sqlite",
+        )
+        driver.connect.assert_called_once_with()
+        driver.connect.return_value.__enter__.assert_called_once_with()
+        driver.connect.return_value.__exit__.assert_called_once()
+        driver.get_keys.assert_called_once_with()
+
+    @patch("raster.internal.tiles.singleband.get_settings")
+    @patch("raster.internal.tiles.singleband.get_driver")
+    def test_reads_all_datasets_inside_driver_connection(
+        self,
+        mock_get_driver,
+        mock_get_settings,
+    ):
+        mock_get_settings.return_value.DRIVER_PROVIDER = "sqlite"
+        driver = MagicMock()
+        driver.get_datasets.return_value = {
+            ("coastal", "100"): "/rasters/coastal.tif"
+        }
+        mock_get_driver.return_value = driver
+
+        datasets = singleband_tiles.all_datasets("/tiles/terracotta.sqlite")
+
+        self.assertEqual(
+            datasets,
+            {("coastal", "100"): "/rasters/coastal.tif"},
+        )
+        mock_get_driver.assert_called_once_with(
+            "/tiles/terracotta.sqlite",
+            provider="sqlite",
+        )
+        driver.connect.assert_called_once_with()
+        driver.connect.return_value.__enter__.assert_called_once_with()
+        driver.connect.return_value.__exit__.assert_called_once()
+        driver.get_datasets.assert_called_once_with()
 
 
 class IngestRasterCommandTests(TestCase):
