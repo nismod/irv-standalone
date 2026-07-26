@@ -39,7 +39,7 @@ services:
       - django-media:/code/media
 
   vector-tileserver:
-    image: ghcr.io/nismod/jsrat-vector-tileserver:0.1
+    image: ghcr.io/nismod/irvapp-vector-tileserver:0.1
     build: ./tileserver/vector
     restart: unless-stopped
     # no published ports: django proxies to http://vector-tileserver:8080

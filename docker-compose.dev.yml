@@ -64,7 +64,7 @@ services:
       - "traefik.http.services.django.loadbalancer.server.port=8000"
 
   vector-tileserver:
-    image: ghcr.io/nismod/jsrat-vector-tileserver-dev:0.1
+    image: ghcr.io/nismod/irvapp-vector-tileserver-dev:0.1
     build: ./tileserver/vector
     volumes:
       - ./tileserver/vector/data:/data
