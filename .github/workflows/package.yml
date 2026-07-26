@@ -42,3 +42,15 @@ jobs:
           tags: ghcr.io/nismod/irvapp-backend:${{ github.ref_name }}
           secrets: |
             GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Build and push vector tileserver Docker image
+        uses: docker/build-push-action@v7
+        with:
+          context: "{{defaultContext}}:tileserver/vector"
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          push: true
+          tags: ghcr.io/nismod/irvapp-vector-tileserver:${{ github.ref_name }}
+          secrets: |
+            GH_TOKEN=${{ secrets.GITHUB_TOKEN }}
+
