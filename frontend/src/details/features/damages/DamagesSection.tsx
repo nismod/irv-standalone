@@ -24,6 +24,9 @@ const damageOrdering = (hazardDomains: HazardDomains) => {
     if (!hazardDomain) {
       continue;
     }
+    if (!hazardDomain.paramDomains.rcp || !hazardDomain.paramDomains.epoch) {
+      continue;
+    }
     for (const rcp of hazardDomain.paramDomains.rcp) {
       for (const epoch of hazardDomain.paramDomains.epoch) {
         ordering.push({
@@ -44,6 +47,9 @@ const rpOrdering = (hazardDomains: HazardDomains) => {
   }
   for (const [hazard, hazardDomain] of Object.entries(hazardDomains)) {
     if (!hazardDomain) {
+      continue;
+    }
+    if (!hazardDomain.paramDomains.returnPeriod) {
       continue;
     }
     for (const rp of hazardDomain.paramDomains.returnPeriod) {
