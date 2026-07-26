@@ -39,7 +39,7 @@ services:
       - django-media:/code/media
 
   vector-tileserver:
-    image: ghcr.io/nismod/irvapp-vector-tileserver:0.1
+    image: ghcr.io/nismod/irvapp-vector-tileserver:canary
     platform: linux/amd64
     build: ./tileserver/vector
     restart: unless-stopped
