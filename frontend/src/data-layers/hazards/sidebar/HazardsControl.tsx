@@ -47,7 +47,7 @@ const PARAM_LABELS: Record<string, string> = {
   rcp: 'RCP',
   GWL: 'Global Warming Level (ºC)',
   SLR: 'Sea Level Rise (cm)',
-  RP: 'Return Period',
+  RP: 'Return Period (years)',
   returnPeriod: 'Return Period',
 };
 
