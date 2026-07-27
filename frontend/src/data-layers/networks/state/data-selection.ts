@@ -12,10 +12,12 @@ import { STORAGE_PREFIX, atomWithQueryParams, setUrlParam } from 'lib/state/map-
 
 import { type InfrastructureNode, mapInfrastructureTreeList } from 'lib/api-client';
 import { TreeNode } from 'lib/controls/checkbox-tree/tree-node';
+import { resolveInfrastructureNodeLayerId } from '../layer-registry';
 
 interface NetworkLayerData {
   label: string;
   url?: string;
+  layerId?: string;
 }
 
 
@@ -51,6 +53,7 @@ function buildHierarchyFromNodes(nodes: InfrastructureNode[]): TreeNode<NetworkL
       leafIndex++;
       const nodeUrl = leafIndex.toString(16).padStart(2, '0'); // 2-digit hex string.
       treeNode.url = nodeUrl;
+      treeNode.layerId = resolveInfrastructureNodeLayerId(node);
     }
     return treeNode;
   });
@@ -143,6 +146,14 @@ export const networkSelectionState = atom<string[]>((get) => {
       networkTreeConfig.nodes[id] &&
       !networkTreeConfig.nodes[id].children,
   );
+});
+
+export const selectedNetworkLayerIdsState = atom<string[]>((get) => {
+  const networkTreeConfig = get(networkTreeConfigState);
+
+  return get(networkSelectionState)
+    .map((nodeId) => networkTreeConfig.nodes[nodeId]?.layerId)
+    .filter((layerId): layerId is string => layerId !== undefined);
 });
 
 export const networksStyleState = atom((get) => get(sectionStyleValueState('assets')));

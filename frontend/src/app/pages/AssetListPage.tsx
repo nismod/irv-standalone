@@ -6,7 +6,7 @@ import { FieldSpec } from 'lib/data-map/view-layers';
 
 import { FieldSpecControl } from 'lib/asset-list/FieldSpecControl';
 import { SortedAssetTable } from 'lib/asset-list/SortedAssetTable';
-import { ListFeature } from 'lib/asset-list/use-sorted-features';
+import { LayerSpec, ListFeature } from 'lib/asset-list/use-sorted-features';
 import { ExpandableRow } from 'lib/asset-list/ExpandableRow';
 import { FeatureSidebarContent } from 'details/features/FeatureSidebarContent';
 import { getAssetDataFormats } from 'data-layers/assets/data-formats';
@@ -14,8 +14,10 @@ import { hazardsMetadataState } from 'data-layers/hazards/state/metadata';
 
 export const AssetListPage = () => {
   const hazardsMetadata = useAtomValue(hazardsMetadataState);
-  const [layerSpec] = useState({
-    layer: 'elec_edges_high', // TODO: enable filtering by sector/subsector/asset type
+  const [layerSpec] = useState<LayerSpec>({
+    sector: 'power',
+    subsector: 'transmission',
+    asset_type: 'High Voltage',
   });
 
   const [fieldSpec, setFieldSpec] = useState<FieldSpec>({

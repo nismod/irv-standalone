@@ -12,22 +12,22 @@ import { sectionVisibilityState } from 'lib/state/sections';
 
 import { LayerSpec } from 'lib/asset-list/use-sorted-features';
 import { damageMapStyleParamsState } from 'app/state/damage-mapping/damage-style-params';
-import adaptationSectorLayers from 'app/config/sidebar/adaptation-sector-layers.json';
 
 import * as networkColorMaps from '../color-maps';
 import {
   networksStyleState,
-  networkSelectionState,
+  selectedNetworkLayerIdsState,
   networkTreeCheckboxState,
   networkTreeConfigState,
 } from './data-selection';
 import { networksMetadataState } from './metadata';
 import { type AdaptationOptionParams } from 'app/config/sidebar/NETWORK_DOMAINS';
 import { getInfrastructureViewLayers } from '../view-layers';
+import { getLeafNodeIdsForLayerIds, resolveAssetLayerIds } from '../layer-registry';
 
- const infrastructureViewLayersState = atom((get) =>
-   getInfrastructureViewLayers(get(networksMetadataState)),
- );
+const infrastructureViewLayersState = atom((get) =>
+  getInfrastructureViewLayers(get(networksMetadataState)),
+);
 
 export const networksLayerState = atom<ViewLayer[]>((get) => {
   if (!get(sectionVisibilityState('assets'))) {
@@ -35,11 +35,12 @@ export const networksLayerState = atom<ViewLayer[]>((get) => {
   }
 
   const infrastructureViewLayers = get(infrastructureViewLayersState);
-  return get(networkSelectionState).map((network) => {
-    const baseLayer = infrastructureViewLayers[network];
+  return get(selectedNetworkLayerIdsState).flatMap((layerId) => {
+    const baseLayer = infrastructureViewLayers[layerId];
+    if (!baseLayer) return [];
     return {
       ...baseLayer,
-      styleParams: get(networkStyleParamsState(network)),
+      styleParams: get(networkStyleParamsState(layerId)),
     };
   });
 });
@@ -65,19 +66,14 @@ export const adaptationDataParamsStateEffect: StateEffect<AdaptationOptionParams
   const { sector, subsector, asset_type } = adaptationParams;
   const networkTreeConfig = get(networkTreeConfigState);
 
-  const layers = uniq(
-    adaptationSectorLayers
-      .filter(
-        (x) => x.sector === sector && x.subsector === subsector && x.asset_type === asset_type,
-      )
-      .map((x) => x.layer_name),
-  );
+  const layers = uniq(resolveAssetLayerIds({ sector, subsector, asset_type }));
+  const nodeIds = getLeafNodeIdsForLayerIds(networkTreeConfig, layers);
 
   const currentSelection = get(networkTreeCheckboxState);
   const updatedTreeState = {
     checked: {
       ...mapValues(currentSelection.checked, () => false),
-      ...fromPairs(layers.map((layer) => [layer, true])),
+      ...fromPairs(nodeIds.map((nodeId) => [nodeId, true])),
     },
     indeterminate: {},
   };

@@ -18,8 +18,8 @@ import {
 import { networksMetadataState } from '../state/metadata';
 import { showAdaptationsState, showProtectorFeaturesState } from '../state/layer';
 
-import adaptationSectorLayers from 'app/config/sidebar/adaptation-sector-layers.json';
 import { protectedFeatureLayersState } from 'lib/state/protected-features';
+import { getAssetLayerDefinition, getLeafNodeIdsForLayerIds } from '../layer-registry';
 
 /**
  * Set the checkbox tree state to true for protected feature layers.
@@ -28,10 +28,11 @@ import { protectedFeatureLayersState } from 'lib/state/protected-features';
 function useSyncProtectedFeatureLayers() {
   const networkTreeConfig = useAtomValue(networkTreeConfigState);
   const prevLayers = new Set(useAtomValue(networkSelectionState));
-  const allLayers = new Set(
+  const allLayerIds = new Set(
     Object.values(networkTreeConfig.nodes)
       .filter((n) => !!n.url)
-      .map((n) => n.id),
+      .map((n) => n.layerId)
+      .filter((layerId): layerId is string => layerId !== undefined),
   );
 
   const showProtectorFeatureLayers = useAtomValue(showProtectorFeaturesState);
@@ -43,7 +44,8 @@ function useSyncProtectedFeatureLayers() {
 
   const setCheckboxState = useSetAtom(networkTreeCheckboxState);
 
-  const showLayers = protectedFeatureLayers.union(protectorFeatureLayers).intersection(allLayers);
+  const showLayerIds = protectedFeatureLayers.union(protectorFeatureLayers).intersection(allLayerIds);
+  const showLayers = new Set(getLeafNodeIdsForLayerIds(networkTreeConfig, showLayerIds));
 
   const doUpdate =
     showProtectorFeatureLayers && showLayers.symmetricDifference(prevLayers).size !== 0;
@@ -75,13 +77,16 @@ function useSyncAdaptationParameters(checkboxState) {
   const updateSector = useUpdateDataParam('adaptation', 'sector');
   const updateSubsector = useUpdateDataParam('adaptation', 'subsector');
   const updateAssetType = useUpdateDataParam('adaptation', 'asset_type');
-  const selectedLayers = Object.keys(checkboxState.checked).filter(
+  const selectedNodeIds = Object.keys(checkboxState.checked).filter(
     (id) =>
       checkboxState.checked[id] &&
       networkTreeConfig.nodes[id] &&
       !networkTreeConfig.nodes[id].children,
   );
-  const adaptationLayer = adaptationSectorLayers.find((x) => selectedLayers.includes(x.layer_name));
+  const selectedLayerIds = selectedNodeIds
+    .map((nodeId) => networkTreeConfig.nodes[nodeId].layerId)
+    .filter((layerId): layerId is string => layerId !== undefined);
+  const adaptationLayer = selectedLayerIds.map(getAssetLayerDefinition).find(Boolean);
   if (adaptationLayer) {
     const { sector, subsector, asset_type } = adaptationLayer;
     updateSector(sector);
@@ -97,9 +102,9 @@ function NodeLabel({
 }: {
   node;
   checked: boolean;
-  layerLabelProps: Omit<ComponentProps<typeof LayerLabel>, 'label' | 'visible'>;
+  layerLabelProps?: Omit<ComponentProps<typeof LayerLabel>, 'label' | 'visible'>;
 }) {
-  return node.children ? (
+  return node.children || !layerLabelProps ? (
     node.label
   ) : (
     <LayerLabel {...layerLabelProps} label={node.label} visible={checked} />
@@ -134,7 +139,11 @@ export const NetworkControl: FC = () => {
         nodes={networkHierarchy}
         config={networkTreeConfig}
         getLabel={(node, checked) => (
-          <NodeLabel node={node} checked={checked} layerLabelProps={networksMetadata[node.id]} />
+          <NodeLabel
+            node={node}
+            checked={checked}
+            layerLabelProps={networksMetadata[node.layerId ?? node.id]}
+          />
         )}
         checkboxState={checkboxState}
         onCheckboxState={setCheckboxState}
