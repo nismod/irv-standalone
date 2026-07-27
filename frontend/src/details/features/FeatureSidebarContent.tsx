@@ -156,7 +156,7 @@ export const FeatureSidebarContent: FC<FeatureSidebarContentProps> = ({
   showRiskSection = true,
 }) => {
   const networksMetadata = useAtomValue(networksMetadataState);
-  const { color, label } = networksMetadata[assetType];
+  const { color = '#333', label = assetType } = networksMetadata[assetType] ?? {};
 
   return (
     <Box position="relative">

@@ -8,6 +8,7 @@ from .models import (
     DamagesRp,
     Dataset,
     Feature,
+    NetworkLayerStyle,
 )
 
 
@@ -72,6 +73,20 @@ class FeatureSerializer(serializers.ModelSerializer):
     class Meta:
         model = Feature
         fields = ['id', 'string_id', 'layer', 'sublayer', 'properties']
+
+
+class NetworkLayerStyleSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(source="layer_id")
+    type = serializers.CharField(source="style_type")
+    minZoom = serializers.IntegerField(
+        source="min_zoom",
+        allow_null=True,
+        required=False,
+    )
+
+    class Meta:
+        model = NetworkLayerStyle
+        fields = ["id", "type", "label", "color", "minZoom"]
 
 
 class FeatureDetailSerializer(serializers.ModelSerializer):

@@ -4,6 +4,7 @@ from .viewsets import (
     DamagesExpectedViewset,
     DamagesRpViewset,
     DatasetViewset,
+    NetworkLayerStyleViewset,
 )
 from .api_views import (
     SortedFeaturesView,
@@ -28,4 +29,5 @@ __all__ = [
     "InfrastructureNodeViewSet",
     "FieldGroupQueryParsingMixin",
     "DatasetViewset",
+    "NetworkLayerStyleViewset",
 ]
