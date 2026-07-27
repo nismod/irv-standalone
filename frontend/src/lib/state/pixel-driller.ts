@@ -302,7 +302,7 @@ const PIXEL_DOMAINS = new Set<PixelDomain>(['fluvial', 'surface', 'coastal', 'cy
 
 const pixelDrillerRecords = atom((get) => {
   const selectedData = get(pixelDrillerDataState);
-  if (!selectedData) {
+  if (!selectedData?.key || !selectedData.hazard || !selectedData.band_data) {
     return [];
   }
   return selectedData.key
