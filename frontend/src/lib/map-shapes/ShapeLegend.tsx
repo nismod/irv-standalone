@@ -4,6 +4,9 @@ export type { MapShapeType as LegendShapeType };
 
 export const ShapeLegend = ({ type, color }: { type: MapShapeType; color: string }) => {
   const ShapeComponent = shapeComponents[type];
+  if (!ShapeComponent) {
+    return null;
+  }
   return (
     <Box component="span" display="inline-block" marginRight={1}>
       <ShapeComponent fill={color} width="10px" height="10px" />
