@@ -45,8 +45,8 @@ function SpeedSlider({ value, onChange, options }) {
 
 const PARAM_LABELS: Record<string, string> = {
   rcp: 'RCP',
-  GWL: 'Global Warming Level',
-  SLR: 'Sea Level Rise',
+  GWL: 'Global Warming Level (ºC)',
+  SLR: 'Sea Level Rise (cm)',
   RP: 'Return Period',
   returnPeriod: 'Return Period',
 };
