@@ -37,6 +37,18 @@ class FeatureLayer(models.Model):
         db_table = "feature_layers"
 
 
+class NetworkLayerStyle(models.Model):
+    layer_id = models.CharField(primary_key=True)
+    label = models.CharField()
+    style_type = models.CharField()
+    color = models.CharField(max_length=64)
+    min_zoom = models.IntegerField(blank=True, null=True)
+
+    class Meta:
+        db_table = "network_layer_styles"
+        ordering = ["layer_id"]
+
+
 class Feature(models.Model):
     string_id = models.CharField()
     layer = models.ForeignKey(

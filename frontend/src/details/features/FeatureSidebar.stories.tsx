@@ -17,6 +17,18 @@ const rasterSourceResponse: RasterTileSource = {
   keys: ['type', 'rp', 'rcp', 'epoch', 'confidence'],
 };
 
+const networkLayerStylesResponse = {
+  results: [
+    {
+      id: 'road_edges_class_b',
+      type: 'line',
+      label: 'Roads (Class B)',
+      color: '#cb3e4e',
+      minZoom: null,
+    },
+  ],
+};
+
 function FixedWidthDecorator(Story) {
   return (
     <div style={{ width: '45ch' }}>
@@ -67,6 +79,9 @@ export const Default: Story = {
       handlers: [
         http.get('/api/map/features/1000036526', () => {
           return HttpResponse.json(mockFeatureDetails);
+        }),
+        http.get('/api/map/network-layer-styles', () => {
+          return HttpResponse.json(networkLayerStylesResponse);
         }),
         http.get('/api/tiles/raster/sources/:datasetId/domains', () => {
           return HttpResponse.json(rasterSourceDomains);

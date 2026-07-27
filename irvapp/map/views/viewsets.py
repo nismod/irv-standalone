@@ -14,6 +14,7 @@ from map.serializers import (
     DamagesExpectedSerializer,
     DamagesRpSerializer,
     DatasetSerializer,
+    NetworkLayerStyleSerializer,
 )
 from map.models import (
     Feature,
@@ -21,6 +22,7 @@ from map.models import (
     DamagesExpected,
     DamagesRp,
     Dataset,
+    NetworkLayerStyle,
 )
 from map.permissions import HasDatasetAccess
 
@@ -105,3 +107,9 @@ class DatasetViewset(viewsets.ReadOnlyModelViewSet):
         if group:
             queryset = queryset.filter(group__iexact=group)
         return queryset
+
+
+class NetworkLayerStyleViewset(viewsets.ReadOnlyModelViewSet):
+    queryset = NetworkLayerStyle.objects.all()
+    serializer_class = NetworkLayerStyleSerializer
+    permission_classes = [IsAuthenticated]

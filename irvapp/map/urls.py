@@ -9,6 +9,7 @@ from map.views import (
     MapConfigViewSet,
     InfrastructureNodeViewSet,
     DatasetViewset,
+    NetworkLayerStyleViewset,
 )
 from rest_framework.routers import DefaultRouter
 from django.urls import path
@@ -19,6 +20,7 @@ router.register(r'adaptation-cost-benefits', AdaptationCostBenefitViewset)
 router.register(r'damages-expected', DamagesExpectedViewset)
 router.register(r'damages-rp', DamagesRpViewset)
 router.register(r'datasets', DatasetViewset)
+router.register(r'network-layer-styles', NetworkLayerStyleViewset)
 router.register(r'config', MapConfigViewSet, basename='map-config')
 router.register(
     r'infrastructure-tree',

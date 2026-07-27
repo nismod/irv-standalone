@@ -4,6 +4,7 @@ from .core import (
     FeatureLayer,
     InfrastructureNode,
     MapConfig,
+    NetworkLayerStyle,
 )
 from .risk import (
     AdaptationCostBenefit,
@@ -22,4 +23,5 @@ __all__ = [
     "FeatureLayer",
     "InfrastructureNode",
     "MapConfig",
+    "NetworkLayerStyle",
 ]

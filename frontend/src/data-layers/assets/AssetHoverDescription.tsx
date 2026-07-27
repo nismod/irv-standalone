@@ -10,7 +10,7 @@ export const AssetHoverDescription: FC<VectorHoverDescription> = ({ target, view
   const hazardsMetadata = useAtomValue(hazardsMetadataState);
   const networksMetadata = useAtomValue(networksMetadataState);
   const { assetId } = (viewLayer.params ?? {}) as { assetId: string };
-  const { label: title, color = '#ccc' } = networksMetadata[assetId];
+  const { label: title = assetId, color = '#ccc' } = networksMetadata[assetId] ?? {};
   return (
     <VectorTooltip
       viewLayer={viewLayer}
