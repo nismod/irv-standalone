@@ -1,4 +1,5 @@
 import logging
+from numbers import Integral
 from hashlib import sha256
 from io import BytesIO
 import json
@@ -31,7 +32,45 @@ def _get_colormap(options):
     """
 
     _colormap = terracotta_colormap(**options)
+    _colormap = _colormap_with_domain_values(_colormap, options)
     return ColorMapSerializer({"colormap": _colormap})
+
+
+def _colormap_with_domain_values(colormap, options):
+    stretch_range = options.get("stretch_range")
+    num_values = options.get("num_values")
+    if not stretch_range or len(stretch_range) != 2 or not num_values:
+        return colormap
+
+    try:
+        stretch_min, stretch_max = stretch_range
+        num_values = int(num_values)
+    except (TypeError, ValueError):
+        return colormap
+
+    if num_values <= 1:
+        return colormap
+
+    values = [entry.get("value") for entry in colormap]
+    if not all(_is_palette_index(value, num_values) for value in values):
+        return colormap
+
+    scale = (stretch_max - stretch_min) / (num_values - 1)
+    return [
+        {
+            **entry,
+            "value": stretch_min + (entry["value"] * scale),
+        }
+        for entry in colormap
+    ]
+
+
+def _is_palette_index(value, num_values):
+    return (
+        isinstance(value, Integral)
+        and not isinstance(value, bool)
+        and 0 <= value < num_values
+    )
 
 
 def _parse_keys(keys):

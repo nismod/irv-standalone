@@ -16,7 +16,12 @@ from raster.management.commands.ingest_rasters import Command
 from .internal.colormaps import CATEGORICAL_COLOR_MAPS
 from .internal.tiles import singleband as singleband_tiles
 from .models import DEFAULT_PATH_TEMPLATE, RasterTileSource
-from .views import _get_singleband_image, _parse_keys, _source_options
+from .views import (
+    _get_colormap,
+    _get_singleband_image,
+    _parse_keys,
+    _source_options,
+)
 
 
 class DiscoverRastersTests(SimpleTestCase):
@@ -160,6 +165,64 @@ class SourceOptionsTests(SimpleTestCase):
 
         self.assertEqual(options, [{"type": "coastal", "rp": "100"}])
         driver.get_datasets.assert_called_once_with(where=filters)
+
+
+class ColormapTests(SimpleTestCase):
+    @patch("raster.views.shared.terracotta_colormap")
+    def test_maps_palette_indices_to_stretch_range_values(
+        self,
+        mock_terracotta_colormap,
+    ):
+        mock_terracotta_colormap.return_value = [
+            {"value": 0, "rgba": [0, 0, 0, 255]},
+            {"value": 1, "rgba": [128, 128, 128, 255]},
+            {"value": 2, "rgba": [255, 255, 255, 255]},
+        ]
+
+        serializer = _get_colormap(
+            {
+                "colormap": "viridis",
+                "stretch_range": [10, 20],
+                "num_values": 3,
+            }
+        )
+
+        self.assertEqual(
+            serializer.data["colormap"],
+            [
+                {"value": 10.0, "rgba": [0, 0, 0, 255]},
+                {"value": 15.0, "rgba": [128, 128, 128, 255]},
+                {"value": 20.0, "rgba": [255, 255, 255, 255]},
+            ],
+        )
+
+    @patch("raster.views.shared.terracotta_colormap")
+    def test_preserves_domain_values_returned_by_terracotta(
+        self,
+        mock_terracotta_colormap,
+    ):
+        mock_terracotta_colormap.return_value = [
+            {"value": 10.0, "rgba": [0, 0, 0, 255]},
+            {"value": 15.0, "rgba": [128, 128, 128, 255]},
+            {"value": 20.0, "rgba": [255, 255, 255, 255]},
+        ]
+
+        serializer = _get_colormap(
+            {
+                "colormap": "viridis",
+                "stretch_range": [10, 20],
+                "num_values": 3,
+            }
+        )
+
+        self.assertEqual(
+            serializer.data["colormap"],
+            [
+                {"value": 10.0, "rgba": [0, 0, 0, 255]},
+                {"value": 15.0, "rgba": [128, 128, 128, 255]},
+                {"value": 20.0, "rgba": [255, 255, 255, 255]},
+            ],
+        )
 
 
 class SinglebandDriverHelperTests(SimpleTestCase):
