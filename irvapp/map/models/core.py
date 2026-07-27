@@ -26,6 +26,9 @@ class InfrastructureNode(OrderableTreeNode):
     class Meta(OrderableTreeNode.Meta):
         db_table = "infrastructure_nodes"
 
+    def __str__(self):
+        return self.node_id
+
 
 class FeatureLayer(models.Model):
     layer_name = models.CharField(primary_key=True)
