@@ -113,7 +113,7 @@ export function setUrlParam(key: string, value: unknown): (prev: Location) => Lo
 //
 // Priority order on init: URL param → sessionStorage → supplied default
 
-export const STORAGE_PREFIX = 'jsrat:';
+export const STORAGE_PREFIX = 'irvapp:';
 
 export function atomWithStoredBool(key: string, defaultVal: boolean) {
   const params = new URLSearchParams(window.location.search);
