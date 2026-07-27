@@ -24,7 +24,7 @@ class ColorMapEntrySerializer(serializers.Serializer):
     Serializer for a single colormap entry (RGB)
     """
 
-    value = serializers.IntegerField(min_value=0, max_value=255)
+    value = serializers.FloatField()
     rgba = serializers.ListField(
         child=serializers.IntegerField(
             min_value=0,
