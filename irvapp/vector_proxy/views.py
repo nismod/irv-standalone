@@ -7,16 +7,15 @@ from django.conf import settings
 from django.http import HttpResponse
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from map.models import Dataset
-from map.permissions import user_has_dataset_access
+from map.permissions import HasDatasetAccess
 from rest_framework import status
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 
 class VectorTileProxyView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, HasDatasetAccess]
     http_method_names = ["get", "head", "options"]
 
     _request_headers_to_forward = (
@@ -132,23 +131,12 @@ class VectorTileProxyView(APIView):
         if dataset_id is None:
             return
 
-        if request.user.is_superuser:
-            return
-
         dataset = (
             Dataset.objects.prefetch_related("access_groups")
             .filter(pk=dataset_id)
             .first()
         )
-        user_group_ids = set(request.user.groups.values_list("pk", flat=True))
-        if not user_has_dataset_access(
-            request.user,
-            dataset,
-            user_group_ids=user_group_ids,
-        ):
-            raise PermissionDenied(
-                "You do not have permission to access this dataset."
-            )
+        self.check_object_permissions(request, dataset)
 
     def _dataset_id_from_tile_path(self, tile_path):
         path_parts = tile_path.lstrip("/").split("/")
