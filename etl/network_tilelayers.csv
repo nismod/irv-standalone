@@ -10,12 +10,12 @@ transport_rail_nodes,transport,rail,junction,point,rail_junctions
 transport_rail_edges,transport,rail,track,line,rail_edges
 roads_nodes,transport,road,bridge,point,road_bridges
 roads_nodes,transport,road,junction,point,road_junctions
-roads_edges,transport,road,MOTORWAY,line,road_edges_motorway
-roads_edges,transport,road,CLASS A,line,road_edges_class_a
-roads_edges,transport,road,CLASS B,line,road_edges_class_b
-roads_edges,transport,road,CLASS C,line,road_edges_class_c
-roads_edges,transport,road,RESIDENTIAL,line,road_edges_residential
-roads_edges,transport,road,UNCLASSIFIED,line,road_edges_unclassified
+roads_edges,transport,road,trunk,line,road_edges_motorway
+roads_edges,transport,road,primary,line,road_edges_class_a
+roads_edges,transport,road,secondary,line,road_edges_class_b
+roads_edges,transport,road,tertiary,line,road_edges_class_c
+roads_edges,transport,road,residential,line,road_edges_residential
+roads_edges,transport,road,unclassified,line,road_edges_unclassified
 water_irrigation_nodes,water,irrigation,well,point,water_irrigation_nodes
 water_irrigation_edges,water,irrigation,canal,line,water_irrigation_edges
 water_potable_nodes,water,potable,Booster Station,point,water_potable_nodes_booster
@@ -39,8 +39,10 @@ water_wastewater_nodes,water,wastewater,WW Relift Station,point,water_waste_node
 water_wastewater_nodes,water,wastewater,WW Treatment Plant,point,water_waste_nodes_wwtp
 water_pipelines,water,wastewater,sewer_gravity,line,water_waste_sewer_gravity
 water_pipelines,water,wastewater,sewer_pressure,line,water_waste_sewer_pressure
-energy_edges,power,transmission,High Voltage,line,elec_edges_high
-energy_edges,power,transmission,Low Voltage,line,elec_edges_low
+energy_edges,power,transmission,reviewed_backbone,line,elec_edges_high
+energy_edges,power,distribution,osm,line,elec_edges_low
+energy_edges,power,transmission,generator_anchor,line,elec_edges_generator_anchor
+energy_edges,power,distribution,substation_anchor,line,elec_edges_substation_anchor
 energy_nodes,power,transmission,pole,point,elec_nodes_pole
 energy_nodes,power,transmission,substation,point,elec_nodes_substation
 energy_nodes,power,demand,demand,point,elec_nodes_demand
