@@ -1,6 +1,7 @@
 import { atom } from 'jotai';
 import { unwrap } from 'jotai/utils';
 
+import { type Dataset, mapDatasetsList } from 'lib/api-client';
 import { colorCssToRgb, makeConfig } from 'lib/helpers';
 import { LegendShapeType } from 'lib/map-shapes/ShapeLegend';
 
@@ -14,6 +15,7 @@ export interface NetworkLayerMetadata {
 }
 
 export type NetworksMetadata = Record<string, NetworkLayerMetadata>;
+export type NetworkDatasetsMetadata = Record<string, Dataset>;
 
 interface NetworkLayerStyleResponse {
   id: string;
@@ -45,6 +47,26 @@ async function fetchNetworkLayerStyles(): Promise<NetworkLayerStyleResponse[]> {
   }
 }
 
+async function fetchNetworkDatasets(): Promise<Dataset[]> {
+  try {
+    const { data, error } = await mapDatasetsList({
+      baseUrl: '/api',
+      credentials: 'include',
+      query: {
+        group: 'infrastructure',
+      },
+    });
+    if (error) {
+      console.error('Error fetching network datasets metadata:', error);
+      return [];
+    }
+    return data.results;
+  } catch (error) {
+    console.error('Error fetching network datasets metadata:', error);
+    return [];
+  }
+}
+
 const networksMetadataQuery = atom(async () => {
   const styles = await fetchNetworkLayerStyles();
   return makeConfig<NetworkLayerMetadata, string>(
@@ -56,3 +78,17 @@ const networksMetadataQuery = atom(async () => {
 });
 
 export const networksMetadataState = unwrap(networksMetadataQuery, (prev) => prev ?? {});
+
+const networkDatasetsMetadataQuery = atom(async () => {
+  const metadata: NetworkDatasetsMetadata = {};
+  const datasets = await fetchNetworkDatasets();
+  datasets.forEach((dataset) => {
+    metadata[dataset.id] = dataset;
+  });
+  return metadata;
+});
+
+export const networkDatasetsMetadataState = unwrap(
+  networkDatasetsMetadataQuery,
+  (prev) => prev ?? {},
+);

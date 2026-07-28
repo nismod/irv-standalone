@@ -16,21 +16,26 @@ export function CheckboxTreeItem<T>({
   checkboxState,
   getLabel,
   disableCheck = false,
+  disabledNodeIds = new Set<string>(),
 }: {
   root: TreeNode<T>;
   handleChange: (checked: boolean, node: TreeNode<T>) => void;
   checkboxState: CheckboxTreeState;
   getLabel: (node: TreeNode<T>, checked: boolean) => string | ReactElement;
   disableCheck?: boolean;
+  disabledNodeIds?: Set<string>;
 }) {
-  const indeterminate = checkboxState.indeterminate[root.id];
-  const checked = indeterminate || checkboxState.checked[root.id];
+  const indeterminate = Boolean(checkboxState.indeterminate[root.id]);
+  const checked = indeterminate || Boolean(checkboxState.checked[root.id]);
+  const disabled = disableCheck || disabledNodeIds.has(root.id);
 
   function handleCheckboxChange(event) {
+    if (disabled) return;
     handleChange(event.currentTarget.checked, root);
   }
 
   function handleItemKeyDown(event) {
+    if (disabled) return;
     if (event.key === 'Enter' || event.key === ' ') {
       handleChange(!checked, root);
       event.stopPropagation();
@@ -51,7 +56,7 @@ export function CheckboxTreeItem<T>({
             indeterminate={indeterminate}
             onChange={handleCheckboxChange}
             onClick={handleClick}
-            disabled={disableCheck}
+            disabled={disabled}
             slotProps={{
               input: {
                 'aria-label': root.label,
@@ -70,6 +75,7 @@ export function CheckboxTreeItem<T>({
           checkboxState={checkboxState}
           getLabel={getLabel}
           disableCheck={disableCheck}
+          disabledNodeIds={disabledNodeIds}
         ></CheckboxTreeItem>
       ))}
     </TreeItem>

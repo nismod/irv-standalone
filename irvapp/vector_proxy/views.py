@@ -6,7 +6,10 @@ from urllib.request import Request, urlopen
 from django.conf import settings
 from django.http import HttpResponse
 from drf_spectacular.utils import OpenApiResponse, extend_schema
+from map.models import Dataset
+from map.permissions import user_has_dataset_access
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -56,6 +59,7 @@ class VectorTileProxyView(APIView):
         return self._proxy_request(request, tile_path)
 
     def _proxy_request(self, request, tile_path):
+        self._check_vector_data_access(request, tile_path)
         upstream_url = self._build_upstream_url(request, tile_path)
         include_body = request.method != "HEAD"
         upstream_request = Request(
@@ -122,6 +126,40 @@ class VectorTileProxyView(APIView):
                 },
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
+
+    def _check_vector_data_access(self, request, tile_path):
+        dataset_id = self._dataset_id_from_tile_path(tile_path)
+        if dataset_id is None:
+            return
+
+        if request.user.is_superuser:
+            return
+
+        dataset = (
+            Dataset.objects.prefetch_related("access_groups")
+            .filter(pk=dataset_id)
+            .first()
+        )
+        user_group_ids = set(request.user.groups.values_list("pk", flat=True))
+        if not user_has_dataset_access(
+            request.user,
+            dataset,
+            user_group_ids=user_group_ids,
+        ):
+            raise PermissionDenied(
+                "You do not have permission to access this dataset."
+            )
+
+    def _dataset_id_from_tile_path(self, tile_path):
+        path_parts = tile_path.lstrip("/").split("/")
+        if len(path_parts) < 2 or path_parts[0] != "data":
+            return None
+
+        dataset_path_part = path_parts[1]
+        if "." in dataset_path_part:
+            dataset_path_part = dataset_path_part.rsplit(".", 1)[0]
+
+        return dataset_path_part or None
 
     def _is_allowed_upstream_url(self, url_value):
         resolved = urlsplit(url_value)

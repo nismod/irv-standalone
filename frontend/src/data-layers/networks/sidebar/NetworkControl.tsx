@@ -14,6 +14,7 @@ import {
   networkTreeCheckboxState,
   networkTreeConfigState,
   networkTreeExpandedState,
+  disabledNetworkNodeIdsState,
 } from '../state/data-selection';
 import { networksMetadataState } from '../state/metadata';
 import { showAdaptationsState, showProtectorFeaturesState } from '../state/layer';
@@ -117,6 +118,7 @@ export const NetworkControl: FC = () => {
   const [checkboxState, setCheckboxState] = useAtom(networkTreeCheckboxState);
   const [expanded, setExpanded] = useAtom(networkTreeExpandedState);
   const networksMetadata = useAtomValue(networksMetadataState);
+  const disabledNodeIds = useAtomValue(disabledNetworkNodeIdsState);
 
   const showAdaptations = useAtomValue(showAdaptationsState);
   const showProtectorFeatureLayers = useAtomValue(showProtectorFeaturesState);
@@ -150,6 +152,7 @@ export const NetworkControl: FC = () => {
         expanded={expanded}
         onExpanded={setExpanded}
         disableCheck={disableCheck}
+        disabledNodeIds={disabledNodeIds}
       />
     </>
   );
