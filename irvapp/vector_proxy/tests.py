@@ -3,9 +3,10 @@ from unittest.mock import patch
 
 from django.conf import settings
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.test import TestCase
 from django.test.utils import override_settings
+from map.models import Dataset
 from rest_framework.test import APIClient
 
 
@@ -41,11 +42,85 @@ class VectorTileProxyViewTests(TestCase):
             username="tile-user",
             password="testpass",
         )
+        self.access_group = Group.objects.create(name="vector-data-access")
+        self.user.groups.add(self.access_group)
+        for dataset_id in ["roads", "rail_stations", "buildings_resort"]:
+            dataset = Dataset.objects.create(
+                id=dataset_id,
+                label=dataset_id.replace("_", " ").title(),
+                group="vector",
+                quantity="features",
+                unit="n/a",
+                stacking_order=1,
+                display_order=1,
+            )
+            dataset.access_groups.add(self.access_group)
 
     def test_requires_authentication(self):
         response = self.client.get("/tiles/vector/data/roads.json")
 
         self.assertEqual(response.status_code, 403)
+
+    @patch("vector_proxy.views.urlopen")
+    def test_requires_dataset_access_group_for_vector_data(
+        self,
+        mock_urlopen,
+    ):
+        self.client.force_authenticate(user=self.user)
+        restricted_group = Group.objects.create(name="restricted-vector-data")
+        Dataset.objects.create(
+            id="restricted_roads",
+            label="Restricted roads",
+            group="vector",
+            quantity="features",
+            unit="n/a",
+            stacking_order=1,
+            display_order=1,
+        ).access_groups.add(restricted_group)
+
+        response = self.client.get(
+            "/tiles/vector/data/restricted_roads.json"
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            response.json()["detail"],
+            "You do not have permission to access this dataset.",
+        )
+        mock_urlopen.assert_not_called()
+
+    @patch("vector_proxy.views.urlopen")
+    def test_requires_matching_dataset_for_vector_data(self, mock_urlopen):
+        self.client.force_authenticate(user=self.user)
+
+        response = self.client.get("/tiles/vector/data/not_a_dataset.json")
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            response.json()["detail"],
+            "You do not have permission to access this dataset.",
+        )
+        mock_urlopen.assert_not_called()
+
+    @patch("vector_proxy.views.urlopen")
+    def test_checks_dataset_access_for_vector_tile_paths(self, mock_urlopen):
+        self.client.force_authenticate(user=self.user)
+        mock_urlopen.return_value = _FakeUpstreamResponse(
+            status=200,
+            body=b"tile",
+            headers={
+                "Content-Type": "application/x-protobuf",
+            },
+        )
+
+        response = self.client.get("/tiles/vector/data/roads/0/0/0.pbf")
+
+        self.assertEqual(response.status_code, 200)
+        forwarded_request = mock_urlopen.call_args.args[0]
+        self.assertEqual(
+            forwarded_request.full_url,
+            "http://tileserver.internal:8080/data/roads/0/0/0.pbf",
+        )
 
     @patch("vector_proxy.views.urlopen")
     def test_proxies_vector_tile_response_for_authenticated_user(

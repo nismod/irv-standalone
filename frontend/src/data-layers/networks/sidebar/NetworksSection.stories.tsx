@@ -1,10 +1,21 @@
 import { StoryObj, Meta } from '@storybook/react-vite';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { HttpResponse, http } from 'msw';
+import { useEffect } from 'react';
+import { useSetAtom } from 'jotai';
 
 import { NetworksSection } from './NetworksSection';
 import rasterSourceDomains from 'mocks/raster_source_domains.json';
 import { type PaginatedDatasetList, type RasterTileSource } from 'lib/api-client';
+import {
+  sectionStyleOptionsState,
+  sectionStyleValueState,
+  sectionVisibilityState,
+} from 'lib/state/sections';
+import { STORAGE_PREFIX } from 'lib/state/map-view/map-url';
+import {
+  networkTreeExpandedState,
+} from '../state/data-selection';
 
 const hazardsResponse: PaginatedDatasetList = {
   count: 2,
@@ -36,10 +47,77 @@ const hazardsResponse: PaginatedDatasetList = {
   ],
 };
 
+const networksResponse: PaginatedDatasetList = {
+  count: 3,
+  next: null,
+  previous: null,
+  results: [
+    {
+      id: 'road_edges_class_a',
+      label: 'Class A roads',
+      group: 'networks',
+      quantity: 'features',
+      unit: 'n/a',
+      tile_source: null,
+      stacking_order: 1,
+      display_order: 1,
+      has_access: true,
+    },
+    {
+      id: 'road_edges_motorway',
+      label: 'Toll roads',
+      group: 'networks',
+      quantity: 'features',
+      unit: 'n/a',
+      tile_source: null,
+      stacking_order: 2,
+      display_order: 2,
+      has_access: false,
+    },
+    {
+      id: 'buildings_resort',
+      label: 'Resort buildings',
+      group: 'buildings',
+      quantity: 'features',
+      unit: 'n/a',
+      tile_source: null,
+      stacking_order: 3,
+      display_order: 3,
+      has_access: false,
+    },
+  ],
+};
+
 const rasterSourceResponse: RasterTileSource = {
   id: 1,
   keys: ['type', 'rp', 'rcp', 'epoch', 'confidence'],
 };
+
+const networkLayerStylesResponse = {
+  results: [
+    {
+      id: 'road_edges_class_a',
+      type: 'line',
+      label: 'Class A roads',
+      color: '#3f51b5',
+      minZoom: null,
+    },
+    {
+      id: 'road_edges_motorway',
+      type: 'line',
+      label: 'Toll roads',
+      color: '#f57c00',
+      minZoom: null,
+    },
+  ],
+};
+
+const networkStyleOptions = [
+  { id: 'type', label: 'Asset type' },
+  { id: 'damages', label: 'Damages' },
+  { id: 'adaptation', label: 'Adaptation Options' },
+  { id: 'protectedFeatures', label: 'Protected Features' },
+];
 
 const mockInfrastructureTree = {
   count: 2,
@@ -105,6 +183,19 @@ const mockInfrastructureTree = {
         },
       ],
     },
+    {
+      node_id: 'buildings',
+      node_name: 'Buildings',
+      parent: null,
+      children: [
+        {
+          node_id: 'buildings_resort',
+          node_name: 'Resort',
+          parent: 'buildings',
+          children: [],
+        },
+      ],
+    },
   ],
 };
 
@@ -116,10 +207,45 @@ function fixedWidthDecorator(Story) {
   );
 }
 
+function storyStyleForView(view: string) {
+  switch (view) {
+    case 'risk':
+      return 'damages';
+    case 'adaptation':
+      return 'adaptation';
+    default:
+      return 'type';
+  }
+}
+
+function StoryState({ Story, view }) {
+  const setAssetsVisible = useSetAtom(sectionVisibilityState('assets'));
+  const setAssetsStyle = useSetAtom(sectionStyleValueState('assets'));
+  const setAssetsStyleOptions = useSetAtom(sectionStyleOptionsState('assets'));
+  const setExpanded = useSetAtom(networkTreeExpandedState);
+
+  useEffect(() => {
+    sessionStorage.removeItem(`${STORAGE_PREFIX}netTree`);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('netTree');
+    window.history.replaceState({}, '', url.toString());
+
+    setAssetsVisible(true);
+    setAssetsStyleOptions(networkStyleOptions);
+    setAssetsStyle(storyStyleForView(view));
+    setExpanded(['power', 'power-lines', 'transport', 'road-network', 'roads', 'buildings']);
+  }, [setAssetsStyle, setAssetsStyleOptions, setAssetsVisible, setExpanded, view]);
+
+  return <Story />;
+}
+
 const meta = {
   title: 'Sidebar/NetworksSection',
   component: NetworksSection,
-  decorators: [fixedWidthDecorator],
+  decorators: [
+    fixedWidthDecorator,
+    (Story, { args }) => <StoryState Story={Story} view={args.view} />,
+  ],
   argTypes: {
     view: {
       control: {
@@ -134,8 +260,28 @@ const meta = {
         http.get('/api/map/infrastructure-tree', () => {
           return HttpResponse.json(mockInfrastructureTree);
         }),
-        http.get('/api/map/datasets', () => {
-          return HttpResponse.json(hazardsResponse);
+        http.get('/api/map/datasets', ({ request }) => {
+          const url = new URL(request.url);
+          if (url.searchParams.get('group') === 'networks') {
+            return HttpResponse.json({
+              ...networksResponse,
+              count: 2,
+              results: networksResponse.results.filter(
+                (dataset) => dataset.group === 'networks',
+              ),
+            });
+          }
+          if (url.searchParams.get('group') === 'hazards') {
+            return HttpResponse.json(hazardsResponse);
+          }
+          return HttpResponse.json({
+            ...networksResponse,
+            count: networksResponse.results.length + hazardsResponse.results.length,
+            results: [...networksResponse.results, ...hazardsResponse.results],
+          });
+        }),
+        http.get('/api/map/network-layer-styles', () => {
+          return HttpResponse.json(networkLayerStylesResponse);
         }),
         http.get('/api/tiles/raster/sources/:datasetId/domains', () => {
           return HttpResponse.json(rasterSourceDomains);
@@ -155,7 +301,7 @@ export const Exposure: Story = {
   args: {
     view: 'exposure',
   },
-  play: ({ canvasElement }) => {
+  play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     expect(canvas.queryByText('Infrastructure')).toBeTruthy();
     expect(
@@ -163,6 +309,19 @@ export const Exposure: Story = {
         'Infrastructure layers are currently following the Adaptation Options selection',
       ),
     ).toBeFalsy();
+    expect(await canvas.findByRole('checkbox', { name: 'Class A' })).toBeEnabled();
+    expect(await canvas.findByRole('checkbox', { name: 'Toll' })).toBeDisabled();
+    expect(await canvas.findByRole('checkbox', { name: 'Buildings' })).toBeDisabled();
+    expect(await canvas.findByRole('checkbox', { name: 'Resort' })).toBeDisabled();
+
+    const classACheckbox = await canvas.findByRole('checkbox', { name: 'Class A' });
+    expect(classACheckbox).not.toBeChecked();
+
+    await userEvent.click(classACheckbox);
+    expect(classACheckbox).toBeChecked();
+
+    await userEvent.click(classACheckbox);
+    expect(classACheckbox).not.toBeChecked();
   },
 };
 

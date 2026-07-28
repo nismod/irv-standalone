@@ -1,6 +1,5 @@
 import { useCallback, ReactElement } from 'react';
 import { SimpleTreeView } from '@mui/x-tree-view';
-import { produce } from 'immer';
 
 import { dfs, getDescendants, TreeNode } from './tree-node';
 import { CheckboxTreeItem } from './CheckboxTreeItem';
@@ -39,7 +38,18 @@ export interface CheckboxTreeState {
 export function recalculateCheckboxStates<T>(
   state: CheckboxTreeState,
   config: CheckboxTreeConfig<T>,
+  disabledNodeIds = new Set<string>(),
 ): CheckboxTreeState {
+  const nextState = {
+    checked: { ...state.checked },
+    indeterminate: { ...state.indeterminate },
+  };
+
+  disabledNodeIds.forEach((nodeId) => {
+    nextState.checked[nodeId] = false;
+    nextState.indeterminate[nodeId] = false;
+  });
+
   for (const root of config.roots) {
     // traverse each root tree in post-order to recalculate state starting from leaf nodes
     dfs(
@@ -47,12 +57,16 @@ export function recalculateCheckboxStates<T>(
       (node) => {
         const nodeChildren = config.nodes[node.id].children;
         if (nodeChildren) {
-          const checked = nodeChildren.every((child) => state.checked[child.id]);
+          const enabledChildren = nodeChildren.filter((child) => !disabledNodeIds.has(child.id));
+          const checked =
+            enabledChildren.length > 0 && enabledChildren.every((child) => nextState.checked[child.id]);
           const indeterminate =
             !checked &&
-            nodeChildren.some((child) => state.checked[child.id] || state.indeterminate[child.id]);
-          state.checked[node.id] = checked;
-          state.indeterminate[node.id] = indeterminate;
+            enabledChildren.some(
+              (child) => nextState.checked[child.id] || nextState.indeterminate[child.id],
+            );
+          nextState.checked[node.id] = checked;
+          nextState.indeterminate[node.id] = indeterminate;
         }
       },
       false,
@@ -60,7 +74,7 @@ export function recalculateCheckboxStates<T>(
     );
   }
 
-  return state;
+  return nextState;
 }
 
 export function CheckboxTree<T>({
@@ -72,6 +86,7 @@ export function CheckboxTree<T>({
   expanded,
   onExpanded,
   disableCheck = false,
+  disabledNodeIds = new Set<string>(),
 }: {
   config: CheckboxTreeConfig<T>;
   nodes: TreeNode<T>[];
@@ -81,20 +96,33 @@ export function CheckboxTree<T>({
   expanded: string[];
   onExpanded: (expanded: string[]) => void;
   disableCheck?: boolean;
+  disabledNodeIds?: Set<string>;
 }) {
   const handleChange = useCallback(
     (checked: boolean, node: TreeNode<T>) => {
-      const descendants: string[] = config.nodes[node.id].descendantIds;
-      onCheckboxState(
-        produce(checkboxState, (draft) => {
-          draft.checked[node.id] = checked;
-          descendants.forEach((n) => (draft.checked[n] = checked));
+      if (disabledNodeIds.has(node.id)) return;
 
-          return recalculateCheckboxStates(draft, config);
-        }),
+      const descendants: string[] = config.nodes[node.id].descendantIds;
+      const nextChecked = {
+        ...checkboxState.checked,
+        [node.id]: checked,
+      };
+      descendants
+        .filter((nodeId) => !disabledNodeIds.has(nodeId))
+        .forEach((nodeId) => (nextChecked[nodeId] = checked));
+
+      onCheckboxState(
+        recalculateCheckboxStates(
+          {
+            checked: nextChecked,
+            indeterminate: checkboxState.indeterminate,
+          },
+          config,
+          disabledNodeIds,
+        ),
       );
     },
-    [checkboxState, config, onCheckboxState],
+    [checkboxState, config, disabledNodeIds, onCheckboxState],
   );
 
   return (
@@ -113,6 +141,7 @@ export function CheckboxTree<T>({
             handleChange={handleChange}
             getLabel={getLabel}
             disableCheck={disableCheck}
+            disabledNodeIds={disabledNodeIds}
           />
         ))}
       </SimpleTreeView>
