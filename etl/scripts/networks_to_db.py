@@ -1,8 +1,10 @@
 """Load network features from a single source file-layer to database."""
 
-import fiona
-import pandas
 
+from pathlib import Path
+
+import pandas
+import geopandas as gpd
 from pyproj import CRS, Transformer
 from shapely.geometry import shape
 from shapely.ops import transform
@@ -15,56 +17,61 @@ from backend.db.models import Feature
 
 def yield_features(layer, network_tilelayer, analysis_data_dir):
     """Read from file layer to modelled Features"""
-    with fiona.open(
-        get_network_layer_path(layer, analysis_data_dir),
-        layer=layer.gpkg_layer,
-    ) as src:
-        from_crs = src.crs
-        to_crs = CRS.from_epsg(4326)
-        t = Transformer.from_crs(from_crs, to_crs, always_xy=True).transform
+    src = gpd.read_parquet(Path(analysis_data_dir) / Path(layer.path))
+    from_crs = src.crs
+    to_crs = CRS.from_epsg(4326)
+    t = Transformer.from_crs(from_crs, to_crs, always_xy=True).transform
 
-        def to_2d(x, y, z=None):
-            return (x, y)
+    def to_2d(x, y, z=None):
+        return (x, y)
 
-        rename = {
-            layer.asset_id_column: "asset_id",
-            layer.asset_type_column: "asset_type",
-            layer.asset_min_cost_column: "cost_min",
-            layer.asset_max_cost_column: "cost_max",
-            layer.asset_mean_cost_column: "cost_mean",
-            layer.asset_cost_unit_column: "cost_unit",
-            layer.asset_reopen_cost_column: "cost_reopen",
-            layer.asset_reopen_cost_unit_column: "cost_reopen_unit",
+    rename = {
+        layer.asset_id_column: "asset_id",
+        layer.asset_type_column: "asset_type",
+        layer.asset_min_cost_column: "cost_min",
+        layer.asset_max_cost_column: "cost_max",
+        layer.asset_mean_cost_column: "cost_mean",
+        layer.asset_cost_unit_column: "cost_unit",
+        layer.asset_reopen_cost_column: "cost_reopen",
+        layer.asset_reopen_cost_unit_column: "cost_reopen_unit",
+    }
+
+    for feature in src.itertuples():
+        geom = transform(t, shape(feature.geometry))
+        if geom.has_z:
+            geom = transform(to_2d, geom)
+        row_dict = {
+            field: getattr(feature, field)
+            for field in feature._fields
+            if field not in ("Index", "geometry")
         }
+        props = clean_props(row_dict, rename)
+        tilelayer_details = get_tilelayer_by_asset_type(
+            layer.ref, props, network_tilelayers
+        )
+        props["sector"] = tilelayer_details.sector
+        props["subsector"] = tilelayer_details.subsector
 
-        for feature in src:
-            geom = transform(t, shape(feature["geometry"]))
-            if geom.has_z:
-                geom = transform(to_2d, geom)
-            props = clean_props(feature["properties"], rename)
-            # FIXME in the data
-            if layer.ref == "transport_rail_edges":
-                props["asset_type"] = "track"
-            if layer.ref == "roads_nodes" and not props["asset_type"]:
-                props["asset_type"] = "junction"
-            tilelayer_details = get_tilelayer_by_asset_type(
-                layer.ref, props, network_tilelayers
-            )
-            props["sector"] = tilelayer_details.sector
-            props["subsector"] = tilelayer_details.subsector
-
-            yield Feature(
-                id=props["uid"],
-                string_id=props["asset_id"],
-                layer=tilelayer_details.layer,
-                properties=props,
-                geom=geom.wkt,
-            )
+        yield Feature(
+            id=props["uid"],
+            string_id=props["asset_id"],
+            layer=tilelayer_details.layer,
+            properties=props,
+            geom=geom.wkt,
+        )
 
 
 def clean_props(props, rename):
     clean = {}
     for k, v in props.items():
+        try:
+            if pandas.isna(v):
+                v = None
+        except (TypeError, ValueError):
+            pass
+        if v is not None and hasattr(v, "item"):
+            # Convert numpy scalars (e.g. bool_, int64, float64) to Python natives
+            v = v.item()
         if k in rename:
             clean[rename[k]] = v
         elif k in rename.values():
@@ -99,10 +106,6 @@ def get_network_layer(
         raise e
 
 
-def get_network_layer_path(layer, analysis_data_dir):
-    return f"{analysis_data_dir}/processed_data/networks_uids/{layer.path}"
-
-
 def get_tilelayer_by_asset_type(layer_ref, props, network_tilelayers):
     try:
         return network_tilelayers[
@@ -128,7 +131,7 @@ if __name__ == "__main__":
     try:
         layer = snakemake.wildcards.layer
         output = snakemake.output
-        analysis_data_dir = snakemake.config["analysis_data_dir"]
+        analysis_data_dir = Path(snakemake.config["analysis_data_dir"])
 
         network_layers = pandas.read_csv(snakemake.config["network_layers"])
         network_layers_areal_protection = pandas.read_csv(
@@ -167,9 +170,5 @@ if __name__ == "__main__":
 
     with open(str(output), "w") as fh:
         fh.write("Loaded to database.\n\n")
-        fh.write(
-            "From:\n"
-            f"{get_network_layer_path(layer, analysis_data_dir)}"
-            f"|{layer.gpkg_layer}\n\n"
-        )
+        fh.write(f"From:\n{analysis_data_dir / Path(layer.path)}\n\n")
         fh.write(f"Details:\n{str(layer)}\n")
