@@ -20,18 +20,13 @@ if __name__ == "__main__":
     with SessionLocal() as db:
 
         for row in network_tilelayers.itertuples():
-            query = (
+            instance = (
                 db.query(FeatureLayer)
-                .filter(
-                    FeatureLayer.layer_name == row.layer,
-                    FeatureLayer.sector == row.sector,
-                    FeatureLayer.subsector == row.subsector,
-                    FeatureLayer.asset_type == row.asset_type,
-                )
+                .filter(FeatureLayer.layer_name == row.layer)
                 .first()
             )
 
-            if not query:
+            if instance is None:
                 print("does not exist, creating", end=" ")
                 instance = FeatureLayer(
                     layer_name=row.layer,
@@ -41,7 +36,10 @@ if __name__ == "__main__":
                 )
                 db.add(instance)
             else:
-                print("exists, skipping", end=" ")
+                print("exists, updating", end=" ")
+                instance.sector = row.sector
+                instance.subsector = row.subsector
+                instance.asset_type = row.asset_type
 
             print(row.layer, row.sector, row.subsector, row.asset_type)
 
