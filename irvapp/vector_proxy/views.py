@@ -50,16 +50,20 @@ class VectorTileProxyView(APIView):
             ),
         }
     )
-    def get(self, request, tile_path=""):
-        return self._proxy_request(request, tile_path)
+    def get(self, request, dataset_id=None, tile_path=""):
+        return self._proxy_request(request, dataset_id, tile_path)
 
     @extend_schema(exclude=True)
-    def head(self, request, tile_path=""):
-        return self._proxy_request(request, tile_path)
+    def head(self, request, dataset_id=None, tile_path=""):
+        return self._proxy_request(request, dataset_id, tile_path)
 
-    def _proxy_request(self, request, tile_path):
-        self._check_vector_data_access(request, tile_path)
-        upstream_url = self._build_upstream_url(request, tile_path)
+    def _proxy_request(self, request, dataset_id, tile_path):
+        self._check_vector_data_access(request, dataset_id)
+        upstream_tile_path = self._build_upstream_tile_path(
+            dataset_id,
+            tile_path,
+        )
+        upstream_url = self._build_upstream_url(request, upstream_tile_path)
         include_body = request.method != "HEAD"
         upstream_request = Request(
             upstream_url,
@@ -88,7 +92,7 @@ class VectorTileProxyView(APIView):
                     upstream_headers=upstream_response.headers,
                     body=self._rewrite_json_urls(
                         request=request,
-                        tile_path=tile_path,
+                        tile_path=upstream_tile_path,
                         upstream_headers=upstream_response.headers,
                         body=response_body,
                     ),
@@ -111,7 +115,7 @@ class VectorTileProxyView(APIView):
                 upstream_headers=exc.headers,
                 body=self._rewrite_json_urls(
                     request=request,
-                    tile_path=tile_path,
+                    tile_path=upstream_tile_path,
                     upstream_headers=exc.headers,
                     body=response_body,
                 ),
@@ -126,8 +130,7 @@ class VectorTileProxyView(APIView):
                 status=status.HTTP_503_SERVICE_UNAVAILABLE,
             )
 
-    def _check_vector_data_access(self, request, tile_path):
-        dataset_id = self._dataset_id_from_tile_path(tile_path)
+    def _check_vector_data_access(self, request, dataset_id):
         if dataset_id is None:
             return
 
@@ -138,16 +141,14 @@ class VectorTileProxyView(APIView):
         )
         self.check_object_permissions(request, dataset)
 
-    def _dataset_id_from_tile_path(self, tile_path):
-        path_parts = tile_path.lstrip("/").split("/")
-        if len(path_parts) < 2 or path_parts[0] != "data":
-            return None
+    def _build_upstream_tile_path(self, dataset_id, tile_path):
+        if dataset_id is None:
+            return tile_path
 
-        dataset_path_part = path_parts[1]
-        if "." in dataset_path_part:
-            dataset_path_part = dataset_path_part.rsplit(".", 1)[0]
-
-        return dataset_path_part or None
+        normalized_tile_path = tile_path.lstrip("/")
+        if normalized_tile_path:
+            return f"data/{dataset_id}/{normalized_tile_path}"
+        return f"data/{dataset_id}.json"
 
     def _is_allowed_upstream_url(self, url_value):
         resolved = urlsplit(url_value)
