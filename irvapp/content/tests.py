@@ -153,6 +153,15 @@ class MarkdownBlockPageViewTests(TestCase):
             {"content"},
         )
 
+    def test_seeded_notice_page_contains_every_markdown_slot(self):
+        response = self.client.get("/content/notice")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            {block["slot"] for block in response.json()},
+            {"content"},
+        )
+
 
 class LogoPageViewTests(TestCase):
     def setUp(self):
