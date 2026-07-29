@@ -1,9 +1,12 @@
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
 import { Box, Button, Container, DialogActions, Drawer, Stack, Typography } from '@mui/material';
-import { AppLink } from 'lib/nav';
-import { useCallback } from 'react';
-import { useAtom } from 'jotai';
+import { useCallback, type ComponentPropsWithoutRef } from 'react';
+import { useAtom, useAtomValue } from 'jotai';
 import { atomWithStorage } from 'jotai/utils';
+import Markdown, { type Components } from 'react-markdown';
+
+import { AppLink, ExtLink } from 'lib/nav';
+import { noticeContentState } from './noticeContent';
 
 const noticeAcceptedDateState = atomWithStorage<Date | null>('notice-accepted', null, {
   getItem: (key, initialValue) => {
@@ -24,8 +27,22 @@ const noticeAcceptedDateState = atomWithStorage<Date | null>('notice-accepted', 
   },
 });
 
+const markdownComponents: Components = {
+  a: ({ href, ...props }) => {
+    if (!href) return <>{props.children}</>;
+    if (href.startsWith('/')) {
+      return <AppLink to={href} {...props} />;
+    }
+    return <ExtLink href={href} {...props} />;
+  },
+  p: ({ ...props }: ComponentPropsWithoutRef<'p'>) => (
+    <Typography paragraph sx={{ m: 0 }} {...props} />
+  ),
+};
+
 export const Notice = () => {
   const [acceptedDate, setAcceptedDate] = useAtom(noticeAcceptedDateState);
+  const noticeContent = useAtomValue(noticeContentState);
 
   const handleAccept = useCallback(() => {
     setAcceptedDate(new Date());
@@ -38,13 +55,7 @@ export const Notice = () => {
           <Box>
             <InfoOutlined color="primary" />
           </Box>
-          <Typography paragraph>
-            The systemic risk analysis data and results shown in this tool contain licensed data
-            that must not be shared outside the Government of Jamaica. By accessing the tool, you
-            acknowledge that you understand this and agree not to download any data or share your
-            access credentials with anyone else.{' '}
-            <AppLink to="/data">Read more about the data</AppLink>.
-          </Typography>
+          <Markdown components={markdownComponents}>{noticeContent.content.markdown}</Markdown>
           <DialogActions>
             <Button variant="contained" onClick={handleAccept}>
               Accept
