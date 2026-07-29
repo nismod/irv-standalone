@@ -11,8 +11,9 @@ import { sectionStyleValueState } from 'lib/state/sections';
 import { STORAGE_PREFIX, atomWithQueryParams, setUrlParam } from 'lib/state/map-view/map-url';
 
 import { type InfrastructureNode, mapInfrastructureTreeList } from 'lib/api-client';
-import { TreeNode } from 'lib/controls/checkbox-tree/tree-node';
+import { dfs, TreeNode } from 'lib/controls/checkbox-tree/tree-node';
 import { resolveInfrastructureNodeLayerId } from '../layer-registry';
+import { networkDatasetsMetadataState } from './metadata';
 
 interface NetworkLayerData {
   label: string;
@@ -40,18 +41,20 @@ async function fetchInfrastructureNodes(): Promise<InfrastructureNode[]> {
   }
 }
 
-let leafIndex = 0;
-function buildHierarchyFromNodes(nodes: InfrastructureNode[]): TreeNode<NetworkLayerData>[] {
+function buildHierarchyFromNodes(
+  nodes: InfrastructureNode[],
+  leafIndex = { value: 0 },
+): TreeNode<NetworkLayerData>[] {
   return nodes.map((node) => {
     const treeNode: TreeNode<NetworkLayerData> = {
       id: node.node_id,
       label: node.node_name,
     };
     if (node.children.length > 0) {
-      treeNode.children = buildHierarchyFromNodes(node.children);
+      treeNode.children = buildHierarchyFromNodes(node.children, leafIndex);
     } else {
-      leafIndex++;
-      const nodeUrl = leafIndex.toString(16).padStart(2, '0'); // 2-digit hex string.
+      leafIndex.value++;
+      const nodeUrl = leafIndex.value.toString(16).padStart(2, '0'); // 2-digit hex string.
       treeNode.url = nodeUrl;
       treeNode.layerId = resolveInfrastructureNodeLayerId(node);
     }
@@ -75,6 +78,38 @@ export const networkTreeConfigState = atom((get) => {
   const networkTreeHierarchy = get(networkTreeHierarchyState);
   return buildTreeConfig(networkTreeHierarchy);
 });
+
+export const disabledNetworkNodeIdsState = atom<Set<string>>((get) => {
+  const networkTreeConfig = get(networkTreeConfigState);
+  const datasets = get(networkDatasetsMetadataState);
+  const disabledNodeIds = new Set<string>();
+
+  networkTreeConfig.roots.forEach((root) => {
+    dfs(
+      root,
+      (node) => {
+        if (!node.children) {
+          if (node.layerId && datasets[node.layerId]?.has_access === false) {
+            disabledNodeIds.add(node.id);
+          }
+          return;
+        }
+
+        if (
+          node.children.length > 0 &&
+          node.children.every((child) => disabledNodeIds.has(child.id))
+        ) {
+          disabledNodeIds.add(node.id);
+        }
+      },
+      false,
+      'post',
+    );
+  });
+
+  return disabledNodeIds;
+});
+
 const networkTreeUrlState = atom((get) => {
   const networkTreeConfig = get(networkTreeConfigState);
   return mapValues(networkTreeConfig.nodes, node => node.url);
@@ -100,6 +135,7 @@ export const networkTreeCheckboxState = atom(
       const networkTreeConfig = get(networkTreeConfigState);
       const networkTreeURLs = get(networkTreeUrlState);
       const networkTreeIDs = get(networkTreeIdState);
+      const disabledNodeIds = get(disabledNetworkNodeIdsState);
       const separator = value.includes('.') ? '.' : ',';
       const checkedFields = value.split(separator).filter(Boolean);
       const checked: Record<string, boolean> = {};
@@ -111,23 +147,34 @@ export const networkTreeCheckboxState = atom(
           checked[id] = true;
         }
       });
-      return recalculateCheckboxStates({ checked, indeterminate: {} }, networkTreeConfig);
+      return recalculateCheckboxStates(
+        { checked, indeterminate: {} },
+        networkTreeConfig,
+        disabledNodeIds,
+      );
     }
 
     const networkTree = get(_networkTreeBase);
     const defaultNetworkTree = networkTree || get(defaultNetworkTreeState);
+    const disabledNodeIds = get(disabledNetworkNodeIdsState);
     const params = new URLSearchParams(window.location.search);
     const raw = params.get('netTree') ?? sessionStorage.getItem(STORAGE_PREFIX + 'netTree');
-    if (!raw) return defaultNetworkTree;
+    if (!raw) {
+      return recalculateCheckboxStates(defaultNetworkTree, get(networkTreeConfigState), disabledNodeIds);
+    }
     return parseTreeFromString(raw);
   },
   (get, set, newTree: CheckboxTreeState) => {
     const networkTreeConfig = get(networkTreeConfigState);
     const networkTreeURLs = get(networkTreeUrlState);
-    set(_networkTreeBase, newTree);
-    const checkedLayers = Object.keys(newTree.checked).filter(
+    const disabledNodeIds = get(disabledNetworkNodeIdsState);
+    const sanitizedTree = recalculateCheckboxStates(newTree, networkTreeConfig, disabledNodeIds);
+    set(_networkTreeBase, sanitizedTree);
+    const checkedLayers = Object.keys(sanitizedTree.checked).filter(
       (id) =>
-        newTree.checked[id] && networkTreeConfig.nodes[id] && !networkTreeConfig.nodes[id].children,
+        sanitizedTree.checked[id] &&
+        networkTreeConfig.nodes[id] &&
+        !networkTreeConfig.nodes[id].children,
     );
     const checked = checkedLayers.map((id) => networkTreeURLs[id]);
     const str = checked.join('.');
