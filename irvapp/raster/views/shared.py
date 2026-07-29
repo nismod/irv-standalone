@@ -109,7 +109,9 @@ def _get_singleband_image(
         tile_options,
     )
 
-    if cache_timeout > 0:
+    cache_enabled = cache_timeout > 0 and cache_max_bytes > 0
+
+    if cache_enabled:
         cache_key = _tile_cache_key(
             database=database,
             keys=keys,
@@ -118,12 +120,11 @@ def _get_singleband_image(
         )
         cached_image = cache.get(cache_key)
         if cached_image is not None:
-            if cache_max_bytes > 0:
-                _touch_tile_cache_key(
-                    cache_key,
-                    len(cached_image),
-                    cache_timeout,
-                )
+            _touch_tile_cache_key(
+                cache_key,
+                len(cached_image),
+                cache_timeout,
+            )
             return BytesIO(cached_image)
 
     image = singleband(
@@ -134,8 +135,13 @@ def _get_singleband_image(
     )
     image_bytes = _image_bytes(image)
 
-    if cache_timeout > 0:
-        _set_cached_tile(cache_key, image_bytes, cache_timeout, cache_max_bytes)
+    if cache_enabled:
+        _set_cached_tile(
+            cache_key,
+            image_bytes,
+            cache_timeout,
+            cache_max_bytes,
+        )
 
     return BytesIO(image_bytes)
 
