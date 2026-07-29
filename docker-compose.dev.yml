@@ -57,7 +57,7 @@ services:
     command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.django.rule=Host(`localhost`) && (PathPrefix(`/api`) || PathPrefix(`/admin`) || PathPrefix(`/static/`) || PathPrefix(`/media/`) || PathPrefix(`/martor/`))"
+      - "traefik.http.routers.django.rule=Host(`localhost`) && (PathPrefix(`/api`) || PathPrefix(`/admin`) || PathPrefix(`/static/`) || PathPrefix(`/media/`) || PathPrefix(`/martor/`) || PathPrefix(`/accounts/`))"
       - "traefik.http.routers.django.entrypoints=web"
       - "traefik.http.routers.django.middlewares=django-stripprefix"
       - "traefik.http.middlewares.django-stripprefix.stripprefix.prefixes=/api"

@@ -39,4 +39,9 @@ export const devProxy = {
     changeOrigin: true,
     rewrite: (path) => path.replace(/^\/pixel/, '/pixel'),
   },
+  '/accounts': {
+    target: 'http://localhost',
+    changeOrigin: true,
+    rewrite: (path) => path.replace(/^\/accounts$/, '/accounts/'),
+  },
 };
