@@ -326,6 +326,38 @@ class RasterTileCacheTests(SimpleTestCase):
         self.assertEqual(first_again.getvalue(), b"one12-new")
         self.assertEqual(mock_singleband.call_count, 3)
 
+    @override_settings(
+        RASTER_TILE_CACHE_TIMEOUT=300,
+        RASTER_TILE_CACHE_MAX_BYTES=0,
+    )
+    @patch("raster.views.shared.build_driver_path")
+    @patch("raster.internal.tiles.singleband.singleband")
+    def test_does_not_cache_without_size_limit(
+        self,
+        mock_singleband,
+        mock_build_driver_path,
+    ):
+        mock_build_driver_path.return_value = "/tiles/terracotta.sqlite"
+        mock_singleband.side_effect = [
+            io.BytesIO(b"first-render"),
+            io.BytesIO(b"second-render"),
+        ]
+
+        first = _get_singleband_image(
+            "terracotta.sqlite",
+            ["coastal"],
+            [1, 2, 3],
+        )
+        second = _get_singleband_image(
+            "terracotta.sqlite",
+            ["coastal"],
+            [1, 2, 3],
+        )
+
+        self.assertEqual(first.getvalue(), b"first-render")
+        self.assertEqual(second.getvalue(), b"second-render")
+        self.assertEqual(mock_singleband.call_count, 2)
+
     @patch("raster.views.shared.build_driver_path")
     @patch("raster.internal.tiles.singleband.singleband")
     def test_cache_hit_refreshes_eviction_order(
