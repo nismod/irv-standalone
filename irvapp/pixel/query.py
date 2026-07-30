@@ -8,18 +8,6 @@ from pyproj.transformer import Transformer
 import xarray as xr
 
 
-LAYER_METADATA_SCHEMA = [
-    "key",
-    "hazard",
-    "rp",
-    "rcp",
-    "epoch",
-    "confidence",
-    "variable",
-    "unit",
-]
-
-
 @dataclass
 class RasterStackMetadata:
     """Metadata about each stack of rasters (those sharing a grid)"""
@@ -83,11 +71,18 @@ def point_query(
         )
 
     if dfs:
-        data = (
-            pd.concat(dfs)
-            .merge(layer_metadata, on="key")
-            .loc[:, LAYER_METADATA_SCHEMA + ["band_data"]]
-        )
+        data = pd.concat(dfs).merge(layer_metadata, on="key")
+
+        # The dimensions of a raster layer are data, not part of the pixel
+        # API contract.  Keep the metadata column order from the CSV and add
+        # the sampled value at the end.  This allows layers with dimensions
+        # such as GWL/RP or SLR/RP to use the same endpoint as the existing
+        # RCP/epoch layers.
+        metadata_columns = [
+            column for column in layer_metadata.columns if column in data.columns
+        ]
+        columns = [*metadata_columns, "band_data"]
+        data = data.loc[:, columns]
         return data.to_dict(orient="list")
     else:
         return {}

@@ -49,9 +49,12 @@ class PixelDataSerializer(serializers.Serializer):
         if not instance:
             return {}
 
-        sanitized = self._replace_non_finite(
-            super().to_representation(instance)
-        )
+        # Pixel layer dimensions are defined by the layer metadata CSV and
+        # may vary between datasets.  Do not filter the payload through the
+        # fixed fields declared above; those fields remain useful for schema
+        # documentation and existing clients, while arbitrary dimensions
+        # must pass through unchanged.
+        sanitized = self._replace_non_finite(dict(instance))
         return cast(dict[str, Any], sanitized)
 
     def _replace_non_finite(self, value: Any) -> Any:

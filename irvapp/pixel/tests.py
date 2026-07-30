@@ -42,6 +42,30 @@ def create_raster(file_path: Path, width: int, height: int, value: float = 0):
 
 class PixelDataSerializerTests(SimpleTestCase):
 
+    def test_preserves_arbitrary_layer_dimensions(self):
+        serializer = PixelDataSerializer(
+            {
+                "key": ["k1"],
+                "hazard": ["coastal"],
+                "gwl": [1.5],
+                "rp": [100.0],
+                "slr": [0.25],
+                "band_data": [1.2],
+            }
+        )
+
+        self.assertEqual(
+            cast(dict[str, list], serializer.data),
+            {
+                "key": ["k1"],
+                "hazard": ["coastal"],
+                "gwl": [1.5],
+                "rp": [100.0],
+                "slr": [0.25],
+                "band_data": [1.2],
+            },
+        )
+
     def test_replaces_non_finite_floats_with_none(self):
         serializer = PixelDataSerializer(
             {
