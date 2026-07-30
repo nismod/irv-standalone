@@ -26,17 +26,17 @@ water_potable_nodes,water,potable,Intake,point,water_potable_nodes_intake
 water_potable_nodes,water,potable,Production Well,point,water_potable_nodes_well
 water_potable_nodes,water,potable,Pump Station,point,water_potable_nodes_pump
 water_potable_nodes,water,potable,Relift Station,point,water_potable_nodes_relift
-water_potable_nodes,water,potable,Reservoir,point,water_potable_nodes_reservoir
+water_potable_nodes,water,potable,reservoir,point,water_potable_nodes_reservoir
 water_potable_nodes,water,potable,River Source,point,water_potable_nodes_river_source
 water_potable_nodes,water,potable,Spring,point,water_potable_nodes_spring
 water_potable_nodes,water,potable,Storage Tank,point,water_potable_nodes_tank
 water_potable_nodes,water,potable,Sump,point,water_potable_nodes_sump
-water_potable_nodes,water,potable,Treatment Plant,point,water_potable_nodes_tp
+water_potable_nodes,water,potable,water_treatment_works,point,water_potable_nodes_tp
 water_pipelines,water,potable,potable,line,water_potable_edges
 water_wastewater_nodes,water,wastewater,WW Sump,point,water_waste_nodes_sump
 water_wastewater_nodes,water,wastewater,WW Pump Station,point,water_waste_nodes_pump
 water_wastewater_nodes,water,wastewater,WW Relift Station,point,water_waste_nodes_relift
-water_wastewater_nodes,water,wastewater,WW Treatment Plant,point,water_waste_nodes_wwtp
+water_wastewater_nodes,water,wastewater,waste_water_treatment_works,point,water_waste_nodes_wwtp
 water_pipelines,water,wastewater,sewer_gravity,line,water_waste_sewer_gravity
 water_pipelines,water,wastewater,sewer_pressure,line,water_waste_sewer_pressure
 energy_edges,power,transmission,reviewed_backbone,line,elec_edges_high
@@ -45,10 +45,9 @@ energy_edges,power,transmission,generator_anchor,line,elec_edges_generator_ancho
 energy_edges,power,distribution,substation_anchor,line,elec_edges_substation_anchor
 energy_nodes,power,transmission,pole,point,elec_nodes_pole
 energy_nodes,power,transmission,substation,point,elec_nodes_substation
-energy_nodes,power,demand,demand,point,elec_nodes_demand
-energy_nodes,power,generation,diesel,point,elec_nodes_diesel
-energy_nodes,power,generation,gas,point,elec_nodes_gas
+energy_nodes,power,demand,distribution_node,point,elec_nodes_demand
+energy_nodes,power,generation,thermal,point,elec_nodes_thermal
 energy_nodes,power,generation,hydro,point,elec_nodes_hydro
 energy_nodes,power,generation,solar,point,elec_nodes_solar
-energy_nodes,power,generation,wind,point,elec_nodes_wind
+energy_nodes,power,generation,unspecified,point,elec_nodes_unspecified
 coastal_protection_areas,coastal_infrastructure,protection,revetment_protection_zone,polygon,coast_nodes_cpf
