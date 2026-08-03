@@ -162,8 +162,12 @@ const exportConfig: ExportConfig = {
   }),
 };
 
+function isEmptyRecord(record: PixelRecord<CycloneKeys>): boolean {
+  return !Number.isFinite(record.value) || record.value === 0;
+}
+
 const getRagStatus = (records): RagStatus => {
-  if (records.every((rec) => !Number.isFinite(rec.value))) {
+  if (records.every(isEmptyRecord)) {
     return 'no-data';
   }
   return calculateRagFromReturnPeriodValuesOneThreshold(
