@@ -114,7 +114,16 @@ export const pixelDrillerDataRPs: (hazard: string) => Atom<Set<number>> = atomFa
     }),
 );
 
-const PIXEL_VALUE_COLUMNS = new Set(['id', 'key', 'hazard', 'rp', 'band_data', 'path']);
+const PIXEL_VALUE_COLUMNS = new Set([
+  'id',
+  'key',
+  'path',
+  'hazard',
+  'rp',
+  'band_data',
+  'variable',
+  'unit',
+]);
 
 /**
  * Unique layer parameter combinations advertised by the pixel API for a
