@@ -3,11 +3,12 @@ import { useAtomValue } from 'jotai';
 import {
   type PixelRecord,
   type PixelRecordKeys,
+  pixelDrillerDataParameters,
   pixelDrillerDataRecords,
 } from 'lib/state/pixel-driller';
 
 import { HazardAccordion } from '../hazard-accordion';
-import { EpochReturnPeriodChart } from '../epoch-return-period-chart';
+import { EpochReturnPeriodChart } from '../parameter-return-period-chart';
 import { buildDomainExportFile } from '../download/download-generators';
 import {
   ExportConfig,
@@ -31,16 +32,6 @@ const downloadId = 'river_flood';
 const FLOOD_HEIGHT_RP = 20; // years
 const FLOOD_HEIGHT_AMBER_THRESHOLD = 0.3; // meters
 const FLOOD_HEIGHT_RED_THRESHOLD = 1.5; // meters
-
-const FLOOD_PARAMETERS = [
-  { epoch: 2010, rcp: 'baseline' },
-  { epoch: 2050, rcp: '2.6' },
-  { epoch: 2050, rcp: '4.5' },
-  { epoch: 2050, rcp: '8.5' },
-  { epoch: 2080, rcp: '2.6' },
-  { epoch: 2080, rcp: '4.5' },
-  { epoch: 2080, rcp: '8.5' },
-];
 
 const exportColumns: DatapackageTableSchemaField[] = [
   { name: 'rp', type: 'number', title: 'Return period', description: 'Return period (years).' },
@@ -164,11 +155,16 @@ const getRagStatus = (records): RagStatus => {
   );
 };
 
-const DataSection = ({ pixel_layer }) => {
+export const FluvialDataSection = ({
+  pixel_layer,
+}: {
+  pixel_layer: string;
+}) => {
+  const layerParams = useAtomValue(pixelDrillerDataParameters(pixel_layer));
   const records = useAtomValue(
     pixelDrillerDataRecords({
       pixel_layer,
-      layerParams: FLOOD_PARAMETERS,
+      layerParams,
     }),
   );
 
@@ -192,4 +188,4 @@ const DataSection = ({ pixel_layer }) => {
   );
 };
 
-export default DataSection;
+export default FluvialDataSection;

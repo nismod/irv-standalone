@@ -114,6 +114,31 @@ export const pixelDrillerDataRPs: (hazard: string) => Atom<Set<number>> = atomFa
     }),
 );
 
+const PIXEL_VALUE_COLUMNS = new Set(['id', 'key', 'hazard', 'rp', 'band_data', 'path']);
+
+/**
+ * Unique layer parameter combinations advertised by the pixel API for a
+ * hazard. Structural fields and the return-period/value axes are excluded.
+ */
+const pixelDrillerDataParametersFamily = atomFamily((layer: string) =>
+    atom((get) => {
+      const rows = get(mapDataArraysToRowObjects).filter((row) => row.hazard === layer);
+      const parameters = rows.map((row) =>
+        Object.fromEntries(
+          Object.entries(row).filter(
+            ([key, value]) => !PIXEL_VALUE_COLUMNS.has(key) && value !== null,
+          ),
+        ),
+      );
+      return Array.from(
+        new Map(parameters.map((parameter) => [JSON.stringify(parameter), parameter])).values(),
+      );
+    }),
+  );
+
+export const pixelDrillerDataParameters = (hazard: string): Atom<LayerParam[]> =>
+  pixelDrillerDataParametersFamily(hazard);
+
 /**
  * Map a collection of data arrays to a single array of row objects.
  * @param data
