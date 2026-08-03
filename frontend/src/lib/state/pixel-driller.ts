@@ -298,7 +298,7 @@ const pixelDrillerDataRecordsFamily = atomFamily(
               ([key]) => !['id', 'hazard', 'band_data'].includes(key),
             ),
           ),
-          value: typeof row.band_data === 'number' ? row.band_data : null,
+          value: Number(row.band_data) || null,
           variable: String(row.variable ?? ''),
           unit: String(row.unit ?? ''),
         }));
