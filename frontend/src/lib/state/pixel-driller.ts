@@ -108,9 +108,7 @@ export const pixelDrillerDataRPs: (hazard: string) => Atom<Set<number>> = atomFa
         return new Set<number>();
       }
       const data = getFilteredPixelData(pixelDataRows, hazard);
-      return new Set(
-        data.flatMap((d) => (typeof d.rp === 'number' ? [d.rp] : [])),
-      );
+      return new Set(data.flatMap((d) => (typeof d.rp === 'number' ? [d.rp] : [])));
     }),
 );
 
@@ -130,20 +128,20 @@ const PIXEL_VALUE_COLUMNS = new Set([
  * hazard. Structural fields and the return-period/value axes are excluded.
  */
 const pixelDrillerDataParametersFamily = atomFamily((layer: string) =>
-    atom((get) => {
-      const rows = get(mapDataArraysToRowObjects).filter((row) => row.hazard === layer);
-      const parameters = rows.map((row) =>
-        Object.fromEntries(
-          Object.entries(row).filter(
-            ([key, value]) => !PIXEL_VALUE_COLUMNS.has(key) && value !== null,
-          ),
+  atom((get) => {
+    const rows = get(mapDataArraysToRowObjects).filter((row) => row.hazard === layer);
+    const parameters = rows.map((row) =>
+      Object.fromEntries(
+        Object.entries(row).filter(
+          ([key, value]) => !PIXEL_VALUE_COLUMNS.has(key) && value !== null,
         ),
-      );
-      return Array.from(
-        new Map(parameters.map((parameter) => [JSON.stringify(parameter), parameter])).values(),
-      );
-    }),
-  );
+      ),
+    );
+    return Array.from(
+      new Map(parameters.map((parameter) => [JSON.stringify(parameter), parameter])).values(),
+    );
+  }),
+);
 
 export const pixelDrillerDataParameters = (hazard: string): Atom<LayerParam[]> =>
   pixelDrillerDataParametersFamily(hazard);
@@ -184,9 +182,7 @@ function getFilteredPixelData(
   return pixelDataRows
     .filter((row) => row.hazard === hazard)
     .filter((row) =>
-      Object.entries(parameters).every(
-        ([key, value]) => value === undefined || row[key] === value,
-      ),
+      Object.entries(parameters).every(([key, value]) => value === undefined || row[key] === value),
     );
 }
 
@@ -197,11 +193,7 @@ function getFilteredPixelData(
  * @param parameters
  * @returns
  */
-function reducePixelDataRow(
-  data: Row[],
-  hazard: string,
-  parameters: LayerParam,
-): Row | null {
+function reducePixelDataRow(data: Row[], hazard: string, parameters: LayerParam): Row | null {
   if (!data.length) {
     return null;
   }
@@ -211,12 +203,7 @@ function reducePixelDataRow(
     variable,
     unit,
     hazard,
-    ...Object.fromEntries(
-      Object.entries(parameters).map(([key, value]) => [
-        key,
-        value,
-      ]),
-    ),
+    ...Object.fromEntries(Object.entries(parameters).map(([key, value]) => [key, value])),
   };
   data.forEach((d) => {
     if (typeof d.rp !== 'number') return;
@@ -236,9 +223,7 @@ function createPixelDrillerRowsKey(
   pixel_layer: string,
   layerParams: LayerParam[],
 ): PixelDrillerRowsKey {
-  const serialized = layerParams
-    .map((parameters) => JSON.stringify(parameters))
-    .join(',');
+  const serialized = layerParams.map((parameters) => JSON.stringify(parameters)).join(',');
   return { pixel_layer, layerParams, _serialized: serialized };
 }
 
@@ -288,17 +273,13 @@ const pixelDrillerDataRecordsFamily = atomFamily(
         return [];
       }
       return layerParams
-        .flatMap((parameters) =>
-          getFilteredPixelData(pixelDataRows, pixel_layer, parameters),
-        )
+        .flatMap((parameters) => getFilteredPixelData(pixelDataRows, pixel_layer, parameters))
         .filter((row) => row !== null)
         .map((row) => ({
           ...Object.fromEntries(
-            Object.entries(row).filter(
-              ([key]) => !['id', 'hazard', 'band_data'].includes(key),
-            ),
+            Object.entries(row).filter(([key]) => !['id', 'hazard', 'band_data'].includes(key)),
           ),
-          value: Number(row.band_data) || null,
+          value: Number.isFinite(row.band_data) ? Number(row.band_data) : null,
           variable: String(row.variable ?? ''),
           unit: String(row.unit ?? ''),
         }));
