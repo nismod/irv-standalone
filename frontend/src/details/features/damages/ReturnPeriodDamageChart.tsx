@@ -12,6 +12,8 @@ const makeSpec = (
   field_title: string,
   width: number,
   height: number,
+  tooltipFields: string[],
+  seriesField: string,
 ) => ({
   $schema: 'https://vega.github.io/schema/vega-lite/v6.json',
   width,
@@ -27,7 +29,17 @@ const makeSpec = (
     tooltip: true,
   },
   encoding: {
-    ...chartStyles,
+    ...(seriesField === 'rcp'
+      ? chartStyles
+      : {
+          color: {
+            field: seriesField,
+            type: 'ordinal',
+            title: seriesField,
+            legend: { orient: 'bottom', direction: 'horizontal' },
+          },
+          shape: { field: seriesField, type: 'ordinal', legend: null },
+        }),
     x: {
       field: 'probability',
       type: 'quantitative',
@@ -52,8 +64,7 @@ const makeSpec = (
     // the tooltip encoding needs to replicate the field definitions in order to customise their ordering
     tooltip: [
       { field: field_key, type: 'quantitative', format: ',.3r', title: field_title },
-      { field: 'rcp', title: 'RCP' },
-      { field: 'rp', title: 'Return Period' },
+      ...tooltipFields.map((field) => ({ field, title: field })),
     ],
   },
 });
@@ -64,6 +75,8 @@ export const ReturnPeriodDamageChart = ({
   field_title,
   width,
   height,
+  tooltipFields = ['rcp', 'rp'],
+  seriesField = 'rcp',
   ...props
 }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -77,8 +90,10 @@ export const ReturnPeriodDamageChart = ({
         field_title,
         width,
         height,
+        tooltipFields,
+        seriesField,
       ),
-    [data, field_key, field_title, width, height],
+    [data, field_key, field_title, width, height, seriesField, tooltipFields],
   ) as VisualizationSpec;
   const embed = useVegaEmbed({
     ref,

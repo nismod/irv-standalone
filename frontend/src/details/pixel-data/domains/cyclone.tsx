@@ -3,11 +3,12 @@ import { useAtomValue } from 'jotai';
 import {
   type PixelRecord,
   type PixelRecordKeys,
+  pixelDrillerDataParameters,
   pixelDrillerDataRecords,
 } from 'lib/state/pixel-driller';
 
 import { HazardAccordion } from '../hazard-accordion';
-import { EpochReturnPeriodChart } from '../epoch-return-period-chart';
+import { EpochReturnPeriodChart } from '../parameter-return-period-chart';
 import {
   ExportFunction,
   MetadataArgs,
@@ -30,14 +31,6 @@ const downloadId = 'cyclone';
 
 const CYCLONE_INTENSITY_THRESHOLD = 50; // m/s
 // confidence 5 and 50 also available in data
-const CYCLONE_PARAMETERS = [
-  { confidence: 95, epoch: 2010, rcp: 'baseline' },
-  { confidence: 95, epoch: 2050, rcp: '4.5' },
-  { confidence: 95, epoch: 2050, rcp: '8.5' },
-  { confidence: 95, epoch: 2100, rcp: '4.5' },
-  { confidence: 95, epoch: 2100, rcp: '8.5' },
-];
-
 const exportColumns: DatapackageTableSchemaField[] = [
   { name: 'rp', type: 'number', title: 'Return period', description: 'Return period (years).' },
   {
@@ -178,11 +171,12 @@ const getRagStatus = (records): RagStatus => {
   );
 };
 
-const DataSection = ({ pixel_layer }) => {
+const DataSection = ({ pixel_layer }: { pixel_layer: string }) => {
+  const layerParams = useAtomValue(pixelDrillerDataParameters(pixel_layer));
   const records = useAtomValue(
     pixelDrillerDataRecords({
       pixel_layer,
-      layerParams: CYCLONE_PARAMETERS,
+      layerParams,
     }),
   );
 
