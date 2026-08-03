@@ -148,8 +148,12 @@ export interface RiverFloodKeys extends PixelRecordKeys {
   variable?: string;
 }
 
+function isEmptyRecord(record: PixelRecord<RiverFloodKeys>): boolean {
+  return !Number.isFinite(record.value) || record.value === 0;
+}
+
 const getRagStatus = (records): RagStatus => {
-  if (records.every((rec) => !Number.isFinite(rec.value))) {
+  if (records.every(isEmptyRecord)) {
     return 'no-data';
   }
   return calculateRagFromOneReturnPeriodTwoThresholds(
