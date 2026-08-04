@@ -39,7 +39,8 @@ export function assetViewLayer(
     fn({ deckProps, zoom, selection, dataFetcher }: ViewLayerFunctionOptions) {
       const styleParams = this?.styleParams;
       const target = selection?.target as VectorTarget;
-      const selectedFeatureIds = [getFeatureId(target?.feature)];
+      const selectedFeatureId = getFeatureId(target?.feature);
+      const selectedFeatureIds = selectedFeatureId == null ? null : [selectedFeatureId];
       const dataLoader = customDataAccessFn?.(styleParams?.colorMap?.fieldSpec)?.dataLoader;
       return selectableMvtLayer(
         {
