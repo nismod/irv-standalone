@@ -8,6 +8,36 @@
   },
   "styles": {},
   "data": {
+    "buildings_commercial": {
+      "mbtiles": "buildings_commercial.mbtiles"
+    },
+    "buildings_industrial": {
+      "mbtiles": "buildings_industrial.mbtiles"
+    },
+    "buildings_institutional": {
+      "mbtiles": "buildings_institutional.mbtiles"
+    },
+    "buildings_mixed": {
+      "mbtiles": "buildings_mixed.mbtiles"
+    },
+    "buildings_other": {
+      "mbtiles": "buildings_other.mbtiles"
+    },
+    "buildings_recreation": {
+      "mbtiles": "buildings_recreation.mbtiles"
+    },
+    "buildings_residential": {
+      "mbtiles": "buildings_residential.mbtiles"
+    },
+    "buildings_unclassified": {
+      "mbtiles": "buildings_unclassified.mbtiles"
+    },
+    "water_potable_nodes_tp": {
+      "mbtiles": "water_potable_nodes_tp.mbtiles"
+    },
+    "water_waste_nodes_wwtp": {
+      "mbtiles": "water_waste_nodes_wwtp.mbtiles"
+    },
     "elec_edges_generator_anchor": {
       "mbtiles": "elec_edges_generator_anchor.mbtiles"
     },
@@ -19,6 +49,21 @@
     },
     "elec_edges_substation_anchor": {
       "mbtiles": "elec_edges_substation_anchor.mbtiles"
+    },
+    "elec_nodes_substation": {
+      "mbtiles": "elec_nodes_substation.mbtiles"
+    },
+    "elec_nodes_demand": {
+      "mbtiles": "elec_nodes_demand.mbtiles"
+    },
+    "elec_nodes_gas": {
+      "mbtiles": "elec_nodes_thermal.mbtiles"
+    },
+    "elec_nodes_hydro": {
+      "mbtiles": "elec_nodes_hydro.mbtiles"
+    },
+    "elec_nodes_solar": {
+      "mbtiles": "elec_nodes_solar.mbtiles"
     },
     "road_edges_class_a": {
       "mbtiles": "road_edges_class_a.mbtiles"
