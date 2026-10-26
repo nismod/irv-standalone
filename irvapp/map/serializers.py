@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema_field
 from rest_framework import serializers
 
 from .permissions import user_has_dataset_access
@@ -38,7 +39,13 @@ class DamagesNpvSerializer(serializers.ModelSerializer):
 
 class DatasetSerializer(serializers.ModelSerializer):
     has_access = serializers.SerializerMethodField()
+    color_range = serializers.ListField(
+        child=serializers.FloatField(),
+        allow_null=True,
+        required=False,
+    )
 
+    @extend_schema_field(serializers.BooleanField())
     def get_has_access(self, dataset):
         user = self.context["request"].user
         if not hasattr(self, "_user_group_ids"):
