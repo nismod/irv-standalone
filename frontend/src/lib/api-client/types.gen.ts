@@ -190,6 +190,14 @@ export type MarkdownBlock = {
     markdown: string;
 };
 
+export type NetworkLayerStyle = {
+    id: string;
+    type: string;
+    label: string;
+    color: string;
+    minZoom?: number | null;
+};
+
 export type Page = {
     name: string;
     title: string;
@@ -247,6 +255,13 @@ export type PaginatedMapConfigList = {
     next?: string | null;
     previous?: string | null;
     results: Array<MapConfig>;
+};
+
+export type PaginatedNetworkLayerStyleList = {
+    count: number;
+    next?: string | null;
+    previous?: string | null;
+    results: Array<NetworkLayerStyle>;
 };
 
 export type PaginatedSortedFeatureListResponse = {
@@ -397,6 +412,20 @@ export type DamagesRpWritable = {
     feature: number;
 };
 
+export type DatasetWritable = {
+    id: string;
+    label: string;
+    group: string;
+    quantity: string;
+    unit: string;
+    license?: string | null;
+    color_scheme?: string | null;
+    color_range?: Array<number> | null;
+    tile_source?: number | null;
+    stacking_order: number;
+    display_order: number;
+};
+
 export type FeatureWritable = {
     string_id: string;
     layer: string;
@@ -464,6 +493,13 @@ export type PaginatedDamagesRpListWritable = {
     next?: string | null;
     previous?: string | null;
     results: Array<DamagesRpWritable>;
+};
+
+export type PaginatedDatasetListWritable = {
+    count: number;
+    next?: string | null;
+    previous?: string | null;
+    results: Array<DatasetWritable>;
 };
 
 export type PaginatedFeatureListWritable = {
@@ -1030,6 +1066,46 @@ export type MapInfrastructureTreeRetrieveResponses = {
 
 export type MapInfrastructureTreeRetrieveResponse = MapInfrastructureTreeRetrieveResponses[keyof MapInfrastructureTreeRetrieveResponses];
 
+export type MapNetworkLayerStylesListData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Number of results to return per page.
+         */
+        limit?: number;
+        /**
+         * The initial index from which to return the results.
+         */
+        offset?: number;
+    };
+    url: '/map/network-layer-styles';
+};
+
+export type MapNetworkLayerStylesListResponses = {
+    200: PaginatedNetworkLayerStyleList;
+};
+
+export type MapNetworkLayerStylesListResponse = MapNetworkLayerStylesListResponses[keyof MapNetworkLayerStylesListResponses];
+
+export type MapNetworkLayerStylesRetrieveData = {
+    body?: never;
+    path: {
+        /**
+         * A unique value identifying this network layer style.
+         */
+        layer_id: string;
+    };
+    query?: never;
+    url: '/map/network-layer-styles/{layer_id}';
+};
+
+export type MapNetworkLayerStylesRetrieveResponses = {
+    200: NetworkLayerStyle;
+};
+
+export type MapNetworkLayerStylesRetrieveResponse = MapNetworkLayerStylesRetrieveResponses[keyof MapNetworkLayerStylesRetrieveResponses];
+
 export type PixelRetrieveData = {
     body?: never;
     path: {
@@ -1084,11 +1160,11 @@ export type TilesRasterPngRetrieveErrors = {
      */
     400: unknown;
     /**
-     * Raster source access denied.
+     * Access denied.
      */
     403: unknown;
     /**
-     * Raster source not found.
+     * Not found.
      */
     404: unknown;
     /**
@@ -1165,11 +1241,11 @@ export type RasterTileSourceDomainsData = {
 
 export type RasterTileSourceDomainsErrors = {
     /**
-     * Raster source access denied.
+     * Access denied.
      */
     403: unknown;
     /**
-     * Raster source not found.
+     * Not found.
      */
     404: unknown;
 };
@@ -1268,6 +1344,77 @@ export type TilesVectorRetrieve2Errors = {
 };
 
 export type TilesVectorRetrieve2Responses = {
+    /**
+     * Proxied vector tile response.
+     */
+    200: unknown;
+};
+
+export type TilesVectorDataJsonRetrieveData = {
+    body?: never;
+    path: {
+        dataset_id: string;
+    };
+    query?: never;
+    url: '/tiles/vector/data/{dataset_id}.json';
+};
+
+export type TilesVectorDataJsonRetrieveErrors = {
+    /**
+     * Authentication required.
+     */
+    401: unknown;
+    /**
+     * Permission denied.
+     */
+    403: unknown;
+    /**
+     * Invalid upstream redirect target.
+     */
+    502: unknown;
+    /**
+     * Vector tile upstream service unavailable.
+     */
+    503: unknown;
+};
+
+export type TilesVectorDataJsonRetrieveResponses = {
+    /**
+     * Proxied vector tile response.
+     */
+    200: unknown;
+};
+
+export type TilesVectorDataRetrieveData = {
+    body?: never;
+    path: {
+        dataset_id: string;
+        tile_path: string;
+    };
+    query?: never;
+    url: '/tiles/vector/data/{dataset_id}/{tile_path}';
+};
+
+export type TilesVectorDataRetrieveErrors = {
+    /**
+     * Authentication required.
+     */
+    401: unknown;
+    /**
+     * Permission denied.
+     */
+    403: unknown;
+    /**
+     * Invalid upstream redirect target.
+     */
+    502: unknown;
+    /**
+     * Vector tile upstream service unavailable.
+     */
+    503: unknown;
+};
+
+export type TilesVectorDataRetrieveResponses = {
     /**
      * Proxied vector tile response.
      */
