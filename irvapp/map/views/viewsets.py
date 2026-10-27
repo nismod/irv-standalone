@@ -56,6 +56,7 @@ class AdaptationCostBenefitViewset(viewsets.ReadOnlyModelViewSet):
     queryset = AdaptationCostBenefit.objects.all()
     serializer_class = AdaptationCostBenefitSerializer
     permission_classes = [IsAuthenticated]
+    lookup_field = "id"
 
     def get_queryset(self):
         return with_model_parameters(super().get_queryset())
@@ -65,6 +66,7 @@ class DamagesExpectedViewset(viewsets.ReadOnlyModelViewSet):
     queryset = DamagesExpected.objects.all()
     serializer_class = DamagesExpectedSerializer
     permission_classes = [IsAuthenticated]
+    lookup_field = "id"
 
     def get_queryset(self):
         return with_model_parameters(super().get_queryset())
@@ -74,6 +76,7 @@ class DamagesRpViewset(viewsets.ReadOnlyModelViewSet):
     queryset = DamagesRp.objects.all()
     serializer_class = DamagesRpSerializer
     permission_classes = [IsAuthenticated]
+    lookup_field = "id"
 
     def get_queryset(self):
         return with_model_parameters(super().get_queryset())

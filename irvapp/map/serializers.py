@@ -26,6 +26,7 @@ def with_model_parameters(queryset):
 
 
 class AdaptationCostBenefitSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     parameters = serializers.SerializerMethodField()
 
     @extend_schema_field(serializers.DictField(child=serializers.JSONField()))
@@ -34,10 +35,11 @@ class AdaptationCostBenefitSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AdaptationCostBenefit
-        exclude = ["parameter_set"]
+        exclude = ["parameter_set", "pk"]
 
 
 class DamagesExpectedSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     parameters = serializers.SerializerMethodField()
 
     @extend_schema_field(serializers.DictField(child=serializers.JSONField()))
@@ -46,10 +48,11 @@ class DamagesExpectedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DamagesExpected
-        exclude = ["parameter_set"]
+        exclude = ["parameter_set", "pk"]
 
 
 class DamagesRpSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     parameters = serializers.SerializerMethodField()
 
     @extend_schema_field(serializers.DictField(child=serializers.JSONField()))
@@ -58,10 +61,11 @@ class DamagesRpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DamagesRp
-        exclude = ["parameter_set"]
+        exclude = ["parameter_set", "pk"]
 
 
 class DamagesNpvSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
     parameters = serializers.SerializerMethodField()
 
     @extend_schema_field(serializers.DictField(child=serializers.JSONField()))
@@ -70,7 +74,7 @@ class DamagesNpvSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DamagesNpv
-        exclude = ["parameter_set"]
+        exclude = ["parameter_set", "pk"]
 
 
 class DatasetSerializer(serializers.ModelSerializer):
