@@ -51,11 +51,11 @@ export function getAssetDataAccessor(layer: string, fieldSpec: FieldSpec) {
   const { fieldGroup, fieldDimensions, field } = fieldSpec;
 
   if (fieldGroup === 'damages_expected') {
-    const { hazard, rcp, epoch } = fieldDimensions as {
+    const { hazard, parameters } = fieldDimensions as {
       hazard: string;
-      rcp: string;
-      epoch: number;
+      parameters: { rcp: string; epoch: number };
     };
+    const { rcp, epoch } = parameters;
 
     const isDirect = field.startsWith('ead_');
 

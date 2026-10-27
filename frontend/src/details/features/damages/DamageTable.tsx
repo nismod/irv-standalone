@@ -1,15 +1,16 @@
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import { numFormat, numRangeFormat } from 'lib/helpers';
+import { numFormat, numRangeFormat, unique } from 'lib/helpers';
 const padding = { px: 0.25, py: 0.25 };
-export const DamageTable = ({ damages }) => (
+export const DamageTable = ({ damages }) => {
+  const parameterNames: string[] = unique<string>(
+    damages.flatMap((damage) => Object.keys(damage.parameters)),
+  );
+  return (
   <TableContainer sx={{ maxHeight: 260 }} tabIndex={0}>
     <Table size="small" padding="none" stickyHeader>
       <TableHead>
         <TableRow>
-          <TableCell sx={padding}>
-            <abbr title="Representative Concentration Pathway (Climate Scenario)">RCP</abbr>
-          </TableCell>
-          <TableCell sx={padding}>Epoch</TableCell>
+          {parameterNames.map((name) => <TableCell sx={padding} key={name}>{name}</TableCell>)}
           <TableCell sx={padding} align="right">
             <abbr title="Expected Annual Damages">EAD (J$)</abbr>
           </TableCell>
@@ -20,10 +21,11 @@ export const DamageTable = ({ damages }) => (
       </TableHead>
       <TableBody>
         {damages.map(
-          ({ key, rcp, epoch, ead_mean, ead_amin, ead_amax, eael_mean, eael_amin, eael_amax }) => (
+          ({ key, parameters, ead_mean, ead_amin, ead_amax, eael_mean, eael_amin, eael_amax }) => (
             <TableRow key={key}>
-              <TableCell sx={{ pl: 0, pr: padding.px, py: padding.py }}>{rcp}</TableCell>
-              <TableCell sx={padding}>{epoch}</TableCell>
+              {parameterNames.map((name) => (
+                <TableCell sx={padding} key={name}>{String(parameters[name] ?? '')}</TableCell>
+              ))}
               <TableCell sx={padding} align="right">
                 {numFormat(ead_mean)}
                 <br />({numRangeFormat(ead_amin, ead_amax)})
@@ -39,4 +41,5 @@ export const DamageTable = ({ damages }) => (
       </TableBody>
     </Table>
   </TableContainer>
-);
+  );
+};

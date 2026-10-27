@@ -1,3 +1,4 @@
+import json
 from typing import cast
 
 from django.core.exceptions import FieldError
@@ -28,6 +29,15 @@ from map.models import (
 )
 from .pagination import FastAPIPagination
 from .mixins import FieldGroupQueryParsingMixin
+
+
+def parameter_filter(model_type, parameters):
+    return {
+        "parameter_set__model_type": model_type,
+        "parameter_set__canonical_key": json.dumps(
+            parameters, sort_keys=True, separators=(",", ":")
+        ),
+    }
 
 
 class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
@@ -198,8 +208,9 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
             if field_group == "damages_expected":
                 query = DamagesExpected.objects.filter(
                     **base_filters,
-                    rcp=dimensions["rcp"],
-                    epoch=dimensions["epoch"],
+                    **parameter_filter(
+                        "damages_expected", dimensions["parameters"]
+                    ),
                     protection_standard=dimensions["protection_standard"],
                 ).annotate(
                     bbox_wkt=AsWKT(Envelope("feature__geom")),
@@ -218,7 +229,9 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
                 query = AdaptationCostBenefit.objects.filter(
                     **base_filters,
                     hazard=dimensions["hazard"],
-                    rcp=dimensions["rcp"],
+                    **parameter_filter(
+                        "adaptation", dimensions["parameters"]
+                    ),
                     adaptation_name=dimensions["adaptation_name"],
                     adaptation_protection_level=dimensions[
                         "adaptation_protection_level"
@@ -289,59 +302,63 @@ class ProtectedFeaturesView(APIView):
     @extend_schema(
         parameters=[
             OpenApiParameter(
-                "rcp",
+                "parameters",
                 OpenApiTypes.STR,
                 OpenApiParameter.QUERY,
                 required=True,
-                description=(
-                    "RCP (Representative Concentration Pathway) value"
-                ),
+                description="JSON object containing model parameters",
             ),
         ],
         responses=ProtectedFeatureSerializer(many=True),
     )
     def get(self, request, protector_id):
-        rcp = request.query_params.get("rcp")
-        if not rcp:
+        raw_parameters = request.query_params.get("parameters")
+        if raw_parameters is None:
             return Response(
-                {"rcp": ["This query parameter is required."]},
+                {"parameters": ["This query parameter is required."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        try:
+            parameters = json.loads(raw_parameters)
+        except json.JSONDecodeError:
+            return Response(
+                {"parameters": ["Must be valid JSON."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        serializer = serializers.DictField(child=serializers.JSONField())
+        try:
+            parameter_validation = serializer.run_validation(parameters)
+        except serializers.ValidationError as exc:
+            return Response(
+                {"parameters": exc.detail},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        query = (
-            AdaptationCostBenefit.objects.filter(
-                protector_feature_id=protector_id,
-                rcp=rcp,
-            )
-            .values(
-                "feature_id",
-                "feature__string_id",
-                "feature__layer__layer_name",
-                "adaptation_name",
-                "adaptation_protection_level",
-                "adaptation_cost",
-                "avoided_ead_mean",
-                "avoided_eael_mean",
-                "hazard",
-                "rcp",
-            )
-            .order_by("feature_id", "adaptation_name", "hazard", "rcp")
-        )
+        query = AdaptationCostBenefit.objects.filter(
+            protector_feature_id=protector_id,
+            hazard__isnull=False,
+            **{
+                "parameter_set__model_type": "adaptation",
+                "parameter_set__canonical_key": json.dumps(
+                    parameter_validation, sort_keys=True, separators=(",", ":")
+                ),
+            },
+        ).select_related("feature", "feature__layer", "parameter_set").prefetch_related(
+            "parameter_set__parameters"
+        ).order_by("feature_id", "adaptation_name", "hazard")
 
         rows = [
             {
-                "id": row["feature_id"],
-                "string_id": row["feature__string_id"],
-                "layer": row["feature__layer__layer_name"],
-                "adaptation_name": row["adaptation_name"],
-                "adaptation_protection_level": row[
-                    "adaptation_protection_level"
-                ],
-                "adaptation_cost": row["adaptation_cost"],
-                "avoided_ead_mean": row["avoided_ead_mean"],
-                "avoided_eael_mean": row["avoided_eael_mean"],
-                "hazard": row["hazard"],
-                "rcp": row["rcp"],
+                "id": row.feature_id,
+                "string_id": row.feature.string_id,
+                "layer": row.feature.layer.layer_name,
+                "adaptation_name": row.adaptation_name,
+                "adaptation_protection_level": row.adaptation_protection_level,
+                "adaptation_cost": row.adaptation_cost,
+                "avoided_ead_mean": row.avoided_ead_mean,
+                "avoided_eael_mean": row.avoided_eael_mean,
+                "hazard": row.hazard,
+                "parameters": row.parameter_set.values,
             }
             for row in query
         ]
@@ -485,8 +502,9 @@ class AttributeLookupView(FieldGroupQueryParsingMixin, APIView):
         if field_group == "damages_expected":
             query = DamagesExpected.objects.filter(
                 feature_id__in=base_feature_ids,
-                rcp=dimensions["rcp"],
-                epoch=dimensions["epoch"],
+                **parameter_filter(
+                    "damages_expected", dimensions["parameters"]
+                ),
                 protection_standard=dimensions["protection_standard"],
             )
 
@@ -518,7 +536,9 @@ class AttributeLookupView(FieldGroupQueryParsingMixin, APIView):
             query = AdaptationCostBenefit.objects.filter(
                 feature_id__in=base_feature_ids,
                 hazard=dimensions["hazard"],
-                rcp=dimensions["rcp"],
+                **parameter_filter(
+                    "adaptation", dimensions["parameters"]
+                ),
                 adaptation_name=dimensions["adaptation_name"],
                 adaptation_protection_level=dimensions[
                     "adaptation_protection_level"

@@ -8,7 +8,7 @@ import { ReactElement } from 'react';
 
 export interface FieldSpec {
   fieldGroup: string;
-  fieldDimensions?: Record<string, string | number>;
+  fieldDimensions?: Record<string, string | number | Record<string, unknown>>;
   field: string;
   fieldParams?: Record<string, string | number>;
 }

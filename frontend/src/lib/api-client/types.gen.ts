@@ -5,9 +5,11 @@ export type ClientOptions = {
 };
 
 export type AdaptationCostBenefit = {
-    readonly pk: string;
+    readonly id: number;
+    readonly parameters: {
+        [key: string]: unknown;
+    };
     hazard: string;
-    rcp: string;
     adaptation_name: string;
     adaptation_protection_level: number;
     protector_feature_id?: number | null;
@@ -63,10 +65,11 @@ export type CurrentUser = {
 };
 
 export type DamagesExpected = {
-    readonly pk: string;
+    readonly id: number;
+    readonly parameters: {
+        [key: string]: unknown;
+    };
     hazard: string;
-    rcp: string;
-    epoch: number;
     protection_standard: number;
     ead_amin?: number | null;
     ead_mean?: number | null;
@@ -78,9 +81,11 @@ export type DamagesExpected = {
 };
 
 export type DamagesNpv = {
-    readonly pk: string;
+    readonly id: number;
+    readonly parameters: {
+        [key: string]: unknown;
+    };
     hazard: string;
-    rcp: string;
     ead_amin?: number | null;
     ead_mean?: number | null;
     ead_amax?: number | null;
@@ -91,10 +96,11 @@ export type DamagesNpv = {
 };
 
 export type DamagesRp = {
-    readonly pk: string;
+    readonly id: number;
+    readonly parameters: {
+        [key: string]: unknown;
+    };
     hazard: string;
-    rcp: string;
-    epoch: number;
     rp: number;
     exposure?: number | null;
     damage_amin?: number | null;
@@ -297,7 +303,9 @@ export type ProtectedFeature = {
     avoided_ead_mean: number | null;
     avoided_eael_mean: number | null;
     hazard: string;
-    rcp: string;
+    parameters: {
+        [key: string]: unknown;
+    };
 };
 
 export type RasterTileSource = {
@@ -348,7 +356,6 @@ export type SortedFeature = {
 
 export type AdaptationCostBenefitWritable = {
     hazard: string;
-    rcp: string;
     adaptation_name: string;
     adaptation_protection_level: number;
     protector_feature_id?: number | null;
@@ -373,8 +380,6 @@ export type CurrentUserWritable = {
 
 export type DamagesExpectedWritable = {
     hazard: string;
-    rcp: string;
-    epoch: number;
     protection_standard: number;
     ead_amin?: number | null;
     ead_mean?: number | null;
@@ -387,7 +392,6 @@ export type DamagesExpectedWritable = {
 
 export type DamagesNpvWritable = {
     hazard: string;
-    rcp: string;
     ead_amin?: number | null;
     ead_mean?: number | null;
     ead_amax?: number | null;
@@ -399,8 +403,6 @@ export type DamagesNpvWritable = {
 
 export type DamagesRpWritable = {
     hazard: string;
-    rcp: string;
-    epoch: number;
     rp: number;
     exposure?: number | null;
     damage_amin?: number | null;
@@ -694,12 +696,12 @@ export type MapAdaptationCostBenefitsRetrieveData = {
     body?: never;
     path: {
         /**
-         * A unique value identifying this adaptation cost benefit.
+         * A unique integer value identifying this adaptation cost benefit.
          */
-        pk: string;
+        id: number;
     };
     query?: never;
-    url: '/map/adaptation-cost-benefits/{pk}';
+    url: '/map/adaptation-cost-benefits/{id}';
 };
 
 export type MapAdaptationCostBenefitsRetrieveResponses = {
@@ -808,12 +810,12 @@ export type MapDamagesExpectedRetrieveData = {
     body?: never;
     path: {
         /**
-         * A unique value identifying this damages expected.
+         * A unique integer value identifying this damages expected.
          */
-        pk: string;
+        id: number;
     };
     query?: never;
-    url: '/map/damages-expected/{pk}';
+    url: '/map/damages-expected/{id}';
 };
 
 export type MapDamagesExpectedRetrieveResponses = {
@@ -848,12 +850,12 @@ export type MapDamagesRpRetrieveData = {
     body?: never;
     path: {
         /**
-         * A unique value identifying this damages rp.
+         * A unique integer value identifying this damages rp.
          */
-        pk: string;
+        id: number;
     };
     query?: never;
-    url: '/map/damages-rp/{pk}';
+    url: '/map/damages-rp/{id}';
 };
 
 export type MapDamagesRpRetrieveResponses = {
@@ -964,9 +966,9 @@ export type MapFeaturesProtectedByListData = {
     };
     query: {
         /**
-         * RCP (Representative Concentration Pathway) value
+         * JSON object containing model parameters
          */
-        rcp: string;
+        parameters: string;
     };
     url: '/map/features/{protector_id}/protected-by';
 };

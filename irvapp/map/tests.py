@@ -15,8 +15,22 @@ from map.models import (
     Dataset,
     Feature,
     FeatureLayer,
+    ModelParameter,
+    ModelParameterSet,
 )
 from map.serializers import DatasetSerializer
+
+
+def make_parameter_set(model_type, **values):
+    canonical_key = json.dumps(values, sort_keys=True, separators=(",", ":"))
+    parameter_set, _ = ModelParameterSet.objects.get_or_create(
+        model_type=model_type, canonical_key=canonical_key
+    )
+    for name, value in values.items():
+        ModelParameter.objects.get_or_create(
+            parameter_set=parameter_set, name=name, defaults={"value": value}
+        )
+    return parameter_set
 
 
 class AttributeLookupViewTests(TestCase):
@@ -47,26 +61,23 @@ class AttributeLookupViewTests(TestCase):
 
     def test_damages_expected_lookup_with_hazard_all_aggregates(self):
         DamagesExpected.objects.create(
+            parameter_set=make_parameter_set("damages_expected", rcp='8.5', epoch=2050),
             feature=self.feature_1,
             hazard="flood",
-            rcp="8.5",
-            epoch=2050,
             protection_standard=100,
             ead_mean=10.0,
         )
         DamagesExpected.objects.create(
+            parameter_set=make_parameter_set("damages_expected", rcp='8.5', epoch=2050),
             feature=self.feature_1,
             hazard="storm",
-            rcp="8.5",
-            epoch=2050,
             protection_standard=100,
             ead_mean=5.0,
         )
         DamagesExpected.objects.create(
+            parameter_set=make_parameter_set("damages_expected", rcp='8.5', epoch=2050),
             feature=self.feature_2,
             hazard="flood",
-            rcp="8.5",
-            epoch=2050,
             protection_standard=100,
             ead_mean=7.0,
         )
@@ -82,8 +93,7 @@ class AttributeLookupViewTests(TestCase):
                 + json.dumps(
                     {
                         "hazard": "all",
-                        "rcp": "8.5",
-                        "epoch": 2050,
+                        "parameters": {"rcp": "8.5", "epoch": 2050},
                         "protection_standard": 100,
                     }
                 )
@@ -97,10 +107,9 @@ class AttributeLookupViewTests(TestCase):
 
     def test_damages_expected_lookup_accepts_list_body(self):
         DamagesExpected.objects.create(
+            parameter_set=make_parameter_set("damages_expected", rcp='8.5', epoch=2050),
             feature=self.feature_1,
             hazard="flood",
-            rcp="8.5",
-            epoch=2050,
             protection_standard=100,
             ead_mean=10.0,
         )
@@ -116,8 +125,7 @@ class AttributeLookupViewTests(TestCase):
                 + json.dumps(
                     {
                         "hazard": "flood",
-                        "rcp": "8.5",
-                        "epoch": 2050,
+                        "parameters": {"rcp": "8.5", "epoch": 2050},
                         "protection_standard": 100,
                     }
                 )
@@ -127,11 +135,41 @@ class AttributeLookupViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()[str(self.feature_1.id)], 10.0)
 
-    def test_adaptation_lookup_cost_benefit_ratio(self):
-        AdaptationCostBenefit.objects.create(
+    def test_damages_expected_lookup_accepts_gwl_and_slr_parameters(self):
+        DamagesExpected.objects.create(
             feature=self.feature_1,
             hazard="flood",
-            rcp="8.5",
+            parameter_set=make_parameter_set(
+                "damages_expected", gwl=2.0, slr=0.5
+            ),
+            protection_standard=100,
+            ead_mean=12.0,
+        )
+
+        response = self.client.post(
+            "/map/attributes/damages_expected",
+            data={"ids": [self.feature_1.id]},
+            format="json",
+            QUERY_STRING=(
+                "layer=roads&field=ead_mean&dimensions="
+                + json.dumps(
+                    {
+                        "hazard": "flood",
+                        "parameters": {"gwl": 2.0, "slr": 0.5},
+                        "protection_standard": 100,
+                    }
+                )
+            ),
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()[str(self.feature_1.id)], 12.0)
+
+    def test_adaptation_lookup_cost_benefit_ratio(self):
+        AdaptationCostBenefit.objects.create(
+            parameter_set=make_parameter_set("adaptation", rcp='8.5'),
+            feature=self.feature_1,
+            hazard="flood",
             adaptation_name="wall",
             adaptation_protection_level=1.0,
             adaptation_cost=20.0,
@@ -150,7 +188,7 @@ class AttributeLookupViewTests(TestCase):
                 + json.dumps(
                     {
                         "hazard": "flood",
-                        "rcp": "8.5",
+                        "parameters": {"rcp": "8.5"},
                         "adaptation_name": "wall",
                         "adaptation_protection_level": 1.0,
                     }
@@ -175,8 +213,7 @@ class AttributeLookupViewTests(TestCase):
                 + json.dumps(
                     {
                         "hazard": "flood",
-                        "rcp": "8.5",
-                        "epoch": 2050,
+                        "parameters": {"rcp": "8.5", "epoch": 2050},
                         "protection_standard": 100,
                     }
                 )
@@ -198,7 +235,7 @@ class AttributeLookupViewTests(TestCase):
                 + json.dumps(
                     {
                         "hazard": "flood",
-                        "rcp": "8.5",
+                        "parameters": {"rcp": "8.5"},
                         "adaptation_name": "wall",
                         "adaptation_protection_level": 1.0,
                     }
@@ -222,8 +259,7 @@ class AttributeLookupViewTests(TestCase):
                 + json.dumps(
                     {
                         "hazard": "flood",
-                        "rcp": "8.5",
-                        "epoch": 2050,
+                        "parameters": {"rcp": "8.5", "epoch": 2050},
                         "protection_standard": 100,
                     }
                 )
@@ -362,26 +398,23 @@ class FeatureRouteTests(TestCase):
 
     def test_sorted_features_returns_fastapi_style_page(self):
         DamagesExpected.objects.create(
+            parameter_set=make_parameter_set("damages_expected", rcp='8.5', epoch=2050),
             feature=self.feature_1,
             hazard="flood",
-            rcp="8.5",
-            epoch=2050,
             protection_standard=100,
             ead_mean=10.0,
         )
         DamagesExpected.objects.create(
+            parameter_set=make_parameter_set("damages_expected", rcp='8.5', epoch=2050),
             feature=self.feature_1,
             hazard="storm",
-            rcp="8.5",
-            epoch=2050,
             protection_standard=100,
             ead_mean=5.0,
         )
         DamagesExpected.objects.create(
+            parameter_set=make_parameter_set("damages_expected", rcp='8.5', epoch=2050),
             feature=self.feature_2,
             hazard="flood",
-            rcp="8.5",
-            epoch=2050,
             protection_standard=100,
             ead_mean=7.0,
         )
@@ -396,8 +429,7 @@ class FeatureRouteTests(TestCase):
                 "dimensions": json.dumps(
                     {
                         "hazard": "all",
-                        "rcp": "8.5",
-                        "epoch": 2050,
+                        "parameters": {"rcp": "8.5", "epoch": 2050},
                         "protection_standard": 100,
                     }
                 ),
@@ -414,9 +446,9 @@ class FeatureRouteTests(TestCase):
 
     def test_protected_features_returns_adaptation_options(self):
         AdaptationCostBenefit.objects.create(
+            parameter_set=make_parameter_set("adaptation", rcp='8.5'),
             feature=self.feature_1,
             hazard="flood",
-            rcp="8.5",
             adaptation_name="wall",
             adaptation_protection_level=1.0,
             protector_feature_id=123,
@@ -427,7 +459,7 @@ class FeatureRouteTests(TestCase):
 
         response = self.client.get(
             "/map/features/123/protected-by",
-            {"rcp": "8.5"},
+            {"parameters": json.dumps({"rcp": "8.5"})},
         )
 
         self.assertEqual(response.status_code, 200)
@@ -435,13 +467,13 @@ class FeatureRouteTests(TestCase):
         self.assertEqual(response.json()[0]["id"], self.feature_1.id)
         self.assertEqual(response.json()[0]["string_id"], "road-1")
         self.assertEqual(response.json()[0]["adaptation_name"], "wall")
-        self.assertEqual(response.json()[0]["rcp"], "8.5")
+        self.assertEqual(response.json()[0]["parameters"]["rcp"], "8.5")
 
     def test_feature_detail_route_returns_related_records(self):
         AdaptationCostBenefit.objects.create(
+            parameter_set=make_parameter_set("adaptation", rcp='8.5'),
             feature=self.feature_1,
             hazard="flood",
-            rcp="8.5",
             adaptation_name="wall",
             adaptation_protection_level=1.0,
             adaptation_cost=20.0,
@@ -449,18 +481,16 @@ class FeatureRouteTests(TestCase):
             avoided_eael_mean=15.0,
         )
         DamagesExpected.objects.create(
+            parameter_set=make_parameter_set("damages_expected", rcp='8.5', epoch=2050),
             feature=self.feature_1,
             hazard="flood",
-            rcp="8.5",
-            epoch=2050,
             protection_standard=100,
             ead_mean=10.0,
         )
         DamagesRp.objects.create(
+            parameter_set=make_parameter_set("damages_rp", rcp='8.5', epoch=2050),
             feature=self.feature_1,
             hazard="flood",
-            rcp="8.5",
-            epoch=2050,
             rp=100,
             damage_mean=2.5,
         )
@@ -474,7 +504,7 @@ class FeatureRouteTests(TestCase):
         self.assertEqual(len(payload["adaptation"]), 1)
         self.assertEqual(payload["adaptation"][0]["adaptation_name"], "wall")
         self.assertEqual(len(payload["damages_expected"]), 1)
-        self.assertEqual(payload["damages_expected"][0]["epoch"], 2050)
+        self.assertEqual(payload["damages_expected"][0]["parameters"]["epoch"], 2050)
         self.assertEqual(len(payload["damages_return_period"]), 1)
         self.assertEqual(payload["damages_return_period"][0]["rp"], 100)
         self.assertEqual(payload["damages_npv"], [])
