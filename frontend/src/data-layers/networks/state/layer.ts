@@ -119,7 +119,7 @@ export const adaptationFieldSpecState = atom<FieldSpec>((get) => {
     fieldGroup: 'adaptation',
     fieldDimensions: {
       hazard,
-      rcp,
+      parameters: { rcp },
       adaptation_name,
       adaptation_protection_level,
     },
