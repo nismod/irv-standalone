@@ -1,20 +1,23 @@
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 
-import { numFormat, numRangeFormat } from 'lib/helpers';
+import { numFormat, numRangeFormat, unique } from 'lib/helpers';
 
 const padding = { px: 0.25, py: 0.25 };
 
 export const AdaptationTable = ({ options }) => {
   const numDays = 15;
+  const parameterNames: string[] = unique<string>(
+    options.flatMap((option) => Object.keys(option.parameters)),
+  );
   return (
     <TableContainer sx={{ maxHeight: 260 }} tabIndex={0}>
       <Table size="small" padding="none" stickyHeader>
         <TableHead>
           <TableRow>
             <TableCell sx={padding}>Hazard</TableCell>
-            <TableCell sx={padding}>
-              <abbr title="Representative Concentration Pathway (Climate Scenario)">RCP</abbr>
-            </TableCell>
+            {parameterNames.map((name) => (
+              <TableCell sx={padding} key={name}>{name}</TableCell>
+            ))}
             <TableCell sx={padding}>Protection Standard</TableCell>
             <TableCell sx={padding} align="right">
               <abbr title="Benefit Cost Ratio">BCR</abbr>
@@ -29,9 +32,11 @@ export const AdaptationTable = ({ options }) => {
         </TableHead>
         <TableBody>
           {options.map((d) => (
-            <TableRow key={`${d.hazard}-${d.rcp}-${d.adaptation_protection_level}`}>
+            <TableRow key={`${d.hazard}-${JSON.stringify(d.parameters)}-${d.adaptation_protection_level}`}>
               <TableCell sx={{ pl: 0, pr: padding.px, py: padding.py }}>{d.hazard}</TableCell>
-              <TableCell sx={padding}>{d.rcp}</TableCell>
+              {parameterNames.map((name) => (
+                <TableCell sx={padding} key={name}>{String(d.parameters[name] ?? '')}</TableCell>
+              ))}
               <TableCell sx={padding}>{d.adaptation_protection_level}</TableCell>
               <TableCell sx={padding} align="right">
                 {numFormat(

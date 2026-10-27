@@ -9,6 +9,7 @@ export const FieldSpecControl: FC<{
   onFieldSpec: (fieldSpec: FieldSpec) => void;
 }> = ({ fieldSpec, onFieldSpec }) => {
   const { fieldGroup, fieldDimensions } = fieldSpec;
+  const modelParameters = (fieldDimensions.parameters ?? {}) as Record<string, string | number>;
 
   return (
     <>
@@ -34,7 +35,7 @@ export const FieldSpecControl: FC<{
         <Box>
           <ParamDropdown
             title="Hazard"
-            value={fieldDimensions.hazard}
+            value={fieldDimensions.hazard as string | number}
             onChange={(value) =>
               onFieldSpec(
                 produce(fieldSpec, (draft) => {
@@ -52,11 +53,14 @@ export const FieldSpecControl: FC<{
           />
           <ParamDropdown
             title="RCP"
-            value={fieldDimensions.rcp}
+            value={modelParameters.rcp}
             onChange={(value) =>
               onFieldSpec(
                 produce(fieldSpec, (draft) => {
-                  draft.fieldDimensions.rcp = value;
+                  draft.fieldDimensions.parameters = {
+                    ...modelParameters,
+                    rcp: value,
+                  };
                 }),
               )
             }
@@ -64,11 +68,14 @@ export const FieldSpecControl: FC<{
           />
           <ParamDropdown
             title="Epoch"
-            value={fieldDimensions.epoch}
+            value={modelParameters.epoch}
             onChange={(value) =>
               onFieldSpec(
                 produce(fieldSpec, (draft) => {
-                  draft.fieldDimensions.epoch = value;
+                  draft.fieldDimensions.parameters = {
+                    ...modelParameters,
+                    epoch: value,
+                  };
                 }),
               )
             }

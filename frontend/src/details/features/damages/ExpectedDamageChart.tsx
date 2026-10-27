@@ -4,10 +4,8 @@ import { VisualizationSpec } from 'vega-embed';
 import { Box } from '@mui/material';
 
 import { unique } from 'lib/helpers';
-import { chartStyles } from './chartStyles';
-
 const makeSpec = (
-  yearValues: number[],
+  scenarios: string[],
   field_min: string,
   field: string,
   field_max: string,
@@ -29,16 +27,15 @@ const makeSpec = (
     tooltip: true,
   },
   encoding: {
-    ...chartStyles,
     x: {
-      field: 'epoch',
+      field: 'scenario',
       type: 'ordinal',
-      title: 'Year',
+      title: 'Model parameters',
       axis: {
         gridDash: [2, 2],
         domainColor: '#ccc',
         tickColor: '#ccc',
-        values: yearValues,
+        values: scenarios,
       },
     },
     y: {
@@ -54,8 +51,7 @@ const makeSpec = (
     // the tooltip encoding needs to replicate the field definitions in order to customise their ordering
     tooltip: [
       { field: field, type: 'quantitative', format: ',.3r', title: field_title },
-      { field: 'rcp', title: 'RCP' },
-      { field: 'epoch', type: 'ordinal', title: 'Year' },
+      { field: 'scenario', title: 'Model parameters' },
     ],
   },
 });
@@ -74,7 +70,7 @@ export const ExpectedDamageChart = ({
   const spec = useMemo(
     () =>
       makeSpec(
-        unique<number>(data.table.map((d) => d.epoch)).sort(),
+        unique<string>(data.table.map((d) => d.scenario)),
         field_min,
         field,
         field_max,

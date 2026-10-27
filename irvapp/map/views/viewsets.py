@@ -1,4 +1,5 @@
 from rest_framework import viewsets
+from django.db.models import Prefetch
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
@@ -15,12 +16,14 @@ from map.serializers import (
     DamagesRpSerializer,
     DatasetSerializer,
     NetworkLayerStyleSerializer,
+    with_model_parameters,
 )
 from map.models import (
     Feature,
     AdaptationCostBenefit,
     DamagesExpected,
     DamagesRp,
+    DamagesNpv,
     Dataset,
     NetworkLayerStyle,
 )
@@ -36,10 +39,10 @@ class FeatureViewset(viewsets.ReadOnlyModelViewSet):
         queryset = super().get_queryset()
         if self.action == "retrieve":
             return queryset.prefetch_related(
-                "adaptationcostbenefit_set",
-                "damagesexpected_set",
-                "damagesrp_set",
-                "damagesnpv_set",
+                Prefetch("adaptationcostbenefit_set", queryset=with_model_parameters(AdaptationCostBenefit.objects.all())),
+                Prefetch("damagesexpected_set", queryset=with_model_parameters(DamagesExpected.objects.all())),
+                Prefetch("damagesrp_set", queryset=with_model_parameters(DamagesRp.objects.all())),
+                Prefetch("damagesnpv_set", queryset=with_model_parameters(DamagesNpv.objects.all())),
             )
         return queryset
 
@@ -53,18 +56,30 @@ class AdaptationCostBenefitViewset(viewsets.ReadOnlyModelViewSet):
     queryset = AdaptationCostBenefit.objects.all()
     serializer_class = AdaptationCostBenefitSerializer
     permission_classes = [IsAuthenticated]
+    lookup_field = "id"
+
+    def get_queryset(self):
+        return with_model_parameters(super().get_queryset())
 
 
 class DamagesExpectedViewset(viewsets.ReadOnlyModelViewSet):
     queryset = DamagesExpected.objects.all()
     serializer_class = DamagesExpectedSerializer
     permission_classes = [IsAuthenticated]
+    lookup_field = "id"
+
+    def get_queryset(self):
+        return with_model_parameters(super().get_queryset())
 
 
 class DamagesRpViewset(viewsets.ReadOnlyModelViewSet):
     queryset = DamagesRp.objects.all()
     serializer_class = DamagesRpSerializer
     permission_classes = [IsAuthenticated]
+    lookup_field = "id"
+
+    def get_queryset(self):
+        return with_model_parameters(super().get_queryset())
 
 
 class DatasetViewset(viewsets.ReadOnlyModelViewSet):
