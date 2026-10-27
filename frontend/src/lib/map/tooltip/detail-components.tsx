@@ -354,7 +354,9 @@ export const BuildingDetails: FC<DetailsComponentProps> = ({ f }) => (
 );
 
 export const CoastalDefenceDetails: FC<DetailsComponentProps> = ({ f }) => {
-  const { data } = useAtomValue(protectedFeatureAdaptationOptionsState('8.5'));
+  const { data } = useAtomValue(
+    protectedFeatureAdaptationOptionsState(JSON.stringify({ rcp: '8.5' })),
+  );
 
   // There may be adaptation results calculated for the coastal protection
   // region as a whole. They have a protected_feature_id == feature_id, so
