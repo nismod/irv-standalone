@@ -11,6 +11,7 @@ type ModelParameters = Record<string, string | number | boolean | null>;
 
 function getExpectedDamageKey(direct: boolean, hazard: string, parameters: ModelParameters) {
   const parameterKey = Object.entries(parameters)
+    .sort(([a], [b]) => a.localeCompare(b))
     .map(([name, value]) => `${name}_${String(value)}`)
     .join('__');
   return `${direct ? 'ead' : 'eael'}__${hazard}__${parameterKey}__conf_None`;
