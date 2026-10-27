@@ -1,8 +1,26 @@
 import json
 
 from django.contrib.gis.db import models
+from django.db.models import BigIntegerField, Func
 
 from .core import Feature
+
+
+class SequenceNextValue(Func):
+    function = "nextval"
+    template = "%(function)s('%(sequence_name)s'::regclass)"
+    allowed_default = True
+
+    def __init__(self, sequence_name):
+        self.sequence_name = sequence_name
+        super().__init__(output_field=BigIntegerField(), sequence_name=sequence_name)
+
+    def deconstruct(self):
+        return (
+            f"{self.__class__.__module__}.{self.__class__.__name__}",
+            [self.sequence_name],
+            {},
+        )
 
 
 class ModelParameterSet(models.Model):
@@ -72,10 +90,23 @@ class ModelParameter(models.Model):
 
 
 class AdaptationCostBenefit(models.Model):
-    id = models.BigAutoField(primary_key=True)
+    pk = models.CompositePrimaryKey(
+        "parameter_set_id",
+        "feature_id",
+        "hazard",
+        "adaptation_name",
+        "adaptation_protection_level",
+    )
+    id = models.BigIntegerField(
+        editable=False,
+        null=True,
+        db_default=SequenceNextValue("adaptation_cost_benefit_id_seq"),
+    )
     feature = models.ForeignKey(Feature, models.CASCADE)
     hazard = models.CharField(max_length=8)
-    parameter_set = models.ForeignKey(ModelParameterSet, models.PROTECT)
+    parameter_set = models.ForeignKey(
+        ModelParameterSet, models.PROTECT, db_index=False
+    )
     adaptation_name = models.CharField()
     adaptation_protection_level = models.FloatField()
     protector_feature_id = models.IntegerField(blank=True, null=True)
@@ -89,25 +120,25 @@ class AdaptationCostBenefit(models.Model):
 
     class Meta:
         db_table = "adaptation_cost_benefit"
-        constraints = [
-            models.UniqueConstraint(
-                fields=[
-                    "feature",
-                    "hazard",
-                    "parameter_set",
-                    "adaptation_name",
-                    "adaptation_protection_level",
-                ],
-                name="unique_adaptation_result",
-            ),
-        ]
 
 
 class DamagesExpected(models.Model):
-    id = models.BigAutoField(primary_key=True)
+    pk = models.CompositePrimaryKey(
+        "parameter_set_id",
+        "feature_id",
+        "hazard",
+        "protection_standard",
+    )
+    id = models.BigIntegerField(
+        editable=False,
+        null=True,
+        db_default=SequenceNextValue("damages_expected_id_seq"),
+    )
     feature = models.ForeignKey(Feature, models.CASCADE)
     hazard = models.CharField(max_length=8)
-    parameter_set = models.ForeignKey(ModelParameterSet, models.PROTECT)
+    parameter_set = models.ForeignKey(
+        ModelParameterSet, models.PROTECT, db_index=False
+    )
     protection_standard = models.IntegerField()
     ead_amin = models.FloatField(blank=True, null=True)
     ead_mean = models.FloatField(blank=True, null=True)
@@ -118,19 +149,24 @@ class DamagesExpected(models.Model):
 
     class Meta:
         db_table = "damages_expected"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["feature", "hazard", "parameter_set", "protection_standard"],
-                name="unique_expected_damage_result",
-            ),
-        ]
 
 
 class DamagesNpv(models.Model):
-    id = models.BigAutoField(primary_key=True)
+    pk = models.CompositePrimaryKey(
+        "parameter_set_id",
+        "feature_id",
+        "hazard",
+    )
+    id = models.BigIntegerField(
+        editable=False,
+        null=True,
+        db_default=SequenceNextValue("damages_npv_id_seq"),
+    )
     feature = models.ForeignKey(Feature, models.CASCADE)
     hazard = models.CharField(max_length=8)
-    parameter_set = models.ForeignKey(ModelParameterSet, models.PROTECT)
+    parameter_set = models.ForeignKey(
+        ModelParameterSet, models.PROTECT, db_index=False
+    )
     ead_amin = models.FloatField(blank=True, null=True)
     ead_mean = models.FloatField(blank=True, null=True)
     ead_amax = models.FloatField(blank=True, null=True)
@@ -140,19 +176,25 @@ class DamagesNpv(models.Model):
 
     class Meta:
         db_table = "damages_npv"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["feature", "hazard", "parameter_set"],
-                name="unique_npv_damage_result",
-            ),
-        ]
 
 
 class DamagesRp(models.Model):
-    id = models.BigAutoField(primary_key=True)
+    pk = models.CompositePrimaryKey(
+        "parameter_set_id",
+        "feature_id",
+        "hazard",
+        "rp",
+    )
+    id = models.BigIntegerField(
+        editable=False,
+        null=True,
+        db_default=SequenceNextValue("damages_rp_id_seq"),
+    )
     feature = models.ForeignKey(Feature, models.CASCADE)
     hazard = models.CharField(max_length=8)
-    parameter_set = models.ForeignKey(ModelParameterSet, models.PROTECT)
+    parameter_set = models.ForeignKey(
+        ModelParameterSet, models.PROTECT, db_index=False
+    )
     rp = models.IntegerField()
     exposure = models.FloatField(blank=True, null=True)
     damage_amin = models.FloatField(blank=True, null=True)
@@ -164,9 +206,3 @@ class DamagesRp(models.Model):
 
     class Meta:
         db_table = "damages_rp"
-        constraints = [
-            models.UniqueConstraint(
-                fields=["feature", "hazard", "parameter_set", "rp"],
-                name="unique_return_period_damage_result",
-            ),
-        ]
