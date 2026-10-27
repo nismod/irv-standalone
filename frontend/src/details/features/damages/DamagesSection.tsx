@@ -13,16 +13,34 @@ import { ReturnPeriodDamageChart } from './ReturnPeriodDamageChart';
 
 type ModelParameters = Record<string, unknown>;
 
+function getScenarioKey(parameters: ModelParameters) {
+  return JSON.stringify(Object.entries(parameters).sort(([a], [b]) => a.localeCompare(b)));
+}
+
 function getScenarioLabel(parameters: ModelParameters) {
-  return Object.entries(parameters)
-    .map(([name, value]) => `${name}=${String(value)}`)
-    .join(', ') || 'Default';
+  return Object.entries(parameters).sort(([a], [b]) => a.localeCompare(b)).length
+    ? JSON.stringify(Object.entries(parameters).sort(([a], [b]) => a.localeCompare(b)))
+    : 'Default';
+}
+
+function csvCell(value: unknown) {
+  const text = value == null
+    ? ''
+    : typeof value === 'object'
+      ? JSON.stringify(value)
+      : String(value);
+  return `"${text.replaceAll('"', '""')}"`;
+}
+
+function csv(rows: unknown[][]) {
+  return rows.map((row) => row.map(csvCell).join(',')).join('\n');
 }
 
 interface ExpectedDamageCell {
   key: string;
   hazard: string;
   parameters: ModelParameters;
+  scenarioKey: string;
   scenario: string;
   ead_mean: number;
   ead_amin: number;
@@ -37,6 +55,7 @@ function getExpectedDamageObject(d: DamagesExpected): ExpectedDamageCell {
     key: `${d.hazard}__${JSON.stringify(parameters)}`,
     hazard: d.hazard,
     parameters,
+    scenarioKey: getScenarioKey(parameters),
     scenario: getScenarioLabel(parameters),
     ead_mean: d.ead_mean,
     ead_amin: d.ead_amin,
@@ -51,6 +70,7 @@ interface RPDamageCell {
   key: string;
   hazard: string;
   parameters: ModelParameters;
+  scenarioKey: string;
   scenario: string;
   rp: number;
   probability: number;
@@ -68,6 +88,7 @@ function getRPDamageObject(d: DamagesRp): RPDamageCell {
     key: `${d.hazard}__${JSON.stringify(parameters)}__rp_${d.rp}`,
     hazard: d.hazard,
     parameters,
+    scenarioKey: getScenarioKey(parameters),
     scenario: getScenarioLabel(parameters),
     rp: d.rp,
     probability: 1 / d.rp,
@@ -104,28 +125,18 @@ function useOrderedRPDamages(damages: RPDamageCell[]) {
 
 function makeDamagesCsv(damages: ExpectedDamageCell[]) {
   const parameterNames = unique(damages.flatMap((damage) => Object.keys(damage.parameters)));
-  return (
-    [...['hazard', ...parameterNames], 'ead_mean', 'ead_amin', 'ead_amax', 'eael_mean', 'eael_amin', 'eael_amax'].join(',') + '\n' +
-    damages
-      .map(
-        (d) =>
-          [d.hazard, ...parameterNames.map((name) => d.parameters[name]), d.ead_mean, d.ead_amin, d.ead_amax, d.eael_mean, d.eael_amin, d.eael_amax].join(','),
-      )
-      .join('\n')
-  );
+  return csv([
+    ['hazard', ...parameterNames, 'ead_mean', 'ead_amin', 'ead_amax', 'eael_mean', 'eael_amin', 'eael_amax'],
+    ...damages.map((d) => [d.hazard, ...parameterNames.map((name) => d.parameters[name]), d.ead_mean, d.ead_amin, d.ead_amax, d.eael_mean, d.eael_amin, d.eael_amax]),
+  ]);
 }
 
 function makeRPDamagesCsv(damages: RPDamageCell[]) {
   const parameterNames = unique(damages.flatMap((damage) => Object.keys(damage.parameters)));
-  return (
-    [...['hazard', ...parameterNames, 'rp'], 'damage_mean', 'damage_amin', 'damage_amax', 'loss_mean', 'loss_amin', 'loss_amax'].join(',') + '\n' +
-    damages
-      .map(
-        (d) =>
-          [d.hazard, ...parameterNames.map((name) => d.parameters[name]), d.rp, d.damage_mean, d.damage_amin, d.damage_amax, d.loss_mean, d.loss_amin, d.loss_amax].join(','),
-      )
-      .join('\n')
-  );
+  return csv([
+    ['hazard', ...parameterNames, 'rp', 'damage_mean', 'damage_amin', 'damage_amax', 'loss_mean', 'loss_amin', 'loss_amax'],
+    ...damages.map((d) => [d.hazard, ...parameterNames.map((name) => d.parameters[name]), d.rp, d.damage_mean, d.damage_amin, d.damage_amax, d.loss_mean, d.loss_amin, d.loss_amax]),
+  ]);
 }
 
 export const DamagesSection = ({ fd }) => {
@@ -134,7 +145,7 @@ export const DamagesSection = ({ fd }) => {
 
   const hazards = useMemo(() => unique(damagesData.map((d) => d.hazard)), [damagesData]);
   const scenarios = useMemo(
-    () => unique(returnPeriodDamagesData.map((d) => d.scenario)),
+    () => [...new Set(returnPeriodDamagesData.map((d) => d.scenarioKey))],
     [returnPeriodDamagesData],
   );
   const [selectedHazard, setSelectedHazard] = useSelect(hazards);
@@ -148,7 +159,7 @@ export const DamagesSection = ({ fd }) => {
     () =>
       selectedHazard
         ? returnPeriodDamagesData.filter(
-            (x) => x.hazard === selectedHazard && x.scenario === selectedScenario,
+            (x) => x.hazard === selectedHazard && x.scenarioKey === selectedScenario,
           )
         : null,
     [selectedHazard, selectedScenario, returnPeriodDamagesData],
@@ -277,9 +288,9 @@ export const DamagesSection = ({ fd }) => {
               value={selectedScenario ?? ''}
               onChange={(e) => setSelectedScenario(e.target.value as string)}
             >
-              {scenarios.map((scenario) => (
-                <MenuItem key={scenario} value={scenario}>
-                  {scenario}
+              {scenarios.map((scenarioKey) => (
+                <MenuItem key={scenarioKey} value={scenarioKey}>
+                  {returnPeriodDamagesData.find((d) => d.scenarioKey === scenarioKey)?.scenario}
                 </MenuItem>
               ))}
             </Select>

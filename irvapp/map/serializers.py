@@ -1,4 +1,5 @@
 from drf_spectacular.utils import extend_schema_field
+from django.db.models import Prefetch
 from rest_framework import serializers
 
 from .permissions import user_has_dataset_access
@@ -10,7 +11,18 @@ from .models import (
     Dataset,
     Feature,
     NetworkLayerStyle,
+    ModelParameter,
 )
+
+
+def with_model_parameters(queryset):
+    return queryset.select_related("parameter_set").prefetch_related(
+        Prefetch(
+            "parameter_set__parameters",
+            queryset=ModelParameter.objects.order_by("name"),
+            to_attr="prefetched_parameters",
+        )
+    )
 
 
 class AdaptationCostBenefitSerializer(serializers.ModelSerializer):

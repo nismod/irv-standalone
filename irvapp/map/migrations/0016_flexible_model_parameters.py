@@ -147,6 +147,65 @@ def reverse_backfill(apps, schema_editor):
 
 
 REVERSE_SCHEMA_SQL = """
+    DO $$
+    BEGIN
+        IF EXISTS (
+            SELECT 1 FROM adaptation_cost_benefit AS result
+            WHERE NOT EXISTS (
+                SELECT 1 FROM model_parameter AS parameter
+                WHERE parameter.parameter_set_id = result.parameter_set_id
+                  AND parameter.name = 'rcp'
+            ) OR EXISTS (
+                SELECT 1 FROM model_parameter AS parameter
+                WHERE parameter.parameter_set_id = result.parameter_set_id
+                  AND parameter.name <> 'rcp'
+            )
+        ) OR EXISTS (
+            SELECT 1 FROM damages_expected AS result
+            WHERE NOT EXISTS (
+                SELECT 1 FROM model_parameter AS parameter
+                WHERE parameter.parameter_set_id = result.parameter_set_id
+                  AND parameter.name = 'rcp'
+            ) OR NOT EXISTS (
+                SELECT 1 FROM model_parameter AS parameter
+                WHERE parameter.parameter_set_id = result.parameter_set_id
+                  AND parameter.name = 'epoch'
+            ) OR EXISTS (
+                SELECT 1 FROM model_parameter AS parameter
+                WHERE parameter.parameter_set_id = result.parameter_set_id
+                  AND parameter.name NOT IN ('rcp', 'epoch')
+            )
+        ) OR EXISTS (
+            SELECT 1 FROM damages_npv AS result
+            WHERE NOT EXISTS (
+                SELECT 1 FROM model_parameter AS parameter
+                WHERE parameter.parameter_set_id = result.parameter_set_id
+                  AND parameter.name = 'rcp'
+            ) OR EXISTS (
+                SELECT 1 FROM model_parameter AS parameter
+                WHERE parameter.parameter_set_id = result.parameter_set_id
+                  AND parameter.name <> 'rcp'
+            )
+        ) OR EXISTS (
+            SELECT 1 FROM damages_rp AS result
+            WHERE NOT EXISTS (
+                SELECT 1 FROM model_parameter AS parameter
+                WHERE parameter.parameter_set_id = result.parameter_set_id
+                  AND parameter.name = 'rcp'
+            ) OR NOT EXISTS (
+                SELECT 1 FROM model_parameter AS parameter
+                WHERE parameter.parameter_set_id = result.parameter_set_id
+                  AND parameter.name = 'epoch'
+            ) OR EXISTS (
+                SELECT 1 FROM model_parameter AS parameter
+                WHERE parameter.parameter_set_id = result.parameter_set_id
+                  AND parameter.name NOT IN ('rcp', 'epoch')
+            )
+        ) THEN
+            RAISE EXCEPTION 'Cannot reverse flexible model parameters: result rows contain parameters that legacy columns cannot represent.';
+        END IF;
+    END $$;
+
     ALTER TABLE adaptation_cost_benefit DROP CONSTRAINT adaptation_cost_benefit_pkey;
     ALTER TABLE adaptation_cost_benefit ADD COLUMN rcp varchar(8);
     UPDATE adaptation_cost_benefit AS result SET rcp = parameter.value #>> '{}'

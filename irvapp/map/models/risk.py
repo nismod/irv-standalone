@@ -38,6 +38,16 @@ class ModelParameterSet(models.Model):
 
     @property
     def values(self):
+        prefetched_parameters = getattr(self, "prefetched_parameters", None)
+        if prefetched_parameters is None:
+            prefetched_parameters = getattr(self, "_prefetched_objects_cache", {}).get(
+                "parameters"
+            )
+        if prefetched_parameters is not None:
+            return {
+                item.name: item.value
+                for item in sorted(prefetched_parameters, key=lambda item: item.name)
+            }
         return {
             item.name: item.value
             for item in self.parameters.order_by("name")
