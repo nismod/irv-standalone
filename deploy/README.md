@@ -357,17 +357,26 @@ GitHub package registry. For more information, see these [instructions for
 authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
 and use a token with `read:packages` scope to read from the GHCR.
 
-On remote, to first start the application:
+From the repository root, upload the production data, environment file and
+Compose configuration to the server (replace `mauritius` with your SSH host
+alias if needed):
 
 ```bash
-# on remote
-docker login ghcr.io  # use GitHub username for username, GitHub access token for password
-cd /var/www
-docker compose -f docker-compose.prod.yml up -d
+rsync -av tileserver/vector/ mauritius:/var/www/tileserver/vector/
+rsync -av tileserver/raster/ mauritius:/var/www/tileserver/raster/
+rsync -av tileserver/stacks/ mauritius:/var/www/tileserver/stacks/
+rsync -av etl/hazard_layers.csv mauritius:/var/www/etl/
+rsync -av docker-compose.prod.yml mauritius:/var/www/
+rsync -av envs/prod/ mauritius:/var/www/envs/prod/
 ```
 
-Run `deploy/deploy_stage.sh` to upload data and docker-compose config, pull the
-published images and (re)start the services.
+Log into GHCR on the server once, using a GitHub token with `read:packages`,
+then pull the published images and start or update the services:
+
+```bash
+ssh mauritius 'docker login ghcr.io'
+ssh mauritius 'cd /var/www && docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d'
+```
 
 ### Manage staging/production
 
@@ -420,16 +429,15 @@ docker compose -f docker-compose.prod.yml build frontend
 docker push ghcr.io/nismod/irvapp-frontend:0.1
 ```
 
-Run `deploy.sh` to update the docker-compose config on the server, pull
-images and restart services.
-
-Alternatively, on the remote server, pull the image, then restart the
-specific service:
+To deploy the updated image in production, update its tag in
+`docker-compose.prod.yml`, then from the repository root upload the updated
+Compose file and apply it on the server:
 
 ```bash
-# Pull image
-docker pull ghcr.io/nismod/irvapp-frontend:0.1
-
-# Restart service
-docker compose -f docker-compose.prod.yml up -d frontend
+rsync -av docker-compose.prod.yml mauritius:/var/www/
+ssh mauritius 'cd /var/www && docker compose -f docker-compose.prod.yml pull frontend && docker compose -f docker-compose.prod.yml up -d frontend'
 ```
+
+Replace `frontend` with the service being updated (`django` or
+`vector-tileserver`) as needed. The updated service image is pulled before the
+service is recreated.
