@@ -342,11 +342,17 @@ PGPASSWORD=docker
 # Django settings
 # generate a secret key with e.g.:
 #   python3 -c "import secrets; print(secrets.token_urlsafe(50))"
+#   python3 -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 DJANGO_SECRET_KEY=change-me
 DJANGO_DEBUG=false
 DJANGO_ALLOWED_HOSTS=mauritius.infrastructureresilience.org
 CSRF_TRUSTED_ORIGINS=https://mauritius.infrastructureresilience.org
 ```
+
+With `DJANGO_DEBUG=false` (the default), Django refuses to start if
+`DJANGO_SECRET_KEY` is missing, shorter than 50 characters, has fewer than five
+distinct characters, or begins with `django-insecure-`. Replace `change-me`
+with a freshly generated secret using the command above.
 
 Testing database connection:
 
