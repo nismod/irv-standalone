@@ -15,8 +15,10 @@ export const damagesFieldState = atom<FieldSpec | null>((get) => {
     fieldGroup: 'damages_expected',
     fieldDimensions: {
       hazard: damageSource,
-      rcp: get(dataParamState({ group: damageSource, param: 'rcp' })),
-      epoch: get(dataParamState({ group: damageSource, param: 'epoch' })),
+      parameters: {
+        rcp: get(dataParamState({ group: damageSource, param: 'rcp' })),
+        epoch: get(dataParamState({ group: damageSource, param: 'epoch' })),
+      },
       protection_standard: 0,
     },
     field: damageType === 'direct' ? 'ead_mean' : 'eael_mean',

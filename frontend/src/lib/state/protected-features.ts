@@ -18,9 +18,11 @@ const apiClient = createClient({
 /**
  * Fetch a list of all adaptation options, by feature ID and layer,
  * for features protected by the current selected feature,
- * filtered by RCP.
+ * filtered by model parameters.
  */
-const protectedFeatureAdaptationOptionsQuery = atomFamily((rcp: string = '2.6') =>
+const DEFAULT_ADAPTATION_PARAMETERS = JSON.stringify({ rcp: '2.6' });
+
+const protectedFeatureAdaptationOptionsQuery = atomFamily((parameters: string = DEFAULT_ADAPTATION_PARAMETERS) =>
   atom(async (get) => {
     const selection = get(selectionState('assets'));
     const target = selection?.target as VectorTarget;
@@ -33,15 +35,15 @@ const protectedFeatureAdaptationOptionsQuery = atomFamily((rcp: string = '2.6') 
         protector_id: +target.feature.id,
       },
       query: {
-        rcp,
+        parameters,
       },
     });
     return data;
   }),
 );
 
-const protectedFeatureAdaptationOptionsCached = atomFamily((rcp: string = '2.6') =>
-  unwrap(protectedFeatureAdaptationOptionsQuery(rcp), (prev) => prev ?? []),
+const protectedFeatureAdaptationOptionsCached = atomFamily((parameters: string = DEFAULT_ADAPTATION_PARAMETERS) =>
+  unwrap(protectedFeatureAdaptationOptionsQuery(parameters), (prev) => prev ?? []),
 );
 
 /**
@@ -49,11 +51,11 @@ const protectedFeatureAdaptationOptionsCached = atomFamily((rcp: string = '2.6')
  * for features protected by the current selected feature.
  * Components using this atom will not suspend while waiting for the API.
  */
-export const protectedFeatureAdaptationOptionsState = atomFamily((rcp: string = '2.6') =>
+export const protectedFeatureAdaptationOptionsState = atomFamily((parameters: string = DEFAULT_ADAPTATION_PARAMETERS) =>
   atom((get) => {
     try {
       const data: ProtectedFeature[] = get(
-        protectedFeatureAdaptationOptionsCached(rcp ?? '2.6'),
+        protectedFeatureAdaptationOptionsCached(parameters),
       );
       return { data, error: null };
     } catch (error) {
@@ -67,8 +69,8 @@ export const protectedFeatureAdaptationOptionsState = atomFamily((rcp: string = 
  */
 export const protectedFeatureLayersQuery = atom(async (get) => {
   const rcpParam = get(dataParamState({ group: 'adaptation', param: 'rcp' }));
-  const rcp = rcpParam !== null ? String(rcpParam) : undefined;
-  const features = await get(protectedFeatureAdaptationOptionsQuery(rcp ?? '2.6'));
+  const parameters = JSON.stringify({ rcp: rcpParam !== null ? String(rcpParam) : '2.6' });
+  const features = await get(protectedFeatureAdaptationOptionsQuery(parameters));
   return new Set(features?.map((feature) => feature.layer));
 });
 
@@ -98,8 +100,8 @@ export const protectedFeatureLayersState = atom((get) => {
  */
 export const protectedFeatureAdaptationsState = atom((get) => {
   const rcpParam = get(dataParamState({ group: 'adaptation', param: 'rcp' }));
-  const rcp = rcpParam !== null ? String(rcpParam) : undefined;
-  const { data } = get(protectedFeatureAdaptationOptionsState(rcp));
+  const parameters = JSON.stringify({ rcp: rcpParam !== null ? String(rcpParam) : '2.6' });
+  const { data } = get(protectedFeatureAdaptationOptionsState(parameters));
   return data;
 });
 

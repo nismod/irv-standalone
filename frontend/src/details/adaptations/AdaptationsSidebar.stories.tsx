@@ -36,7 +36,7 @@ export const Default: Story = {
             url.searchParams.get('sector') === 'power' &&
             url.searchParams.get('field') === 'avoided_ead_mean' &&
             url.searchParams.get('dimensions') ===
-              '{"hazard":"TC","rcp":"4.5","adaptation_name":"Upgrade wooden poles to steel","adaptation_protection_level":0.76}'
+              '{"hazard":"TC","parameters":{"rcp":"4.5"},"adaptation_name":"Upgrade wooden poles to steel","adaptation_protection_level":0.76}'
           ) {
             return HttpResponse.json(mockItemSearch);
           }

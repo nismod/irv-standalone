@@ -7,23 +7,29 @@ import { getFeatureId } from 'lib/deck/utils/get-feature-id';
 import { sumOrNone } from 'lib/helpers';
 import { MapGeoJSONFeature } from 'maplibre-gl';
 
-function getExpectedDamageKey(direct: boolean, hazard: string, rcp: string, epoch: number) {
-  return `${direct ? 'ead' : 'eael'}__${hazard}__rcp_${rcp}__epoch_${epoch}__conf_None`;
+type ModelParameters = Record<string, string | number | boolean | null>;
+
+function getExpectedDamageKey(direct: boolean, hazard: string, parameters: ModelParameters) {
+  const parameterKey = Object.entries(parameters)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, value]) => `${name}_${String(value)}`)
+    .join('__');
+  return `${direct ? 'ead' : 'eael'}__${hazard}__${parameterKey}__conf_None`;
 }
 
 const hazardTypes = ['fluvial', 'surface', 'coastal', 'cyclone'];
 
 function totalExpectedDamagesProperty(
   direct: boolean,
-  { rcp, epoch }: { rcp: string; epoch: number },
+  parameters: ModelParameters,
 ) {
   const hazardProperties = hazardTypes.map((ht) =>
-    featureProperty<number>(getExpectedDamageKey(direct, ht, rcp, epoch)),
+    featureProperty<number>(getExpectedDamageKey(direct, ht, parameters)),
   );
 
   return withTriggers(
     (f: MapGeoJSONFeature) => sumOrNone(hazardProperties.map((p) => p(f))),
-    [direct, rcp, epoch],
+    [direct, parameters],
   );
 }
 
@@ -51,18 +57,17 @@ export function getAssetDataAccessor(layer: string, fieldSpec: FieldSpec) {
   const { fieldGroup, fieldDimensions, field } = fieldSpec;
 
   if (fieldGroup === 'damages_expected') {
-    const { hazard, rcp, epoch } = fieldDimensions as {
+    const { hazard, parameters } = fieldDimensions as {
       hazard: string;
-      rcp: string;
-      epoch: number;
+      parameters: ModelParameters;
     };
 
     const isDirect = field.startsWith('ead_');
 
     if (hazard === 'all') {
-      return totalExpectedDamagesProperty(isDirect, { rcp, epoch });
+      return totalExpectedDamagesProperty(isDirect, parameters);
     }
-    return featureProperty(getExpectedDamageKey(isDirect, hazard, rcp, epoch));
+    return featureProperty(getExpectedDamageKey(isDirect, hazard, parameters));
   } else if (fieldGroup === 'damages_return_period') {
     // return return period damages dynamically loaded from API
     const dataLoader = dataLoaderManager.getDataLoader(layer, fieldSpec);

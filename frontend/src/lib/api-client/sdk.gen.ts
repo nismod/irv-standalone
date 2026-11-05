@@ -112,7 +112,7 @@ export const mapAdaptationCostBenefitsRetrieve = <ThrowOnError extends boolean =
             name: 'sessionid',
             type: 'apiKey'
         }],
-    url: '/map/adaptation-cost-benefits/{pk}',
+    url: '/map/adaptation-cost-benefits/{id}',
     ...options
 });
 
@@ -169,7 +169,7 @@ export const mapDamagesExpectedRetrieve = <ThrowOnError extends boolean = false>
             name: 'sessionid',
             type: 'apiKey'
         }],
-    url: '/map/damages-expected/{pk}',
+    url: '/map/damages-expected/{id}',
     ...options
 });
 
@@ -189,7 +189,7 @@ export const mapDamagesRpRetrieve = <ThrowOnError extends boolean = false>(optio
             name: 'sessionid',
             type: 'apiKey'
         }],
-    url: '/map/damages-rp/{pk}',
+    url: '/map/damages-rp/{id}',
     ...options
 });
 

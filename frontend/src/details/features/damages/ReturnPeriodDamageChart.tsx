@@ -4,8 +4,6 @@ import { VisualizationSpec } from 'vega-embed';
 import { Box } from '@mui/material';
 
 import { unique } from 'lib/helpers';
-import { chartStyles } from './chartStyles';
-
 const makeSpec = (
   rpValues: number[],
   field_key: string,
@@ -29,17 +27,13 @@ const makeSpec = (
     tooltip: true,
   },
   encoding: {
-    ...(seriesField === 'rcp'
-      ? chartStyles
-      : {
-          color: {
-            field: seriesField,
-            type: 'ordinal',
-            title: seriesField,
-            legend: { orient: 'bottom', direction: 'horizontal' },
-          },
-          shape: { field: seriesField, type: 'ordinal', legend: null },
-        }),
+    color: {
+      field: seriesField,
+      type: 'ordinal',
+      title: 'Model parameters',
+      legend: { orient: 'bottom', direction: 'horizontal' },
+    },
+    shape: { field: seriesField, type: 'ordinal', legend: null },
     x: {
       field: 'probability',
       type: 'quantitative',
@@ -75,8 +69,8 @@ export const ReturnPeriodDamageChart = ({
   field_title,
   width,
   height,
-  tooltipFields = ['rcp', 'rp'],
-  seriesField = 'rcp',
+  tooltipFields = ['scenario', 'rp'],
+  seriesField = 'scenario',
   ...props
 }) => {
   const ref = useRef<HTMLDivElement>(null);
