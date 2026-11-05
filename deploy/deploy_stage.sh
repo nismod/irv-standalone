@@ -27,7 +27,14 @@ rsync -vz etl/hazard_layers.csv "$host:/var/www/etl/"
 rsync -vz docker-compose.stage.yml "$host:/var/www/"
 rsync -vz envs/stage/ "$host:/var/www/envs"
 
-# pull updated images and (re)start services
-ssh "$host" "cd /var/www && docker compose -f docker-compose.stage.yml pull && docker compose -f docker-compose.stage.yml up -d"
+# Take a database backup before running this script for a schema-changing release.
+# Run release commands in the newly pulled image; stop if either fails.
+ssh "$host" 'bash -se' <<'REMOTE'
+cd /var/www
+docker compose -f docker-compose.stage.yml pull
+docker compose -f docker-compose.stage.yml run --rm --no-deps -T django python manage.py migrate --noinput
+docker compose -f docker-compose.stage.yml run --rm --no-deps -T django python manage.py collectstatic --noinput
+docker compose -f docker-compose.stage.yml up -d --no-build
+REMOTE
 
 popd

@@ -153,11 +153,11 @@ The service requires two virtual machines with similar specifications:
 
 1. Application server
    - exposed to internal or public network to serve the app (ports 80 and 443)
-   - running Ubuntu 20.04
+   - running Ubuntu LTS
    - minimum resources of ~20GB disk, ~1GB RAM, 2 cores
 2. Database server
    - exposed to the application server
-   - running Ubuntu 20.04
+   - running Ubuntu LTS
    - minimum resources of ~80GB disk, ~1GB RAM, 2 cores
 
 ## VM provisioning
@@ -393,21 +393,32 @@ rsync -av docker-compose.prod.yml mauritius:/var/www/
 rsync -av envs/prod/ mauritius:/var/www/envs/prod/
 ```
 
-Log into GHCR on the server once, using a GitHub token with `read:packages`,
-then pull the published images and start or update the services:
+Log into GHCR on the server once, using a GitHub token with `read:packages`:
 
 ```bash
 ssh mauritius 'docker login ghcr.io'
-ssh mauritius 'cd /var/www && docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d'
 ```
+
+Then pull the published images, run migrations and collect Django static files
+before starting or updating the services:
+
+```bash
+ssh mauritius 'bash -se' <<'REMOTE'
+cd /var/www
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml run --rm --no-deps -T django python manage.py migrate --noinput
+docker compose -f docker-compose.prod.yml run --rm --no-deps -T django python manage.py collectstatic --noinput
+docker compose -f docker-compose.prod.yml up -d --no-build
+REMOTE
+```
+
+Consider backing up the database before running database migrations. On AWS,
+create an RDS snapshot.
 
 ### Manage staging/production
 
-
 The docker compose setup runs the frontend, the django backend and the vector
-tileserver. Frontend and backend are exposed on high-numbered ports bound to
-localhost; the vector tileserver is reached by the backend over the compose
-network.
+tileserver.
 
 [Nginx](https://nginx.org/en/) is used as a reverse-proxy to terminate incoming
 connections and pass them on to the containerised services.
@@ -420,11 +431,13 @@ for instructions on setting up or renewing SSL certificates.
 
 ### Publishing docker images
 
-For pushing to the GitHub container registry, you will need to follow these
-[instructions for authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) and use a token with `write:packages` scope.
+To push to the GitHub container registry, you will need to follow these
+[instructions for
+authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
+and use a token with `write:packages` scope.
 
-Build and publish all images (versions as set in `docker-compose.prod.yml`;
-the backend image is built from `./irvapp`):
+Build and publish all images (versions as set in `docker-compose.prod.yml`; the
+backend image is built from `./irvapp`):
 
 ```bash
 # Build images locally
@@ -458,9 +471,26 @@ Compose file and apply it on the server:
 
 ```bash
 rsync -av docker-compose.prod.yml mauritius:/var/www/
-ssh mauritius 'cd /var/www && docker compose -f docker-compose.prod.yml pull frontend && docker compose -f docker-compose.prod.yml up -d frontend'
+
+ssh mauritius 'bash -se' <<'REMOTE'
+cd /var/www
+docker compose -f docker-compose.prod.yml pull frontend
+docker compose -f docker-compose.prod.yml up -d frontend
+REMOTE
 ```
 
-Replace `frontend` with the service being updated (`django` or
-`vector-tileserver`) as needed. The updated service image is pulled before the
-service is recreated.
+For a `vector-tileserver` update, replace `frontend` with `vector-tileserver`.
+For a backend (`django`) update, also run migrations and static-file collection,
+as above:
+
+```bash
+rsync -av docker-compose.prod.yml mauritius:/var/www/
+
+ssh mauritius 'bash -se' <<'REMOTE'
+cd /var/www
+docker compose -f docker-compose.prod.yml pull django
+docker compose -f docker-compose.prod.yml run --rm --no-deps -T django python manage.py migrate --noinput
+docker compose -f docker-compose.prod.yml run --rm --no-deps -T django python manage.py collectstatic --noinput
+docker compose -f docker-compose.prod.yml up -d django
+REMOTE
+```
