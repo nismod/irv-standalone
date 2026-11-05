@@ -81,11 +81,24 @@ The configuration is split across several files:
 - `state-bootstrap/` - separate one-off configuration that creates the state
   bucket
 
-All variables have working defaults. To override them, pass `-var` flags or
-copy `terraform.tfvars.example` to `terraform.tfvars` (git-ignored, as it may
-hold environment-specific or sensitive values) and edit. In particular,
-consider restricting SSH access to a trusted network range - strongly
-recommended:
+Most variables have working defaults. The SSH key pair values are required:
+provide your SSH public key and the EC2 key pair name when running Terraform.
+For example, from the `deploy` directory:
+
+```bash
+terraform apply \
+  -var="deployer_public_key=$(cat ~/.ssh/id_ed25519.pub)" \
+  -var="deployer_public_key_name=irv-standalone-deployer"
+```
+
+Use the matching `.pub` file for the private key you will use to connect, and
+choose an EC2 key pair name. Pass the same `-var` flags to `terraform plan` to
+preview the configuration without being prompted.
+
+Other values can be overridden with `-var` flags or by copying
+`terraform.tfvars.example` to `terraform.tfvars` (git-ignored, as it may hold
+environment-specific or sensitive values). In particular, consider
+restricting SSH access to a trusted network range - strongly recommended:
 
 ```conf
 # terraform.tfvars
