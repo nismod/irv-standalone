@@ -34,7 +34,7 @@ services:
     volumes:
       - ./tileserver/stacks:/data/pixel:ro
       - ./tileserver/raster/data:/data/raster:ro
-      - ./etl:/data/pixel:ro
+      - ./etl/hazard_layers.csv:/data/pixel/hazard_layers.csv:ro
       - ./staticfiles:/code/staticfiles
       - django-media:/code/media
 
