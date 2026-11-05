@@ -61,6 +61,22 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plu
 # in the compose file then come back automatically after a reboot
 sudo systemctl enable --now docker
 
+#
+# Set up 2 GB of persistent swap
+#
+SWAPFILE=/swapfile
+if ! sudo swapon --show=NAME --noheadings | grep -Fxq "$SWAPFILE"; then
+  if [ ! -f "$SWAPFILE" ]; then
+    sudo fallocate -l 2G "$SWAPFILE"
+    sudo chmod 600 "$SWAPFILE"
+    sudo mkswap "$SWAPFILE"
+  fi
+  sudo swapon "$SWAPFILE"
+fi
+if ! grep -qE '^/swapfile[[:space:]]' /etc/fstab; then
+  echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab > /dev/null
+fi
+
 # Set up current user with docker
 getent group docker > /dev/null || sudo groupadd docker
 sudo usermod -aG docker "$USER"

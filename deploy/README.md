@@ -154,6 +154,7 @@ The service requires two virtual machines with similar specifications:
 - docker and the docker compose plugin, to run the app containers (started on
   boot; the compose services are marked `restart: unless-stopped` so they come
   back after a reboot)
+- a persistent 2 GB swap file at `/swapfile`, enabled immediately and on boot
 - nginx as a reverse proxy terminating incoming connections, with HTTP basic
   authentication (installed from `etc/nginx/sites-available/site.conf.template`)
 - Let's Encrypt ([certbot](https://certbot.eff.org/)) to acquire an SSL
