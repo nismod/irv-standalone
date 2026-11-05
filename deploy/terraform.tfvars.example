@@ -8,10 +8,10 @@
 # ssh_ingress_cidr_blocks = ["203.0.113.0/24"]
 
 # Application server sizing:
-# instance_type       = "t3.small"
+# instance_type       = "t3.micro"
 # root_volume_size_gb = 20
 
 # Database server sizing:
-# db_instance_class        = "db.t3.small"
+# db_instance_class        = "db.t3.micro"
 # db_allocated_storage     = 20
 # db_max_allocated_storage = 100
