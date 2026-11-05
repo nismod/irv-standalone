@@ -197,6 +197,10 @@ Notes:
   creates the DNS record. If DNS is not ready, leave `CERTBOT_EMAIL` unset and
   the script prints the `certbot` command to run later.
 - The script is idempotent: rerunning it is safe.
+- Existing Nginx site configuration is preserved on reruns, including TLS
+  settings added by Certbot. Changes to `site.conf.template` must be merged
+  into the installed site configuration manually, then checked with
+  `sudo nginx -t` before reloading Nginx.
 - docker group membership takes effect at next login, so log out and in (or
   `newgrp docker`) before running `docker compose` as your own user.
 

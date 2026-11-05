@@ -103,10 +103,14 @@ sudo chmod -R 775 /var/www/
 #   sudo htpasswd -B /etc/nginx/.htpasswd username
 sudo touch /etc/nginx/.htpasswd
 
-# Install the site config. This bootstrap version serves plain HTTP; certbot
-# rewrites the installed copy below to add SSL termination and redirect.
-sed "s/DOMAIN_PLACEHOLDER/${SITE_DOMAIN}/g" "$NGINX_TEMPLATE" |
-  sudo tee "/etc/nginx/sites-available/${SITE_DOMAIN}" > /dev/null
+# Install the HTTP bootstrap only for a new site. Preserve existing configs,
+# including the SSL termination and redirect installed by certbot.
+if ! sudo test -e "/etc/nginx/sites-available/${SITE_DOMAIN}"; then
+  sed "s/DOMAIN_PLACEHOLDER/${SITE_DOMAIN}/g" "$NGINX_TEMPLATE" |
+    sudo tee "/etc/nginx/sites-available/${SITE_DOMAIN}" > /dev/null
+else
+  echo "Preserving existing nginx configuration for ${SITE_DOMAIN}."
+fi
 sudo ln -sf "/etc/nginx/sites-available/${SITE_DOMAIN}" "/etc/nginx/sites-enabled/${SITE_DOMAIN}"
 sudo rm -f /etc/nginx/sites-enabled/default
 
