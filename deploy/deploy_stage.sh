@@ -25,7 +25,7 @@ rsync -vz etl/hazard_layers.csv "$host:/var/www/etl/"
 
 # docker compose configuration
 rsync -vz docker-compose.stage.yml "$host:/var/www/"
-rsync -vz envs/stage/ "$host:/var/www/envs"
+rsync -rvz --chmod=D2770,F640 envs/stage/ "$host:/var/www/envs/"
 
 # Take a database backup before running this script for a schema-changing release.
 # Run release commands in the newly pulled image; stop if either fails.

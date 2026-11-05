@@ -93,8 +93,14 @@ sudo mkdir -p /var/www/tileserver/raster/data
 sudo mkdir -p /var/www/tileserver/vector/data
 sudo mkdir -p /var/www/tileserver/stacks
 sudo mkdir -p /var/www/etl
+sudo mkdir -p /var/www/envs/prod
 sudo chown -R :irv_admin /var/www/
-sudo chmod -R 775 /var/www/
+# Public data is readable by nginx; directories inherit the admin group.
+# Prune envs so secret files are never given public permissions on reruns.
+sudo find /var/www -path /var/www/envs -prune -o -type d -exec chmod 2775 {} +
+sudo find /var/www -path /var/www/envs -prune -o -type f -exec chmod 664 {} +
+sudo find /var/www/envs -type d -exec chmod 2770 {} +
+sudo find /var/www/envs -type f -exec chmod 640 {} +
 
 #
 # Set up nginx as a reverse proxy for the app services

@@ -330,6 +330,12 @@ lives at `envs/prod/.backend.env` locally (`envs/stage/.backend.env` for
 staging) and must be uploaded to the server before starting/restarting the
 compose stack (see "Deployment" below).
 
+Provisioning restricts `/var/www/envs` to its owner and the `irv_admin` group:
+directories use mode `2770` and files use `640`. Deployment uploads preserve
+these restrictions with `rsync --chmod`; do not copy secret files with public
+read permissions. The user running Compose must own the files or belong to
+`irv_admin`.
+
 Expected contents, to be replaced with actual details:
 
 ```conf
@@ -390,7 +396,7 @@ rsync -av tileserver/raster/ mauritius:/var/www/tileserver/raster/
 rsync -av tileserver/stacks/ mauritius:/var/www/tileserver/stacks/
 rsync -av etl/hazard_layers.csv mauritius:/var/www/etl/
 rsync -av docker-compose.prod.yml mauritius:/var/www/
-rsync -av envs/prod/ mauritius:/var/www/envs/prod/
+rsync -av --chmod=D2770,F640 envs/prod/ mauritius:/var/www/envs/prod/
 ```
 
 Log into GHCR on the server once, using a GitHub token with `read:packages`:
