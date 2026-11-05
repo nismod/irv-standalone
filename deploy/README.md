@@ -360,6 +360,10 @@ With `DJANGO_DEBUG=false` (the default), Django refuses to start if
 distinct characters, or begins with `django-insecure-`. Replace `change-me`
 with a freshly generated secret using the command above.
 
+In development (`DJANGO_DEBUG=true`) settings support HTTP without secure
+cookies. Otherwise, Django trusts Nginx's `X-Forwarded-Proto` header to
+recognize HTTPS, and marks session and CSRF cookies as secure.
+
 Testing database connection:
 
 ```bash

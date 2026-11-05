@@ -49,6 +49,15 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
+# Production is reachable through nginx, which overwrites this header and
+# terminates TLS. Keep the backend port bound to localhost on the host.
+SECURE_PROXY_SSL_HEADER = (
+    ('HTTP_X_FORWARDED_PROTO', 'https') if not DEBUG else None
+)
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+# HTTP-to-HTTPS redirects are handled by nginx, including non-Django routes.
+
 
 # Application definition
 
