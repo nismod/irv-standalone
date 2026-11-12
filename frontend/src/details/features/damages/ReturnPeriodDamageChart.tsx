@@ -3,15 +3,17 @@ import { useVegaEmbed } from 'react-vega';
 import { VisualizationSpec } from 'vega-embed';
 import { Box } from '@mui/material';
 
-import { unique } from 'lib/helpers';
-const makeSpec = (
-  rpValues: number[],
+import { parameterLabel } from './parameter-labels';
+import { seriesEncoding } from './chartStyles';
+
+export const makeReturnPeriodDamageSpec = (
   field_key: string,
   field_title: string,
   width: number,
   height: number,
   tooltipFields: string[],
-  seriesField: string,
+  seriesField?: string,
+  seriesTitle = seriesField ? parameterLabel(seriesField) : null,
 ) => ({
   $schema: 'https://vega.github.io/schema/vega-lite/v6.json',
   width,
@@ -27,13 +29,7 @@ const makeSpec = (
     tooltip: true,
   },
   encoding: {
-    color: {
-      field: seriesField,
-      type: 'ordinal',
-      title: 'Model parameters',
-      legend: { orient: 'bottom', direction: 'horizontal' },
-    },
-    shape: { field: seriesField, type: 'ordinal', legend: null },
+    ...seriesEncoding(seriesField, seriesTitle),
     x: {
       field: 'probability',
       type: 'quantitative',
@@ -58,7 +54,10 @@ const makeSpec = (
     // the tooltip encoding needs to replicate the field definitions in order to customise their ordering
     tooltip: [
       { field: field_key, type: 'quantitative', format: ',.3r', title: field_title },
-      ...tooltipFields.map((field) => ({ field, title: field })),
+      ...tooltipFields.map((field) => ({
+        field,
+        title: field === seriesField ? seriesTitle : parameterLabel(field),
+      })),
     ],
   },
 });
@@ -69,25 +68,24 @@ export const ReturnPeriodDamageChart = ({
   field_title,
   width,
   height,
-  tooltipFields = ['scenario', 'rp'],
-  seriesField = 'scenario',
+  seriesField = undefined,
+  seriesTitle = seriesField ? parameterLabel(seriesField) : null,
+  tooltipFields = seriesField ? [seriesField, 'rp'] : ['rp'],
   ...props
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const spec = useMemo(
     () =>
-      makeSpec(
-        unique<number>(data.table.map((d) => d.rp))
-          .sort()
-          .reverse(),
+      makeReturnPeriodDamageSpec(
         field_key,
         field_title,
         width,
         height,
         tooltipFields,
         seriesField,
+        seriesTitle,
       ),
-    [data, field_key, field_title, width, height, seriesField, tooltipFields],
+    [field_key, field_title, width, height, seriesField, seriesTitle, tooltipFields],
   ) as VisualizationSpec;
   const embed = useVegaEmbed({
     ref,

@@ -3,15 +3,21 @@ import { useVegaEmbed } from 'react-vega';
 import { VisualizationSpec } from 'vega-embed';
 import { Box } from '@mui/material';
 
-import { unique } from 'lib/helpers';
-const makeSpec = (
-  scenarios: string[],
-  field_min: string,
+import { parameterLabel } from './parameter-labels';
+import { seriesEncoding } from './chartStyles';
+
+export const makeExpectedDamageSpec = (
   field: string,
-  field_max: string,
   field_title: string,
   width: number,
   height: number,
+  xField: string,
+  xTitle = parameterLabel(xField),
+  tooltipFields = [xField],
+  seriesField?: string,
+  seriesTitle = seriesField ? parameterLabel(seriesField) : null,
+  field_min?: string,
+  field_max?: string,
 ) => ({
   $schema: 'https://vega.github.io/schema/vega-lite/v6.json',
   width,
@@ -19,23 +25,34 @@ const makeSpec = (
   data: {
     name: 'table',
   },
-  mark: {
-    type: 'line',
-    point: {
-      filled: true,
+  layer: [
+    ...(field_min && field_max ? [{
+      transform: [{ filter: { and: [
+        { field: field_min, valid: true },
+        { field: field_max, valid: true },
+      ] } }],
+      mark: { type: 'errorbar', ticks: true, opacity: 0.5 },
+      encoding: {
+        y: { field: field_min, type: 'quantitative', title: field_title },
+        y2: { field: field_max },
+      },
+    }] : []),
+    {
+      mark: { type: 'line', point: { filled: true }, tooltip: true },
+      encoding: seriesEncoding(seriesField, seriesTitle),
     },
-    tooltip: true,
-  },
+  ],
   encoding: {
+    ...(seriesField ? { color: seriesEncoding(seriesField, seriesTitle).color } : {}),
     x: {
-      field: 'scenario',
+      field: xField,
       type: 'ordinal',
-      title: 'Model parameters',
+      title: xTitle,
       axis: {
+        labelAngle: 0,
         gridDash: [2, 2],
         domainColor: '#ccc',
         tickColor: '#ccc',
-        values: scenarios,
       },
     },
     y: {
@@ -51,7 +68,12 @@ const makeSpec = (
     // the tooltip encoding needs to replicate the field definitions in order to customise their ordering
     tooltip: [
       { field: field, type: 'quantitative', format: ',.3r', title: field_title },
-      { field: 'scenario', title: 'Model parameters' },
+      ...(field_min ? [{ field: field_min, type: 'quantitative', format: ',.3r', title: `${field_title} (amin)` }] : []),
+      ...(field_max ? [{ field: field_max, type: 'quantitative', format: ',.3r', title: `${field_title} (amax)` }] : []),
+      ...tooltipFields.map((field) => ({
+        field,
+        title: field === xField ? xTitle : field === seriesField ? seriesTitle : parameterLabel(field),
+      })),
     ],
   },
 });
@@ -59,26 +81,35 @@ const makeSpec = (
 export const ExpectedDamageChart = ({
   data,
   field,
-  field_min,
-  field_max,
+  field_min = undefined,
+  field_max = undefined,
   field_title,
   width,
   height,
+  xField,
+  xTitle = parameterLabel(xField),
+  seriesField = undefined,
+  seriesTitle = seriesField ? parameterLabel(seriesField) : null,
+  tooltipFields = seriesField ? [xField, seriesField] : [xField],
   ...props
 }) => {
   const ref = useRef<HTMLDivElement>(null);
   const spec = useMemo(
     () =>
-      makeSpec(
-        unique<string>(data.table.map((d) => d.scenario)),
-        field_min,
+      makeExpectedDamageSpec(
         field,
-        field_max,
         field_title,
         width,
         height,
+        xField,
+        xTitle,
+        tooltipFields,
+        seriesField,
+        seriesTitle,
+        field_min,
+        field_max,
       ),
-    [data, field_min, field, field_max, field_title, width, height],
+    [field, field_min, field_max, field_title, width, height, xField, xTitle, tooltipFields, seriesField, seriesTitle],
   ) as VisualizationSpec;
   const embed = useVegaEmbed({
     ref,
