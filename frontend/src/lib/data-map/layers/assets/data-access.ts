@@ -10,8 +10,10 @@ import { MapGeoJSONFeature } from 'maplibre-gl';
 type ModelParameters = Record<string, string | number | boolean | null>;
 
 function getExpectedDamageKey(direct: boolean, hazard: string, parameters: ModelParameters) {
+  // Existing tiles put RCP before epoch. Append other parameters in a stable order.
+  const parameterOrder = (name: string) => (name === 'rcp' ? 0 : name === 'epoch' ? 1 : 2);
   const parameterKey = Object.entries(parameters)
-    .sort(([a], [b]) => a.localeCompare(b))
+    .sort(([a], [b]) => parameterOrder(a) - parameterOrder(b) || a.localeCompare(b))
     .map(([name, value]) => `${name}_${String(value)}`)
     .join('__');
   return `${direct ? 'ead' : 'eael'}__${hazard}__${parameterKey}__conf_None`;

@@ -1,7 +1,7 @@
-import json
-
 from django.contrib.gis.db import models
 from django.db.models import BigIntegerField, Func
+
+from map.model_parameters import canonical_parameter_key
 
 from .core import Feature
 
@@ -40,9 +40,7 @@ class ModelParameterSet(models.Model):
 
     @classmethod
     def for_values(cls, model_type, values):
-        canonical_key = json.dumps(
-            values, sort_keys=True, separators=(",", ":")
-        )
+        canonical_key = canonical_parameter_key(values)
         parameter_set, _ = cls.objects.get_or_create(
             model_type=model_type, canonical_key=canonical_key
         )
@@ -100,6 +98,7 @@ class AdaptationCostBenefit(models.Model):
     id = models.BigIntegerField(
         editable=False,
         null=True,
+        unique=True,
         db_default=SequenceNextValue("adaptation_cost_benefit_id_seq"),
     )
     feature = models.ForeignKey(Feature, models.CASCADE)
@@ -132,6 +131,7 @@ class DamagesExpected(models.Model):
     id = models.BigIntegerField(
         editable=False,
         null=True,
+        unique=True,
         db_default=SequenceNextValue("damages_expected_id_seq"),
     )
     feature = models.ForeignKey(Feature, models.CASCADE)
@@ -160,6 +160,7 @@ class DamagesNpv(models.Model):
     id = models.BigIntegerField(
         editable=False,
         null=True,
+        unique=True,
         db_default=SequenceNextValue("damages_npv_id_seq"),
     )
     feature = models.ForeignKey(Feature, models.CASCADE)
@@ -188,6 +189,7 @@ class DamagesRp(models.Model):
     id = models.BigIntegerField(
         editable=False,
         null=True,
+        unique=True,
         db_default=SequenceNextValue("damages_rp_id_seq"),
     )
     feature = models.ForeignKey(Feature, models.CASCADE)

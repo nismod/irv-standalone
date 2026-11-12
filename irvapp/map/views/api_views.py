@@ -16,6 +16,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from map.model_parameters import canonical_parameter_key
 from map.serializers import (
     SortedFeatureSerializer,
     ProtectedFeatureSerializer,
@@ -34,9 +35,7 @@ from .mixins import FieldGroupQueryParsingMixin
 def parameter_filter(model_type, parameters):
     return {
         "parameter_set__model_type": model_type,
-        "parameter_set__canonical_key": json.dumps(
-            parameters, sort_keys=True, separators=(",", ":")
-        ),
+        "parameter_set__canonical_key": canonical_parameter_key(parameters),
     }
 
 
@@ -337,12 +336,7 @@ class ProtectedFeaturesView(APIView):
         query = AdaptationCostBenefit.objects.filter(
             protector_feature_id=protector_id,
             hazard__isnull=False,
-            **{
-                "parameter_set__model_type": "adaptation",
-                "parameter_set__canonical_key": json.dumps(
-                    parameter_validation, sort_keys=True, separators=(",", ":")
-                ),
-            },
+            **parameter_filter("adaptation", parameter_validation),
         ).select_related("feature", "feature__layer", "parameter_set").prefetch_related(
             "parameter_set__parameters"
         ).order_by("feature_id", "adaptation_name", "hazard")

@@ -1,9 +1,13 @@
 import json
+from importlib import import_module
+from types import SimpleNamespace
 
 from allauth.account.models import EmailAddress
+from django.apps import apps
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import Point
-from django.test import TestCase
+from django.db import IntegrityError, connection, transaction
+from django.test import SimpleTestCase, TestCase
 from rest_framework.test import APIRequestFactory
 from rest_framework.test import APIClient
 from raster.models import RasterTileSource
@@ -11,26 +15,40 @@ from raster.models import RasterTileSource
 from map.models import (
     AdaptationCostBenefit,
     DamagesExpected,
+    DamagesNpv,
     DamagesRp,
     Dataset,
     Feature,
     FeatureLayer,
-    ModelParameter,
     ModelParameterSet,
 )
+from map.model_parameters import canonical_parameter_key
 from map.serializers import DatasetSerializer
 
 
 def make_parameter_set(model_type, **values):
-    canonical_key = json.dumps(values, sort_keys=True, separators=(",", ":"))
-    parameter_set, _ = ModelParameterSet.objects.get_or_create(
-        model_type=model_type, canonical_key=canonical_key
-    )
-    for name, value in values.items():
-        ModelParameter.objects.get_or_create(
-            parameter_set=parameter_set, name=name, defaults={"value": value}
+    return ModelParameterSet.for_values(model_type, values)
+
+
+class ModelParameterKeyTests(SimpleTestCase):
+    def test_numeric_values_match_after_browser_round_trip(self):
+        self.assertEqual(
+            canonical_parameter_key({"gwl": 2.0, "slr": 0.5, "epoch": 2050}),
+            canonical_parameter_key({"epoch": 2050.0, "slr": 0.5, "gwl": 2}),
         )
-    return parameter_set
+
+    def test_nested_values_are_normalized(self):
+        self.assertEqual(
+            canonical_parameter_key({"values": [2.0, {"slr": -0.0}]}),
+            canonical_parameter_key({"values": [2, {"slr": 0}]}),
+        )
+
+    def test_strings_booleans_and_fractional_values_remain_distinct(self):
+        keys = {
+            canonical_parameter_key({"value": value})
+            for value in (2, "2", True, 1, 0.5, None)
+        }
+        self.assertEqual(len(keys), 6)
 
 
 class AttributeLookupViewTests(TestCase):
@@ -57,6 +75,83 @@ class AttributeLookupViewTests(TestCase):
             layer=self.layer,
             properties={"name": "B"},
             geom=Point(1.0, 1.0, srid=4326),
+        )
+
+    def test_parameter_sets_reuse_equivalent_numeric_values(self):
+        first = make_parameter_set("damages_expected", gwl=2.0, slr=0.5)
+        second = make_parameter_set("damages_expected", slr=0.5, gwl=2)
+        self.assertEqual(first.pk, second.pk)
+        self.assertEqual(first.parameters.count(), 2)
+
+    def test_result_ids_are_unique(self):
+        cases = [
+            (AdaptationCostBenefit, {"adaptation_name": "wall", "adaptation_protection_level": 1.0}),
+            (DamagesExpected, {"protection_standard": 0}),
+            (DamagesNpv, {}),
+            (DamagesRp, {"rp": 100}),
+        ]
+        for model, dimensions in cases:
+            with self.subTest(model=model.__name__):
+                values = {
+                    "feature": self.feature_1,
+                    "parameter_set": make_parameter_set(model._meta.db_table, gwl=2),
+                    **dimensions,
+                }
+                result = model.objects.create(hazard="flood", **values)
+                self.assertIsNotNone(result.id)
+                with self.assertRaises(IntegrityError), transaction.atomic():
+                    model.objects.create(id=result.id, hazard="storm", **values)
+
+    def test_parameter_key_migration_merges_nonoverlapping_results(self):
+        legacy = ModelParameterSet.objects.create(
+            model_type="damages_expected", canonical_key='{"gwl":2.0}'
+        )
+        legacy.parameters.create(name="gwl", value=2.0)
+        retained = make_parameter_set("damages_expected", gwl=2)
+        result = DamagesExpected.objects.create(
+            feature=self.feature_1, parameter_set=legacy,
+            hazard="flood", protection_standard=0, ead_mean=10,
+        )
+        DamagesExpected.objects.create(
+            feature=self.feature_1, parameter_set=retained,
+            hazard="storm", protection_standard=0, ead_mean=20,
+        )
+        migration = import_module("map.migrations.0020_normalize_parameter_keys")
+        migration.normalize_parameter_keys(apps, SimpleNamespace(connection=connection))
+        # Reassignment changes the composite primary key; the public ID stays stable.
+        result = DamagesExpected.objects.get(id=result.id)
+        self.assertEqual(result.parameter_set_id, retained.pk)
+        self.assertEqual(result.ead_mean, 10)
+        self.assertFalse(ModelParameterSet.objects.filter(pk=legacy.pk).exists())
+        self.assertEqual(DamagesExpected.objects.count(), 2)
+
+    def test_parameter_key_migration_normalizes_a_single_legacy_set(self):
+        legacy = ModelParameterSet.objects.create(
+            model_type="damages_expected", canonical_key='{"gwl":2.0}'
+        )
+        legacy.parameters.create(name="gwl", value=2.0)
+        migration = import_module("map.migrations.0020_normalize_parameter_keys")
+        migration.normalize_parameter_keys(apps, SimpleNamespace(connection=connection))
+        self.assertEqual(make_parameter_set("damages_expected", gwl=2).pk, legacy.pk)
+
+    def test_parameter_key_migration_preserves_overlapping_results(self):
+        legacy = ModelParameterSet.objects.create(
+            model_type="damages_expected", canonical_key='{"gwl":2.0}'
+        )
+        legacy.parameters.create(name="gwl", value=2.0)
+        retained = make_parameter_set("damages_expected", gwl=2)
+        for parameter_set, damage in ((legacy, 10), (retained, 20)):
+            DamagesExpected.objects.create(
+                feature=self.feature_1, parameter_set=parameter_set,
+                hazard="flood", protection_standard=0, ead_mean=damage,
+            )
+        migration = import_module("map.migrations.0020_normalize_parameter_keys")
+        with self.assertRaisesMessage(RuntimeError, "overlapping"), transaction.atomic():
+            migration.normalize_parameter_keys(apps, SimpleNamespace(connection=connection))
+        self.assertEqual(ModelParameterSet.objects.count(), 2)
+        self.assertEqual(
+            list(DamagesExpected.objects.order_by("ead_mean").values_list("ead_mean", flat=True)),
+            [10, 20],
         )
 
     def test_damages_expected_lookup_with_hazard_all_aggregates(self):
@@ -155,7 +250,7 @@ class AttributeLookupViewTests(TestCase):
                 + json.dumps(
                     {
                         "hazard": "flood",
-                        "parameters": {"gwl": 2.0, "slr": 0.5},
+                        "parameters": {"gwl": 2, "slr": 0.5},
                         "protection_standard": 100,
                     }
                 )
@@ -164,6 +259,37 @@ class AttributeLookupViewTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()[str(self.feature_1.id)], 12.0)
+
+        response = self.client.get(
+            "/map/features/sorted-by/damages_expected",
+            {
+                "layer": "roads",
+                "field": "ead_mean",
+                "dimensions": json.dumps({
+                    "hazard": "flood",
+                    "parameters": {"gwl": 2, "slr": 0.5},
+                    "protection_standard": 100,
+                }),
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["items"][0]["value"], 12.0)
+
+    def test_protected_features_match_equivalent_numeric_parameters(self):
+        AdaptationCostBenefit.objects.create(
+            parameter_set=make_parameter_set("adaptation", gwl=2.0),
+            feature=self.feature_1,
+            hazard="flood",
+            adaptation_name="wall",
+            adaptation_protection_level=1.0,
+            protector_feature_id=123,
+        )
+        response = self.client.get(
+            "/map/features/123/protected-by",
+            {"parameters": json.dumps({"gwl": 2})},
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()[0]["id"], self.feature_1.id)
 
     def test_adaptation_lookup_cost_benefit_ratio(self):
         AdaptationCostBenefit.objects.create(
