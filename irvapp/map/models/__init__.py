@@ -11,6 +11,8 @@ from .risk import (
     DamagesExpected,
     DamagesNpv,
     DamagesRp,
+    ModelParameter,
+    ModelParameterSet,
 )
 
 __all__ = [
@@ -18,6 +20,8 @@ __all__ = [
     "DamagesExpected",
     "DamagesNpv",
     "DamagesRp",
+    "ModelParameter",
+    "ModelParameterSet",
     "Dataset",
     "Feature",
     "FeatureLayer",

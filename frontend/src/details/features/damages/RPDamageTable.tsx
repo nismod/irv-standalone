@@ -1,7 +1,11 @@
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
-import { numFormat, numRangeFormat } from 'lib/helpers';
+import { numFormat, numRangeFormat, unique } from 'lib/helpers';
 const padding = { px: 0.25, py: 0.25 };
-export const RPDamageTable = ({ damages }) => (
+export const RPDamageTable = ({ damages }) => {
+  const parameterNames: string[] = unique<string>(
+    damages.flatMap((damage) => Object.keys(damage.parameters)),
+  );
+  return (
   <TableContainer sx={{ maxHeight: 250 }} tabIndex={0}>
     <Table size="small" padding="none" stickyHeader>
       <TableHead>
@@ -9,9 +13,7 @@ export const RPDamageTable = ({ damages }) => (
           <TableCell sx={padding}>
             <abbr title="Return Period">RP</abbr>
           </TableCell>
-          <TableCell sx={padding}>
-            <abbr title="Representative Concentration Pathway (Climate Scenario)">RCP</abbr>
-          </TableCell>
+          {parameterNames.map((name) => <TableCell sx={padding} key={name}>{name}</TableCell>)}
           <TableCell sx={padding} align="right">
             Damages (J$)
           </TableCell>
@@ -24,7 +26,9 @@ export const RPDamageTable = ({ damages }) => (
         {damages.map((d) => (
           <TableRow key={d.key}>
             <TableCell sx={padding}>{d.rp}</TableCell>
-            <TableCell sx={{ pl: 0, pr: padding.px, py: padding.py }}>{d.rcp}</TableCell>
+            {parameterNames.map((name) => (
+              <TableCell sx={padding} key={name}>{String(d.parameters[name] ?? '')}</TableCell>
+            ))}
             <TableCell sx={padding} align="right">
               {numFormat(d.damage_mean)}
               <br />({numRangeFormat(d.damage_amin, d.damage_amax)})
@@ -39,4 +43,5 @@ export const RPDamageTable = ({ damages }) => (
       </TableBody>
     </Table>
   </TableContainer>
-);
+  );
+};

@@ -44,9 +44,11 @@
       "eael_mean": 401.69801726169686,
       "eael_amax": 401.69801726169686,
       "hazard": "fluvial",
-      "rcp": "8.5",
-      "epoch": 2080,
-      "protection_standard": 0
+      "protection_standard": 0,
+      "parameters": {
+        "rcp": "8.5",
+        "epoch": 2080
+      }
     },
     {
       "ead_amin": 487182.160291818,
@@ -56,9 +58,11 @@
       "eael_mean": 401.69801726169686,
       "eael_amax": 401.69801726169686,
       "hazard": "fluvial",
-      "rcp": "baseline",
-      "epoch": 2010,
-      "protection_standard": 0
+      "protection_standard": 0,
+      "parameters": {
+        "rcp": "baseline",
+        "epoch": 2010
+      }
     },
     {
       "ead_amin": 486743.0431355126,
@@ -68,9 +72,11 @@
       "eael_mean": 401.69801726169686,
       "eael_amax": 401.69801726169686,
       "hazard": "fluvial",
-      "rcp": "4.5",
-      "epoch": 2050,
-      "protection_standard": 0
+      "protection_standard": 0,
+      "parameters": {
+        "rcp": "4.5",
+        "epoch": 2050
+      }
     },
     {
       "ead_amin": 486743.0431355126,
@@ -80,9 +86,11 @@
       "eael_mean": 401.69801726169686,
       "eael_amax": 401.69801726169686,
       "hazard": "fluvial",
-      "rcp": "4.5",
-      "epoch": 2080,
-      "protection_standard": 0
+      "protection_standard": 0,
+      "parameters": {
+        "rcp": "4.5",
+        "epoch": 2080
+      }
     },
     {
       "ead_amin": 486743.0431355126,
@@ -92,9 +100,11 @@
       "eael_mean": 401.69801726169686,
       "eael_amax": 401.69801726169686,
       "hazard": "fluvial",
-      "rcp": "2.6",
-      "epoch": 2050,
-      "protection_standard": 0
+      "protection_standard": 0,
+      "parameters": {
+        "rcp": "2.6",
+        "epoch": 2050
+      }
     },
     {
       "ead_amin": 486743.0431355126,
@@ -104,9 +114,11 @@
       "eael_mean": 401.69801726169686,
       "eael_amax": 401.69801726169686,
       "hazard": "fluvial",
-      "rcp": "2.6",
-      "epoch": 2080,
-      "protection_standard": 0
+      "protection_standard": 0,
+      "parameters": {
+        "rcp": "2.6",
+        "epoch": 2080
+      }
     },
     {
       "ead_amin": 485305.7331847125,
@@ -116,9 +128,11 @@
       "eael_mean": 401.69801726169686,
       "eael_amax": 401.69801726169686,
       "hazard": "fluvial",
-      "rcp": "8.5",
-      "epoch": 2050,
-      "protection_standard": 0
+      "protection_standard": 0,
+      "parameters": {
+        "rcp": "8.5",
+        "epoch": 2050
+      }
     }
   ],
   "damages_return_period": [
@@ -131,9 +145,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "2.6",
-      "epoch": 2050,
-      "rp": 100
+      "rp": 100,
+      "parameters": {
+        "rcp": "2.6",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 483.9756685899824,
@@ -144,9 +160,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "2.6",
-      "epoch": 2080,
-      "rp": 100
+      "rp": 100,
+      "parameters": {
+        "rcp": "2.6",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 483.9756685899824,
@@ -157,9 +175,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "4.5",
-      "epoch": 2050,
-      "rp": 100
+      "rp": 100,
+      "parameters": {
+        "rcp": "4.5",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 483.9756685899824,
@@ -170,9 +190,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "4.5",
-      "epoch": 2080,
-      "rp": 100
+      "rp": 100,
+      "parameters": {
+        "rcp": "4.5",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 453.83622017023436,
@@ -183,9 +205,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "8.5",
-      "epoch": 2050,
-      "rp": 100
+      "rp": 100,
+      "parameters": {
+        "rcp": "8.5",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 453.83622017023436,
@@ -196,9 +220,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "8.5",
-      "epoch": 2080,
-      "rp": 100
+      "rp": 100,
+      "parameters": {
+        "rcp": "8.5",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 453.83622017023436,
@@ -209,9 +235,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "baseline",
-      "epoch": 2010,
-      "rp": 100
+      "rp": 100,
+      "parameters": {
+        "rcp": "baseline",
+        "epoch": 2010
+      }
     },
     {
       "exposure": 824.9544523060868,
@@ -222,9 +250,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "2.6",
-      "epoch": 2050,
-      "rp": 1500
+      "rp": 1500,
+      "parameters": {
+        "rcp": "2.6",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 824.9544523060868,
@@ -235,9 +265,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "2.6",
-      "epoch": 2080,
-      "rp": 1500
+      "rp": 1500,
+      "parameters": {
+        "rcp": "2.6",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 824.9544523060868,
@@ -248,9 +280,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "4.5",
-      "epoch": 2050,
-      "rp": 1500
+      "rp": 1500,
+      "parameters": {
+        "rcp": "4.5",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 824.9544523060868,
@@ -261,9 +295,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "4.5",
-      "epoch": 2080,
-      "rp": 1500
+      "rp": 1500,
+      "parameters": {
+        "rcp": "4.5",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 824.9544523060868,
@@ -274,9 +310,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "8.5",
-      "epoch": 2050,
-      "rp": 1500
+      "rp": 1500,
+      "parameters": {
+        "rcp": "8.5",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 791.2650543865976,
@@ -287,9 +325,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "8.5",
-      "epoch": 2080,
-      "rp": 1500
+      "rp": 1500,
+      "parameters": {
+        "rcp": "8.5",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 824.9544523060868,
@@ -300,9 +340,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "baseline",
-      "epoch": 2010,
-      "rp": 1500
+      "rp": 1500,
+      "parameters": {
+        "rcp": "baseline",
+        "epoch": 2010
+      }
     },
     {
       "exposure": 389.4876621254102,
@@ -313,9 +355,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "2.6",
-      "epoch": 2050,
-      "rp": 20
+      "rp": 20,
+      "parameters": {
+        "rcp": "2.6",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 389.4876621254102,
@@ -326,9 +370,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "2.6",
-      "epoch": 2080,
-      "rp": 20
+      "rp": 20,
+      "parameters": {
+        "rcp": "2.6",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 389.4876621254102,
@@ -339,9 +385,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "4.5",
-      "epoch": 2050,
-      "rp": 20
+      "rp": 20,
+      "parameters": {
+        "rcp": "4.5",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 389.4876621254102,
@@ -352,9 +400,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "4.5",
-      "epoch": 2080,
-      "rp": 20
+      "rp": 20,
+      "parameters": {
+        "rcp": "4.5",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 389.4876621254102,
@@ -365,9 +415,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "8.5",
-      "epoch": 2050,
-      "rp": 20
+      "rp": 20,
+      "parameters": {
+        "rcp": "8.5",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 388.01749573289806,
@@ -378,9 +430,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "8.5",
-      "epoch": 2080,
-      "rp": 20
+      "rp": 20,
+      "parameters": {
+        "rcp": "8.5",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 389.4876621254102,
@@ -391,9 +445,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "baseline",
-      "epoch": 2010,
-      "rp": 20
+      "rp": 20,
+      "parameters": {
+        "rcp": "baseline",
+        "epoch": 2010
+      }
     },
     {
       "exposure": 576.7984100439553,
@@ -404,9 +460,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "2.6",
-      "epoch": 2050,
-      "rp": 200
+      "rp": 200,
+      "parameters": {
+        "rcp": "2.6",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 576.7984100439553,
@@ -417,9 +475,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "2.6",
-      "epoch": 2080,
-      "rp": 200
+      "rp": 200,
+      "parameters": {
+        "rcp": "2.6",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 576.7984100439553,
@@ -430,9 +490,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "4.5",
-      "epoch": 2050,
-      "rp": 200
+      "rp": 200,
+      "parameters": {
+        "rcp": "4.5",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 576.7984100439553,
@@ -443,9 +505,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "4.5",
-      "epoch": 2080,
-      "rp": 200
+      "rp": 200,
+      "parameters": {
+        "rcp": "4.5",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 576.7984100439553,
@@ -456,9 +520,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "8.5",
-      "epoch": 2050,
-      "rp": 200
+      "rp": 200,
+      "parameters": {
+        "rcp": "8.5",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 557.2181703753232,
@@ -469,9 +535,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "8.5",
-      "epoch": 2080,
-      "rp": 200
+      "rp": 200,
+      "parameters": {
+        "rcp": "8.5",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 557.2181703753232,
@@ -482,9 +550,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "baseline",
-      "epoch": 2010,
-      "rp": 200
+      "rp": 200,
+      "parameters": {
+        "rcp": "baseline",
+        "epoch": 2010
+      }
     },
     {
       "exposure": 421.07328378076477,
@@ -495,9 +565,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "2.6",
-      "epoch": 2050,
-      "rp": 50
+      "rp": 50,
+      "parameters": {
+        "rcp": "2.6",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 421.07328378076477,
@@ -508,9 +580,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "2.6",
-      "epoch": 2080,
-      "rp": 50
+      "rp": 50,
+      "parameters": {
+        "rcp": "2.6",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 421.07328378076477,
@@ -521,9 +595,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "4.5",
-      "epoch": 2050,
-      "rp": 50
+      "rp": 50,
+      "parameters": {
+        "rcp": "4.5",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 421.07328378076477,
@@ -534,9 +610,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "4.5",
-      "epoch": 2080,
-      "rp": 50
+      "rp": 50,
+      "parameters": {
+        "rcp": "4.5",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 421.07328378076477,
@@ -547,9 +625,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "8.5",
-      "epoch": 2050,
-      "rp": 50
+      "rp": 50,
+      "parameters": {
+        "rcp": "8.5",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 421.07328378076477,
@@ -560,9 +640,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "8.5",
-      "epoch": 2080,
-      "rp": 50
+      "rp": 50,
+      "parameters": {
+        "rcp": "8.5",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 421.07328378076477,
@@ -573,9 +655,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "baseline",
-      "epoch": 2010,
-      "rp": 50
+      "rp": 50,
+      "parameters": {
+        "rcp": "baseline",
+        "epoch": 2010
+      }
     },
     {
       "exposure": 695.2268075167289,
@@ -586,9 +670,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "2.6",
-      "epoch": 2050,
-      "rp": 500
+      "rp": 500,
+      "parameters": {
+        "rcp": "2.6",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 695.2268075167289,
@@ -599,9 +685,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "2.6",
-      "epoch": 2080,
-      "rp": 500
+      "rp": 500,
+      "parameters": {
+        "rcp": "2.6",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 695.2268075167289,
@@ -612,9 +700,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "4.5",
-      "epoch": 2050,
-      "rp": 500
+      "rp": 500,
+      "parameters": {
+        "rcp": "4.5",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 695.2268075167289,
@@ -625,9 +715,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "4.5",
-      "epoch": 2080,
-      "rp": 500
+      "rp": 500,
+      "parameters": {
+        "rcp": "4.5",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 694.160453573351,
@@ -638,9 +730,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "8.5",
-      "epoch": 2050,
-      "rp": 500
+      "rp": 500,
+      "parameters": {
+        "rcp": "8.5",
+        "epoch": 2050
+      }
     },
     {
       "exposure": 694.160453573351,
@@ -651,9 +745,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "8.5",
-      "epoch": 2080,
-      "rp": 500
+      "rp": 500,
+      "parameters": {
+        "rcp": "8.5",
+        "epoch": 2080
+      }
     },
     {
       "exposure": 694.160453573351,
@@ -664,9 +760,11 @@
       "loss_mean": 8142.5273769262885,
       "loss_amax": 8142.527376926288,
       "hazard": "fluvial",
-      "rcp": "baseline",
-      "epoch": 2010,
-      "rp": 500
+      "rp": 500,
+      "parameters": {
+        "rcp": "baseline",
+        "epoch": 2010
+      }
     }
   ],
   "damages_npv": [
@@ -678,7 +776,9 @@
       "eael_mean": 4708.951190967155,
       "eael_amax": 4995.6675698459785,
       "hazard": "fluvial",
-      "rcp": "2.6"
+      "parameters": {
+        "rcp": "2.6"
+      }
     },
     {
       "ead_amin": 5355366.592011428,
@@ -688,7 +788,9 @@
       "eael_mean": 4708.951190967155,
       "eael_amax": 4995.6675698459785,
       "hazard": "fluvial",
-      "rcp": "4.5"
+      "parameters": {
+        "rcp": "4.5"
+      }
     },
     {
       "ead_amin": 5348502.487422377,
@@ -698,7 +800,9 @@
       "eael_mean": 4708.951190967155,
       "eael_amax": 4995.6675698459785,
       "hazard": "fluvial",
-      "rcp": "8.5"
+      "parameters": {
+        "rcp": "8.5"
+      }
     }
   ],
   "adaptation": [
@@ -711,9 +815,11 @@
       "avoided_eael_mean": 65925.31667354016,
       "avoided_eael_amax": 69939.34597784371,
       "hazard": "flooding",
-      "rcp": "2.6",
       "adaptation_name": "Elevate the roads",
-      "adaptation_protection_level": 1
+      "adaptation_protection_level": 1,
+      "parameters": {
+        "rcp": "2.6"
+      }
     },
     {
       "adaptation_cost": 1219346528.1029265,
@@ -724,9 +830,11 @@
       "avoided_eael_mean": 65925.31667354016,
       "avoided_eael_amax": 69939.34597784371,
       "hazard": "flooding",
-      "rcp": "2.6",
       "adaptation_name": "Elevate the roads",
-      "adaptation_protection_level": 1.5
+      "adaptation_protection_level": 1.5,
+      "parameters": {
+        "rcp": "2.6"
+      }
     },
     {
       "adaptation_cost": 1625795370.8039017,
@@ -737,9 +845,11 @@
       "avoided_eael_mean": 65925.31667354016,
       "avoided_eael_amax": 69939.34597784371,
       "hazard": "flooding",
-      "rcp": "2.6",
       "adaptation_name": "Elevate the roads",
-      "adaptation_protection_level": 2
+      "adaptation_protection_level": 2,
+      "parameters": {
+        "rcp": "2.6"
+      }
     },
     {
       "adaptation_cost": 2032244213.504877,
@@ -750,9 +860,11 @@
       "avoided_eael_mean": 65925.31667354016,
       "avoided_eael_amax": 69939.34597784371,
       "hazard": "flooding",
-      "rcp": "2.6",
       "adaptation_name": "Elevate the roads",
-      "adaptation_protection_level": 2.5
+      "adaptation_protection_level": 2.5,
+      "parameters": {
+        "rcp": "2.6"
+      }
     },
     {
       "adaptation_cost": 290320601.92926824,
@@ -763,9 +875,11 @@
       "avoided_eael_mean": 70634.26786450732,
       "avoided_eael_amax": 74935.01354768968,
       "hazard": "flooding",
-      "rcp": "2.6",
       "adaptation_name": "Upgrade concrete mix, upgrade mortar mix, upgrade rubble masonry wall, increase number of drainage structure",
-      "adaptation_protection_level": 999
+      "adaptation_protection_level": 999,
+      "parameters": {
+        "rcp": "2.6"
+      }
     },
     {
       "adaptation_cost": 812897685.4019508,
@@ -776,9 +890,11 @@
       "avoided_eael_mean": 65925.31667354016,
       "avoided_eael_amax": 69939.34597784371,
       "hazard": "flooding",
-      "rcp": "4.5",
       "adaptation_name": "Elevate the roads",
-      "adaptation_protection_level": 1
+      "adaptation_protection_level": 1,
+      "parameters": {
+        "rcp": "4.5"
+      }
     },
     {
       "adaptation_cost": 1219346528.1029265,
@@ -789,9 +905,11 @@
       "avoided_eael_mean": 65925.31667354016,
       "avoided_eael_amax": 69939.34597784371,
       "hazard": "flooding",
-      "rcp": "4.5",
       "adaptation_name": "Elevate the roads",
-      "adaptation_protection_level": 1.5
+      "adaptation_protection_level": 1.5,
+      "parameters": {
+        "rcp": "4.5"
+      }
     },
     {
       "adaptation_cost": 1625795370.8039017,
@@ -802,9 +920,11 @@
       "avoided_eael_mean": 65925.31667354016,
       "avoided_eael_amax": 69939.34597784371,
       "hazard": "flooding",
-      "rcp": "4.5",
       "adaptation_name": "Elevate the roads",
-      "adaptation_protection_level": 2
+      "adaptation_protection_level": 2,
+      "parameters": {
+        "rcp": "4.5"
+      }
     },
     {
       "adaptation_cost": 2032244213.504877,
@@ -815,9 +935,11 @@
       "avoided_eael_mean": 65925.31667354016,
       "avoided_eael_amax": 69939.34597784371,
       "hazard": "flooding",
-      "rcp": "4.5",
       "adaptation_name": "Elevate the roads",
-      "adaptation_protection_level": 2.5
+      "adaptation_protection_level": 2.5,
+      "parameters": {
+        "rcp": "4.5"
+      }
     },
     {
       "adaptation_cost": 290320601.92926824,
@@ -828,9 +950,11 @@
       "avoided_eael_mean": 70634.26786450732,
       "avoided_eael_amax": 74935.01354768968,
       "hazard": "flooding",
-      "rcp": "4.5",
       "adaptation_name": "Upgrade concrete mix, upgrade mortar mix, upgrade rubble masonry wall, increase number of drainage structure",
-      "adaptation_protection_level": 999
+      "adaptation_protection_level": 999,
+      "parameters": {
+        "rcp": "4.5"
+      }
     },
     {
       "adaptation_cost": 812897685.4019508,
@@ -841,9 +965,11 @@
       "avoided_eael_mean": 65925.31667354016,
       "avoided_eael_amax": 69939.34597784371,
       "hazard": "flooding",
-      "rcp": "8.5",
       "adaptation_name": "Elevate the roads",
-      "adaptation_protection_level": 1
+      "adaptation_protection_level": 1,
+      "parameters": {
+        "rcp": "8.5"
+      }
     },
     {
       "adaptation_cost": 1219346528.1029265,
@@ -854,9 +980,11 @@
       "avoided_eael_mean": 65925.31667354016,
       "avoided_eael_amax": 69939.34597784371,
       "hazard": "flooding",
-      "rcp": "8.5",
       "adaptation_name": "Elevate the roads",
-      "adaptation_protection_level": 1.5
+      "adaptation_protection_level": 1.5,
+      "parameters": {
+        "rcp": "8.5"
+      }
     },
     {
       "adaptation_cost": 1625795370.8039017,
@@ -867,9 +995,11 @@
       "avoided_eael_mean": 65925.31667354016,
       "avoided_eael_amax": 69939.34597784371,
       "hazard": "flooding",
-      "rcp": "8.5",
       "adaptation_name": "Elevate the roads",
-      "adaptation_protection_level": 2
+      "adaptation_protection_level": 2,
+      "parameters": {
+        "rcp": "8.5"
+      }
     },
     {
       "adaptation_cost": 2032244213.504877,
@@ -880,9 +1010,11 @@
       "avoided_eael_mean": 65925.31667354016,
       "avoided_eael_amax": 69939.34597784371,
       "hazard": "flooding",
-      "rcp": "8.5",
       "adaptation_name": "Elevate the roads",
-      "adaptation_protection_level": 2.5
+      "adaptation_protection_level": 2.5,
+      "parameters": {
+        "rcp": "8.5"
+      }
     },
     {
       "adaptation_cost": 290320601.92926824,
@@ -893,9 +1025,11 @@
       "avoided_eael_mean": 70634.26786450732,
       "avoided_eael_amax": 74935.01354768968,
       "hazard": "flooding",
-      "rcp": "8.5",
       "adaptation_name": "Upgrade concrete mix, upgrade mortar mix, upgrade rubble masonry wall, increase number of drainage structure",
-      "adaptation_protection_level": 999
+      "adaptation_protection_level": 999,
+      "parameters": {
+        "rcp": "8.5"
+      }
     }
   ]
 }

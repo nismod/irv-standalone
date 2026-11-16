@@ -8,11 +8,12 @@ import { downloadFile, unique } from 'lib/helpers';
 import { Fragment, useMemo } from 'react';
 
 function makeAdaptationCsv(options: AdaptationCostBenefit[]) {
+  const parameterNames = unique(options.flatMap((option) => Object.keys(option.parameters)));
   const header =
     [
       'adaptation_name',
       'hazard',
-      'rcp',
+      ...parameterNames,
       'adaptation_protection_level',
       'adaptation_cost',
       'avoided_ead_amin',
@@ -30,7 +31,7 @@ function makeAdaptationCsv(options: AdaptationCostBenefit[]) {
         [
           `"${d.adaptation_name}"`,
           d.hazard,
-          d.rcp,
+          ...parameterNames.map((name) => d.parameters[name]),
           d.adaptation_protection_level,
           d.adaptation_cost,
           d.avoided_ead_amin,
@@ -54,7 +55,7 @@ export const AdaptationSection = ({ fd }) => {
         return {
           adaptation_name: d.adaptation_name,
           hazard: d.hazard,
-          rcp: d.rcp,
+          parameters: d.parameters,
           adaptation_protection_level: d.adaptation_protection_level,
           adaptation_cost: d.adaptation_cost,
           avoided_ead_amin: d.avoided_ead_amin,

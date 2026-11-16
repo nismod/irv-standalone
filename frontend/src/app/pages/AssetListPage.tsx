@@ -24,8 +24,10 @@ export const AssetListPage = () => {
     fieldGroup: 'damages_expected',
     fieldDimensions: {
       hazard: 'cyclone',
-      rcp: '4.5',
-      epoch: 2050,
+      parameters: {
+        rcp: '4.5',
+        epoch: 2050,
+      },
       protection_standard: 0,
     },
     fieldParams: {},

@@ -1,85 +1,45 @@
 import Download from '@mui/icons-material/Download';
 import { FormControl, InputLabel, IconButton, MenuItem, Select, Typography } from '@mui/material';
 import { Box } from '@mui/system';
-import { useAtomValue } from 'jotai';
-
-import { type HazardDomains, hazardDomainState } from 'data-layers/hazards/state/domains';
 import { DamagesExpected, DamagesRp } from 'lib/api-client';
 import { downloadFile, titleCase, unique } from 'lib/helpers';
 import { useSelect } from 'lib/hooks/use-select';
-import fromPairs from 'lodash/fromPairs';
 import { useMemo } from 'react';
 import { DamageTable } from './DamageTable';
 import { RPDamageTable } from './RPDamageTable';
 import { ExpectedDamageChart } from './ExpectedDamageChart';
 import { ReturnPeriodDamageChart } from './ReturnPeriodDamageChart';
+import { parameterLabel } from './parameter-labels';
+import {
+  expectedDamageDimensions,
+  returnPeriodDimensions,
+  parameterField,
+  parameterNames,
+  parameterOptions,
+  parameterSelectionKey,
+  parameterTitle,
+} from './chart-parameters';
 
 
-const damageOrdering = (hazardDomains: HazardDomains) => {
-  const ordering = [];
-  if (!hazardDomains) {
-    return ordering;
-  }
-  for (const [hazard, hazardDomain] of Object.entries(hazardDomains)) {
-    if (!hazardDomain) {
-      continue;
-    }
-    if (!hazardDomain.paramDomains.rcp || !hazardDomain.paramDomains.epoch) {
-      continue;
-    }
-    for (const rcp of hazardDomain.paramDomains.rcp) {
-      for (const epoch of hazardDomain.paramDomains.epoch) {
-        ordering.push({
-          hazard,
-          rcp,
-          epoch,
-        });
-      }
-    }
-  }
-  return ordering;
-};
+type ModelParameters = Record<string, unknown>;
 
-const rpOrdering = (hazardDomains: HazardDomains) => {
-  const ordering = [];
-  if (!hazardDomains) {
-    return ordering;
-  }
-  for (const [hazard, hazardDomain] of Object.entries(hazardDomains)) {
-    if (!hazardDomain) {
-      continue;
-    }
-    if (!hazardDomain.paramDomains.returnPeriod) {
-      continue;
-    }
-    for (const rp of hazardDomain.paramDomains.returnPeriod) {
-      for (const rcp of hazardDomain.paramDomains.rcp) {
-        for (const epoch of hazardDomain.paramDomains.epoch) {
-          ordering.push({
-            hazard,
-            rcp,
-            epoch,
-            rp,
-          });
-        }
-      }
-    }
-  }
-  return ordering;
-};
-
-function getDamageKey({ hazard, rcp, epoch }) {
-  return `${hazard}__rcp_${rcp}__epoch_${epoch}__conf_None`;
+function csvCell(value: unknown) {
+  const text = value == null
+    ? ''
+    : typeof value === 'object'
+      ? JSON.stringify(value)
+      : String(value);
+  return `"${text.replaceAll('"', '""')}"`;
 }
-function getRPDamageKey({ hazard, rcp, epoch, rp }) {
-  return `${hazard}__rcp_${rcp}__epoch_${epoch}__rp_${rp}__conf_None`;
+
+function csv(rows: unknown[][]) {
+  return rows.map((row) => row.map(csvCell).join(',')).join('\n');
 }
 
 interface ExpectedDamageCell {
   key: string;
   hazard: string;
-  rcp: string;
-  epoch: string;
+  parameters: ModelParameters;
   ead_mean: number;
   ead_amin: number;
   ead_amax: number;
@@ -88,11 +48,11 @@ interface ExpectedDamageCell {
   eael_amax: number;
 }
 function getExpectedDamageObject(d: DamagesExpected): ExpectedDamageCell {
+  const parameters = d.parameters as Record<string, unknown>;
   return {
-    key: getDamageKey({ hazard: d.hazard, rcp: d.rcp, epoch: d.epoch }),
+    key: `${d.hazard}__${JSON.stringify(parameters)}`,
     hazard: d.hazard,
-    rcp: d.rcp,
-    epoch: d.epoch.toString(),
+    parameters,
     ead_mean: d.ead_mean,
     ead_amin: d.ead_amin,
     ead_amax: d.ead_amax,
@@ -105,10 +65,9 @@ function getExpectedDamageObject(d: DamagesExpected): ExpectedDamageCell {
 interface RPDamageCell {
   key: string;
   hazard: string;
-  rcp: string;
+  parameters: ModelParameters;
   rp: number;
   probability: number;
-  epoch: string;
   damage_mean: number;
   damage_amin: number;
   damage_amax: number;
@@ -118,13 +77,13 @@ interface RPDamageCell {
 }
 
 function getRPDamageObject(d: DamagesRp): RPDamageCell {
+  const parameters = d.parameters as Record<string, unknown>;
   return {
-    key: getRPDamageKey({ hazard: d.hazard, rcp: d.rcp, epoch: d.epoch, rp: d.rp }),
+    key: `${d.hazard}__${JSON.stringify(parameters)}__rp_${d.rp}`,
     hazard: d.hazard,
-    rcp: d.rcp,
+    parameters,
     rp: d.rp,
     probability: 1 / d.rp,
-    epoch: d.epoch.toString(),
     damage_mean: d.damage_mean,
     damage_amin: d.damage_amin,
     damage_amax: d.damage_amax,
@@ -143,46 +102,56 @@ function prepareRPDamages(rpDamages: DamagesRp[]) {
 }
 
 function useOrderedDamages(damages: ExpectedDamageCell[]) {
-  const hazardDomains = useAtomValue(hazardDomainState);
-  const lookup = fromPairs(damages.map((d) => [d.key, d]));
-
-  return useMemo(() => damageOrdering(hazardDomains)
-    .map(getDamageKey)
-    .map((key) => lookup[key])
-    .filter(Boolean), [hazardDomains, lookup]);
-}
-
-function useOrderedRPDamages(damages: RPDamageCell[]) {
-  const hazardDomains = useAtomValue(hazardDomainState);
-  const lookup = fromPairs(damages.map((d) => [d.key, d]));
-
-  return useMemo(() => rpOrdering(hazardDomains)
-    .map(getRPDamageKey)
-    .map((key) => lookup[key])
-    .filter(Boolean), [hazardDomains, lookup]);
-}
-
-function makeDamagesCsv(damages: ExpectedDamageCell[]) {
-  return (
-    'hazard,rcp,epoch,ead_mean,ead_amin,ead_amax,eael_mean,eael_amin,eael_amax\n' +
-    damages
-      .map(
-        (d) =>
-          `${d.hazard},${d.rcp},${d.epoch},${d.ead_mean},${d.ead_amin},${d.ead_amax},${d.eael_mean},${d.eael_amin},${d.eael_amax}`,
-      )
-      .join('\n')
+  return useMemo(
+    () => [...damages].sort((a, b) => a.hazard.localeCompare(b.hazard) || a.key.localeCompare(b.key)),
+    [damages],
   );
 }
 
+function useOrderedRPDamages(damages: RPDamageCell[]) {
+  return useMemo(
+    () => [...damages].sort((a, b) => a.hazard.localeCompare(b.hazard) || a.key.localeCompare(b.key)),
+    [damages],
+  );
+}
+
+function makeDamagesCsv(damages: ExpectedDamageCell[]) {
+  const parameterNames = unique(damages.flatMap((damage) => Object.keys(damage.parameters)));
+  return csv([
+    ['hazard', ...parameterNames, 'ead_mean', 'ead_amin', 'ead_amax', 'eael_mean', 'eael_amin', 'eael_amax'],
+    ...damages.map((d) => [d.hazard, ...parameterNames.map((name) => d.parameters[name]), d.ead_mean, d.ead_amin, d.ead_amax, d.eael_mean, d.eael_amin, d.eael_amax]),
+  ]);
+}
+
 function makeRPDamagesCsv(damages: RPDamageCell[]) {
+  const parameterNames = unique(damages.flatMap((damage) => Object.keys(damage.parameters)));
+  return csv([
+    ['hazard', ...parameterNames, 'rp', 'damage_mean', 'damage_amin', 'damage_amax', 'loss_mean', 'loss_amin', 'loss_amax'],
+    ...damages.map((d) => [d.hazard, ...parameterNames.map((name) => d.parameters[name]), d.rp, d.damage_mean, d.damage_amin, d.damage_amax, d.loss_mean, d.loss_amin, d.loss_amax]),
+  ]);
+}
+
+function ParameterSelector({ id, names, options, value, onChange }: {
+  id: string;
+  names: string[];
+  options: { key: string; label: string }[];
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  if (!names.length || !options.length) return null;
   return (
-    'hazard,rcp,epoch,rp,damage_mean,damage_amin,damage_amax,loss_mean,loss_amin,loss_amax\n' +
-    damages
-      .map(
-        (d) =>
-          `${d.hazard},${d.rcp},${d.epoch},${d.rp},${d.damage_mean},${d.damage_amin},${d.damage_amax},${d.loss_mean},${d.loss_amin},${d.loss_amax}`,
-      )
-      .join('\n')
+    <FormControl fullWidth sx={{ my: 2 }} disabled={options.length === 1}>
+      <InputLabel id={id}>{parameterTitle(names)}</InputLabel>
+      <Select
+        labelId={id}
+        value={value ?? ''}
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {options.map((option) => (
+          <MenuItem key={option.key} value={option.key}>{option.label}</MenuItem>
+        ))}
+      </Select>
+    </FormControl>
   );
 }
 
@@ -190,29 +159,35 @@ export const DamagesSection = ({ fd }) => {
   const damagesData = useOrderedDamages(prepareExpectedDamages(fd?.damages_expected ?? []));
   const returnPeriodDamagesData = useOrderedRPDamages(prepareRPDamages(fd?.damages_return_period ?? []));
 
-  const hazards = useMemo(() => unique(damagesData.map((d) => d.hazard)), [damagesData]);
-  const epochs = useMemo(() => unique(damagesData.map((d) => d.epoch)).sort(), [damagesData]);
+  const hazards = useMemo(
+    () => unique([...damagesData, ...returnPeriodDamagesData].map((d) => d.hazard)),
+    [damagesData, returnPeriodDamagesData],
+  );
   const [selectedHazard, setSelectedHazard] = useSelect(hazards);
-  const [selectedEpoch, setSelectedEpoch] = useSelect(epochs);
-
-  const selectedData = useMemo(
-    () => (selectedHazard ? damagesData.filter((x) => x.hazard === selectedHazard) : null),
+  const hazardRPData = useMemo(
+    () => returnPeriodDamagesData.filter((d) => d.hazard === selectedHazard),
+    [returnPeriodDamagesData, selectedHazard],
+  );
+  const hazardExpectedData = useMemo(
+    () => damagesData.filter((x) => x.hazard === selectedHazard),
     [selectedHazard, damagesData],
   );
-  const selectedRPData = useMemo(
-    () =>
-      selectedHazard
-        ? returnPeriodDamagesData.filter(
-            (x) => x.hazard === selectedHazard && x.epoch === selectedEpoch,
-          )
-        : null,
-    [selectedHazard, selectedEpoch, returnPeriodDamagesData],
+  const expectedDimensions = expectedDamageDimensions(hazardExpectedData);
+  const expectedOptions = parameterOptions(hazardExpectedData, expectedDimensions.selectors);
+  const [expectedSelection, setExpectedSelection] = useSelect(expectedOptions.map((option) => option.key));
+  const selectedData = hazardExpectedData.filter(
+    (row) => parameterSelectionKey(row, expectedDimensions.selectors) === expectedSelection,
   );
+  const rpDimensions = returnPeriodDimensions(hazardRPData);
+  const rpOptions = parameterOptions(hazardRPData, rpDimensions.selectors);
+  const [rpSelection, setRPSelection] = useSelect(rpOptions.map((option) => option.key));
+  const selectedRPData = hazardRPData.filter(
+    (row) => parameterSelectionKey(row, rpDimensions.selectors) === rpSelection,
+  );
+  const expectedTooltipFields = parameterNames(hazardExpectedData).map(parameterField);
+  const rpTooltipFields = [...parameterNames(hazardRPData).map(parameterField), 'rp'];
 
-  const has_eael = useMemo(
-    () => (selectedData ? selectedData.some((d) => d.eael_amax > 0) : null),
-    [selectedData],
-  );
+  const has_eael = selectedData.some((d) => d.eael_amax > 0);
 
   return (
     <>
@@ -251,7 +226,14 @@ export const DamagesSection = ({ fd }) => {
             </Select>
           </FormControl>
         ) : null}
-        {selectedData ? (
+        <ParameterSelector
+          id={`feature-${fd.id}-expected-parameters`}
+          names={expectedDimensions.selectors}
+          options={expectedOptions}
+          value={expectedSelection}
+          onChange={setExpectedSelection}
+        />
+        {selectedData.length ? (
           <>
             <Box mt={1}>
               <Typography component="h3" variant="subtitle2">
@@ -265,6 +247,11 @@ export const DamagesSection = ({ fd }) => {
                 field_min="ead_amin"
                 field_max="ead_amax"
                 field_title="EAD (J$)"
+                xField={expectedDimensions.x ? parameterField(expectedDimensions.x) : 'hazard'}
+                xTitle={expectedDimensions.x ? parameterLabel(expectedDimensions.x) : null}
+                seriesField={expectedDimensions.series ? parameterField(expectedDimensions.series) : undefined}
+                seriesTitle={expectedDimensions.series ? parameterLabel(expectedDimensions.series) : null}
+                tooltipFields={expectedTooltipFields}
                 actions={false}
                 width={280} // this is currently picked to fit the chart to the sidebar width
                 height={170}
@@ -284,6 +271,11 @@ export const DamagesSection = ({ fd }) => {
                   field_min="eael_amin"
                   field_max="eael_amax"
                   field_title="EAEL (J$/day)"
+                  xField={expectedDimensions.x ? parameterField(expectedDimensions.x) : 'hazard'}
+                  xTitle={expectedDimensions.x ? parameterLabel(expectedDimensions.x) : null}
+                  seriesField={expectedDimensions.series ? parameterField(expectedDimensions.series) : undefined}
+                  seriesTitle={expectedDimensions.series ? parameterLabel(expectedDimensions.series) : null}
+                  tooltipFields={expectedTooltipFields}
                   actions={false}
                   width={280} // this is currently picked to fit the chart to the sidebar width
                   height={170}
@@ -324,23 +316,14 @@ export const DamagesSection = ({ fd }) => {
             <Download />
           </IconButton>
         </Box>
-        {epochs.length ? (
-          <FormControl fullWidth sx={{ my: 2 }} disabled={epochs.length === 1}>
-            <InputLabel id={`feature-${fd.id}-epoch`}>Epoch</InputLabel>
-            <Select
-              labelId={`feature-${fd.id}-epoch`}
-              value={selectedEpoch ?? ''}
-              onChange={(e) => setSelectedEpoch(e.target.value as string)}
-            >
-              {epochs.map((h) => (
-                <MenuItem key={h} value={h}>
-                  {titleCase(h)}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
-        ) : null}
-        {selectedRPData ? (
+        <ParameterSelector
+          id={`feature-${fd.id}-rp-parameters`}
+          names={rpDimensions.selectors}
+          options={rpOptions}
+          value={rpSelection}
+          onChange={setRPSelection}
+        />
+        {selectedRPData.length ? (
           <>
             <Box mt={1}>
               <ReturnPeriodDamageChart
@@ -349,6 +332,9 @@ export const DamagesSection = ({ fd }) => {
                 }}
                 field_key="damage_mean"
                 field_title="Damage (J$)"
+                seriesField={rpDimensions.series ? parameterField(rpDimensions.series) : undefined}
+                seriesTitle={rpDimensions.series ? parameterLabel(rpDimensions.series) : null}
+                tooltipFields={rpTooltipFields}
                 actions={false}
                 width={280} // this is currently picked to fit the chart to the sidebar width
                 height={130}

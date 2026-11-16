@@ -23,3 +23,23 @@ export const chartStyles = {
     },
   },
 };
+
+export function seriesEncoding(field?: string, title?: string) {
+  if (!field) return {};
+  const isRcp = field === 'rcp' || field === 'parameters.rcp';
+  return {
+    color: {
+      field,
+      type: 'ordinal',
+      title,
+      legend: chartStyles.color.legend,
+      ...(isRcp ? { scale: chartStyles.color.scale } : {}),
+    },
+    shape: {
+      field,
+      type: 'ordinal',
+      legend: null,
+      ...(isRcp ? { scale: chartStyles.shape.scale } : {}),
+    },
+  };
+}

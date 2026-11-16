@@ -1,4 +1,5 @@
 from drf_spectacular.utils import extend_schema_field
+from django.db.models import Prefetch
 from rest_framework import serializers
 
 from .permissions import user_has_dataset_access
@@ -10,31 +11,70 @@ from .models import (
     Dataset,
     Feature,
     NetworkLayerStyle,
+    ModelParameter,
 )
 
 
+def with_model_parameters(queryset):
+    return queryset.select_related("parameter_set").prefetch_related(
+        Prefetch(
+            "parameter_set__parameters",
+            queryset=ModelParameter.objects.order_by("name"),
+            to_attr="prefetched_parameters",
+        )
+    )
+
+
 class AdaptationCostBenefitSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    parameters = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.DictField(child=serializers.JSONField()))
+    def get_parameters(self, instance):
+        return instance.parameter_set.values
+
     class Meta:
         model = AdaptationCostBenefit
-        fields = '__all__'
+        exclude = ["parameter_set", "pk"]
 
 
 class DamagesExpectedSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    parameters = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.DictField(child=serializers.JSONField()))
+    def get_parameters(self, instance):
+        return instance.parameter_set.values
+
     class Meta:
         model = DamagesExpected
-        fields = '__all__'
+        exclude = ["parameter_set", "pk"]
 
 
 class DamagesRpSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    parameters = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.DictField(child=serializers.JSONField()))
+    def get_parameters(self, instance):
+        return instance.parameter_set.values
+
     class Meta:
         model = DamagesRp
-        fields = '__all__'
+        exclude = ["parameter_set", "pk"]
 
 
 class DamagesNpvSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+    parameters = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.DictField(child=serializers.JSONField()))
+    def get_parameters(self, instance):
+        return instance.parameter_set.values
+
     class Meta:
         model = DamagesNpv
-        fields = '__all__'
+        exclude = ["parameter_set", "pk"]
 
 
 class DatasetSerializer(serializers.ModelSerializer):
@@ -133,14 +173,13 @@ class AttributeLookupRequestSerializer(serializers.Serializer):
 
 class ExpectedDamagesDimensionsSerializer(serializers.Serializer):
     hazard = serializers.CharField()
-    rcp = serializers.CharField()
-    epoch = serializers.IntegerField()
+    parameters = serializers.DictField(child=serializers.JSONField())
     protection_standard = serializers.IntegerField()
 
 
 class AdaptationDimensionsSerializer(serializers.Serializer):
     hazard = serializers.CharField()
-    rcp = serializers.CharField()
+    parameters = serializers.DictField(child=serializers.JSONField())
     adaptation_name = serializers.CharField()
     adaptation_protection_level = serializers.FloatField()
 
@@ -163,7 +202,7 @@ class ProtectedFeatureSerializer(serializers.Serializer):
     avoided_ead_mean = serializers.FloatField(allow_null=True)
     avoided_eael_mean = serializers.FloatField(allow_null=True)
     hazard = serializers.CharField()
-    rcp = serializers.CharField()
+    parameters = serializers.DictField(child=serializers.JSONField())
 
 
 class SortedFeatureSerializer(serializers.Serializer):
