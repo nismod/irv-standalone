@@ -1,4 +1,7 @@
-from django.contrib.auth.models import User
+import json
+from urllib.parse import urlencode
+
+from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import Point
 from django.test import TestCase
 from django.db import connection
@@ -6,14 +9,15 @@ from django.test.utils import CaptureQueriesContext
 from rest_framework.test import APIClient
 
 from map.models import (
-    AdaptationCostBenefit, DamagesExpected, Feature, FeatureLayer, ModelParameterSet,
+    AdaptationCostBenefit, DamagesExpected, Dataset, Feature, FeatureLayer, ModelParameterSet,
 )
 
 
 class ModelScenarioTests(TestCase):
     def setUp(self):
         self.client = APIClient()
-        self.client.force_authenticate(User.objects.create_user(username="scenarios"))
+        self.user = User.objects.create_user(username="scenarios")
+        self.client.force_authenticate(self.user)
         self.features = []
         for name, sector in (("roads", "transport"), ("power", "energy")):
             layer = FeatureLayer.objects.create(
@@ -23,11 +27,11 @@ class ModelScenarioTests(TestCase):
                 layer=layer, string_id=name, properties={}, geom=Point(0, 0, srid=4326),
             ))
 
-    def damage(self, feature, parameters, hazard="flood", protection=0):
+    def damage(self, feature, parameters, hazard="flood", protection=0, amount=10):
         return DamagesExpected.objects.create(
             feature=feature, hazard=hazard, protection_standard=protection,
             parameter_set=ModelParameterSet.for_values("damages_expected", parameters),
-            ead_mean=10,
+            ead_mean=amount,
         )
 
     def test_requires_authentication_and_valid_model(self):
@@ -100,3 +104,67 @@ class ModelScenarioTests(TestCase):
             "/map/model-scenarios/damages_expected", {"layer": "roads"},
         ).json()
         self.assertEqual([row["parameters"] for row in rows], [{"gwl": 2}])
+
+    def test_hazard_permissions_apply_to_discovery_map_values_and_sorted_totals(self):
+        dataset = Dataset.objects.create(
+            id="coastal", label="Coastal", group="hazards", quantity="depth", unit="m",
+            stacking_order=0, display_order=0,
+        )
+        parameters = {"gwl": 2}
+        self.damage(self.features[0], parameters, hazard="fluvial", amount=10)
+        self.damage(self.features[0], parameters, hazard="coastal", amount=90)
+
+        def check(expected_total, hazards):
+            response = self.client.get("/map/model-scenarios/damages_expected", {"layer": "roads"})
+            self.assertEqual({row["hazard"] for row in response.json()}, hazards)
+            query = {
+                "layer": "roads", "field": "ead_mean",
+                "dimensions": json.dumps({"hazard": "all", "parameters": parameters, "protection_standard": 0}),
+            }
+            response = self.client.post(
+                "/map/attributes/damages_expected?" + urlencode(query),
+                {"ids": [self.features[0].pk]}, format="json",
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()[str(self.features[0].pk)], expected_total)
+            response = self.client.get("/map/features/sorted-by/damages_expected", query)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()["items"][0]["value"], expected_total)
+
+        # A result hazard with no raster dataset (fluvial) remains available.
+        check(10, {"fluvial"})
+        group = Group.objects.create(name="coastal-data")
+        dataset.access_groups.add(group)
+        self.user.groups.add(group)
+        check(100, {"fluvial", "coastal"})
+        self.user.groups.remove(group)
+        self.user.is_superuser = True
+        self.user.save(update_fields=["is_superuser"])
+        check(100, {"fluvial", "coastal"})
+
+    def test_adaptation_discovery_and_protected_features_exclude_restricted_hazards(self):
+        Dataset.objects.create(
+            id="coastal", label="Coastal", group="hazards", quantity="depth", unit="m",
+            stacking_order=0, display_order=0,
+        )
+        for hazard in ("coastal", "flood"):
+            AdaptationCostBenefit.objects.create(
+                feature=self.features[0], hazard=hazard, protector_feature_id=123,
+                parameter_set=ModelParameterSet.for_values("adaptation", {"gwl": 2}),
+                adaptation_name="Wall", adaptation_protection_level=50, adaptation_cost=20,
+            )
+        response = self.client.get("/map/model-scenarios/adaptation", {"protector_id": 123})
+        self.assertEqual([row["hazard"] for row in response.json()], ["flood"])
+        response = self.client.get("/map/features/123/protected-by", {"parameters": json.dumps({"gwl": 2})})
+        self.assertEqual([row["hazard"] for row in response.json()], ["flood"])
+        query = {"layer": "roads", "field": "adaptation_cost", "dimensions": json.dumps({
+            "hazard": "coastal", "parameters": {"gwl": 2}, "adaptation_name": "Wall",
+            "adaptation_protection_level": 50,
+        })}
+        response = self.client.get("/map/features/sorted-by/adaptation", query)
+        self.assertEqual(response.json()["items"], [])
+        response = self.client.post(
+            "/map/attributes/adaptation?" + urlencode(query),
+            {"ids": [self.features[0].pk]}, format="json",
+        )
+        self.assertEqual(response.json()[str(self.features[0].pk)], None)

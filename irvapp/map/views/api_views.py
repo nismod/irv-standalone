@@ -17,6 +17,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from map.model_parameters import canonical_parameter_key
+from map.permissions import inaccessible_hazard_ids
 from map.serializers import (
     SortedFeatureSerializer,
     ProtectedFeatureSerializer,
@@ -202,6 +203,7 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
             )
 
         base_filters = self._layer_filters(request)
+        restricted_hazards = inaccessible_hazard_ids(request.user)
 
         try:
             if field_group == "damages_expected":
@@ -211,7 +213,7 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
                         "damages_expected", dimensions["parameters"]
                     ),
                     protection_standard=dimensions["protection_standard"],
-                ).annotate(
+                ).exclude(hazard__in=restricted_hazards).annotate(
                     bbox_wkt=AsWKT(Envelope("feature__geom")),
                 )
                 if dimensions["hazard"] != "all":
@@ -235,7 +237,7 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
                     adaptation_protection_level=dimensions[
                         "adaptation_protection_level"
                     ],
-                ).annotate(
+                ).exclude(hazard__in=restricted_hazards).annotate(
                     bbox_wkt=AsWKT(Envelope("feature__geom")),
                 )
 
@@ -337,7 +339,7 @@ class ProtectedFeaturesView(APIView):
             protector_feature_id=protector_id,
             hazard__isnull=False,
             **parameter_filter("adaptation", parameter_validation),
-        ).select_related("feature", "feature__layer", "parameter_set").prefetch_related(
+        ).exclude(hazard__in=inaccessible_hazard_ids(request.user)).select_related("feature", "feature__layer", "parameter_set").prefetch_related(
             "parameter_set__parameters"
         ).order_by("feature_id", "adaptation_name", "hazard")
 
@@ -492,6 +494,7 @@ class AttributeLookupView(FieldGroupQueryParsingMixin, APIView):
         ).values_list("id", flat=True)
 
         lookup = {}
+        restricted_hazards = inaccessible_hazard_ids(request.user)
 
         if field_group == "damages_expected":
             query = DamagesExpected.objects.filter(
@@ -500,7 +503,7 @@ class AttributeLookupView(FieldGroupQueryParsingMixin, APIView):
                     "damages_expected", dimensions["parameters"]
                 ),
                 protection_standard=dimensions["protection_standard"],
-            )
+            ).exclude(hazard__in=restricted_hazards)
 
             if dimensions["hazard"] != "all":
                 query = query.filter(hazard=dimensions["hazard"])
@@ -537,7 +540,7 @@ class AttributeLookupView(FieldGroupQueryParsingMixin, APIView):
                 adaptation_protection_level=dimensions[
                     "adaptation_protection_level"
                 ],
-            )
+            ).exclude(hazard__in=restricted_hazards)
 
             if field == "cost_benefit_ratio":
                 eael_days = 1

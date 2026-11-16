@@ -5,6 +5,7 @@ from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from map.permissions import inaccessible_hazard_ids
 
 from map.models import (
     AdaptationCostBenefit, DamagesExpected, Feature, FeatureLayer, ModelParameter, ModelParameterSet,
@@ -113,6 +114,8 @@ class ModelScenariosView(APIView):
             scoped_results = scoped_results.filter(protector_feature_id=protector_id)
 
         candidates = scenario_combinations(model, dimensions, parameter_set_ids)
+        restricted = inaccessible_hazard_ids(request.user)
+        candidates = [row for row in candidates if row["hazard"] not in restricted]
         if hazard is not None and hazard != "all":
             candidates = [row for row in candidates if row["hazard"] == hazard]
         has_scope = bool(layers) or protector_id is not None or any(

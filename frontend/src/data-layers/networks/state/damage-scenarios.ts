@@ -17,6 +17,7 @@ import {
   selectResult,
 } from 'lib/model-scenarios/scenarios';
 import { selectedNetworkLayerIdsState } from './data-selection';
+import { hazardsMetadataState } from 'data-layers/hazards/state/metadata';
 
 export const damageScenarioCatalogState = atom((get) =>
   get(
@@ -28,10 +29,12 @@ export const damageScenarioCatalogState = atom((get) =>
 
 export const damageScenarioState = atom((get) => {
   const catalog = get(damageScenarioCatalogState);
-  const hazards = [...new Set(catalog?.rows.map((row) => row.hazard) ?? [])];
+  const metadata = get(hazardsMetadataState);
+  const available = catalog?.rows.filter((row) => metadata[row.hazard]?.has_access !== false) ?? [];
+  const hazards = [...new Set(available.map((row) => row.hazard))];
   const requested = get(damageSourceState);
-  const hazard = requested === 'all' || hazards.includes(requested) ? requested : hazards[0];
-  const rows = scenariosForHazard(catalog?.rows ?? [], hazard);
+  const hazard = requested === 'all' || hazards.includes(requested) ? requested : 'all';
+  const rows = scenariosForHazard(available, hazard);
   const result = selectResult(rows, get(modelParametersState('damages_expected')), {
     protection_standard: get(damageProtectionStandardState),
   });

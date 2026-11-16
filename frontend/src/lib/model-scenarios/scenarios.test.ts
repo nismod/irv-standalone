@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { FieldSpec } from 'lib/data-map/view-layers';
 import {
   changeParameter,
   ModelScenario,
@@ -18,6 +19,16 @@ const rows: ModelScenario[] = [
 ];
 
 describe('model scenarios', () => {
+  it('accepts JSON arrays, booleans and nested objects in FieldSpec model parameters', () => {
+    const parameters = { enabled: true, members: [1, '1', false], settings: { optional: null } };
+    const fieldSpec: FieldSpec = {
+      fieldGroup: 'damages_expected',
+      field: 'ead_mean',
+      fieldDimensions: scenarioDimensions({ hazard: 'flood', protection_standard: 0, parameters }),
+    };
+    expect(fieldSpec.fieldDimensions.parameters).toEqual(parameters);
+  });
+
   it('keeps complete scenarios and their JSON types when changing sparse dimensions', () => {
     const selected = rows[0].parameters;
     expect(parameterOptions(rows, selected, 'gwl').map((option) => option.value)).toEqual([1.5, 2]);

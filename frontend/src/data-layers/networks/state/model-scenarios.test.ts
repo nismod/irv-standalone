@@ -17,6 +17,8 @@ import { damageSourceStateEffect } from 'app/state/damage-mapping/damage-map';
 import { hazardSelectionState } from 'data-layers/hazards/state/data-selection';
 import { matchRasterScenario } from 'data-layers/hazards/raster-scenario';
 import { HAZARD_SOURCE } from 'data-layers/hazards/source';
+import { hazardsMetadataState } from 'data-layers/hazards/state/metadata';
+import type { Dataset } from 'lib/api-client';
 
 vi.mock('./data-selection', async () => {
   const { atom } = await import('jotai');
@@ -28,6 +30,11 @@ vi.mock('./data-selection', async () => {
   };
 });
 vi.mock('../view-layers', () => ({ getInfrastructureViewLayers: () => ({}) }));
+vi.mock('data-layers/hazards/state/metadata', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('data-layers/hazards/state/metadata')>();
+  const { atom } = await import('jotai');
+  return { ...actual, hazardsMetadataState: atom({}) };
+});
 vi.mock('lib/state/interactions/interaction-state', async () => {
   const { atom } = await import('jotai');
   const { atomFamily } = await import('jotai-family');
@@ -51,6 +58,44 @@ afterEach(() => {
 });
 
 describe('model scenario query flow', () => {
+  it('drops a restricted persisted hazard and excludes it from all-hazard scenarios', async () => {
+    vi.spyOn(api, 'mapModelScenariosList').mockResolvedValue({
+      data: [
+        { hazard: 'fluvial', parameters: { gwl: 2 }, protection_standard: 0 },
+        { hazard: 'coastal', parameters: { gwl: 4 }, protection_standard: 0 },
+      ],
+    } as never);
+    const store = createStore();
+    store.set(hazardsMetadataState as PrimitiveAtom<Record<string, Dataset>>, {
+      coastal: { id: 'coastal', has_access: false } as Dataset,
+    });
+    store.set(damageSourceState, 'coastal');
+    subscriptions.push(store.sub(damagesFieldState, () => {}));
+    await vi.waitFor(() => expect(store.get(damagesFieldState)).not.toBeNull());
+    expect(store.get(damagesFieldState).fieldDimensions).toEqual({
+      hazard: 'all',
+      parameters: { gwl: 2 },
+      protection_standard: 0,
+    });
+  });
+
+  it('revalidates an active selection when permissions change while the catalogue is cached', async () => {
+    const catalogue = vi.spyOn(api, 'mapModelScenariosList').mockResolvedValue({
+      data: [{ hazard: 'coastal', parameters: { gwl: 2 }, protection_standard: 0 }],
+    } as never);
+    const store = createStore();
+    const metadata = hazardsMetadataState as PrimitiveAtom<Record<string, Dataset>>;
+    store.set(metadata, { coastal: { id: 'coastal', has_access: true } as Dataset });
+    store.set(damageSourceState, 'coastal');
+    subscriptions.push(store.sub(damagesFieldState, () => {}));
+    await vi.waitFor(() =>
+      expect(store.get(damagesFieldState)?.fieldDimensions.hazard).toBe('coastal'),
+    );
+    store.set(metadata, { coastal: { id: 'coastal', has_access: false } as Dataset });
+    expect(store.get(damagesFieldState)).toBeNull();
+    expect(catalogue).toHaveBeenCalledTimes(1);
+  });
+
   it('waits for asset filters before requesting adaptation metadata', () => {
     const request = vi.spyOn(api, 'mapModelScenariosList');
     const store = createStore();
@@ -83,6 +128,11 @@ describe('model scenario query flow', () => {
     });
     expect(matchRasterScenario({ gwl: 3 }, hazardDomains.heat).linked).toBe(false);
     expect(store.get(dataParamState({ group: 'heat', param: 'gwl' }))).toBe(2);
+    expect(store.get(hazardSelectionState('heat'))).toBe(false);
+    damageSourceStateEffect(ops, {
+      scenario: { hazard: 'heat', parameters: { gwl: 2, slr: 0.5, member: 'b' } },
+      hazardDomains,
+    });
     expect(store.get(hazardSelectionState('heat'))).toBe(false);
   });
 
