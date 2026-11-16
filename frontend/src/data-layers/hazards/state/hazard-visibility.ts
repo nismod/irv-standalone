@@ -4,7 +4,7 @@ import { damageSourceState } from 'lib/state/damage-map';
 import { showDamagesState } from 'app/state/damage-mapping/damage-map';
 
 import { hazardsMapOrderState, hazardsMetadataState } from './metadata';
-import { getHazardSelectionAggregate } from './data-selection';
+import { getHazardSelectionAggregate, hazardSelectionState } from './data-selection';
 
 export const hazardVisibilityState = atom((get) => {
   if (get(showDamagesState)) {
@@ -17,7 +17,7 @@ export const hazardVisibilityState = atom((get) => {
         return {};
       }
       return {
-        [selectedDamageSource]: true,
+        [selectedDamageSource]: get(hazardSelectionState(selectedDamageSource)),
       };
     }
   } else {

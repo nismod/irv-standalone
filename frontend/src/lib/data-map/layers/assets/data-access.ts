@@ -4,8 +4,6 @@ import { FieldSpec } from 'lib/data-map/view-layers';
 import { featureProperty } from 'lib/deck/props/data-source';
 import { Accessor, withTriggers } from 'lib/deck/props/getters';
 import { getFeatureId } from 'lib/deck/utils/get-feature-id';
-import { sumOrNone } from 'lib/helpers';
-import { MapGeoJSONFeature } from 'maplibre-gl';
 
 type ModelParameters = Record<string, string | number | boolean | null>;
 
@@ -17,22 +15,6 @@ function getExpectedDamageKey(direct: boolean, hazard: string, parameters: Model
     .map(([name, value]) => `${name}_${String(value)}`)
     .join('__');
   return `${direct ? 'ead' : 'eael'}__${hazard}__${parameterKey}__conf_None`;
-}
-
-const hazardTypes = ['fluvial', 'surface', 'coastal', 'cyclone'];
-
-function totalExpectedDamagesProperty(
-  direct: boolean,
-  parameters: ModelParameters,
-) {
-  const hazardProperties = hazardTypes.map((ht) =>
-    featureProperty<number>(getExpectedDamageKey(direct, ht, parameters)),
-  );
-
-  return withTriggers(
-    (f: MapGeoJSONFeature) => sumOrNone(hazardProperties.map((p) => p(f))),
-    [direct, parameters],
-  );
 }
 
 /**
@@ -53,7 +35,7 @@ function withLoaderTriggers(fn: Accessor<unknown>, dataLoader: DataLoader) {
  * @param fieldSpec field specification
  * @returns a data accessor for a given layer and field spec.
  */
-export function getAssetDataAccessor(layer: string, fieldSpec: FieldSpec) {
+export function getAssetDataAccessor(layer: string, fieldSpec: FieldSpec): Accessor<unknown> {
   if (fieldSpec == null) return null;
 
   const { fieldGroup, fieldDimensions, field } = fieldSpec;
@@ -65,11 +47,22 @@ export function getAssetDataAccessor(layer: string, fieldSpec: FieldSpec) {
     };
 
     const isDirect = field.startsWith('ead_');
-
-    if (hazard === 'all') {
-      return totalExpectedDamagesProperty(isDirect, parameters);
+    if (!parameters) return () => null;
+    // Only this precise case is covered by the existing Jamaica tile export.
+    // Other scenarios, protection levels, metrics and totals use the same
+    // attributes API as the asset list and adaptations.
+    const legacyTile =
+      Object.keys(parameters).length === 2 &&
+      typeof parameters.rcp === 'string' &&
+      typeof parameters.epoch === 'number' &&
+      ['fluvial', 'surface', 'coastal', 'cyclone'].includes(hazard) &&
+      fieldDimensions.protection_standard === 0 &&
+      ['ead_mean', 'eael_mean'].includes(field);
+    if (legacyTile) {
+      return featureProperty(getExpectedDamageKey(isDirect, hazard, parameters));
     }
-    return featureProperty(getExpectedDamageKey(isDirect, hazard, parameters));
+    const dataLoader = dataLoaderManager.getDataLoader(layer, fieldSpec);
+    return withLoaderTriggers((f) => dataLoader.getData(getFeatureId(f)), dataLoader);
   } else if (fieldGroup === 'damages_return_period') {
     // return return period damages dynamically loaded from API
     const dataLoader = dataLoaderManager.getDataLoader(layer, fieldSpec);

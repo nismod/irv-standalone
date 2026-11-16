@@ -3,67 +3,30 @@ import {
   inferDependenciesFromData,
   inferDomainsFromData,
 } from 'lib/controls/data-params';
+import { assetLayerDefinitions } from 'data-layers/networks/layer-registry';
 
-import adaptationOptions from 'app/config/sidebar/adaptation-options.json';
-
-interface TotalDamagesParams {
-  rcp: string;
-  epoch: number;
-}
-
-const totalDamagesConfig: DataParamGroupConfig<TotalDamagesParams> = {
-  paramDefaults: {
-    rcp: 'baseline',
-    epoch: 2010,
-  },
-  paramDomains: {
-    rcp: ['baseline', '4.5', '8.5'],
-    epoch: [2010, 2050],
-  },
-  paramDependencies: {
-    rcp: ({ epoch }) => {
-      if (epoch === 2010) return ['baseline'];
-      if (epoch === 2050) return ['4.5', '8.5'];
-    },
-  },
-};
-
+// Asset filters remain project configuration. Model scenarios and adaptation
+// options come from the results catalogue, independently of these filters.
 export interface AdaptationOptionParams {
   sector: string;
   subsector: string;
   asset_type: string;
-  hazard: string;
-  rcp: string;
-  adaptation_name: string;
-  adaptation_protection_level: number;
 }
 
-const adaptationDomainsConfig: DataParamGroupConfig<AdaptationOptionParams> = {
-  paramDefaults: {
-    sector: 'power',
-    subsector: 'transmission',
-    asset_type: 'pole',
-    hazard: 'flooding',
-    rcp: '2.6',
-    adaptation_name: 'Building protective wall',
-    adaptation_protection_level: 1,
-  },
-  paramDomains: inferDomainsFromData<AdaptationOptionParams>(adaptationOptions),
-  paramDependencies: inferDependenciesFromData(adaptationOptions, {
-    sector: [],
-    subsector: ['sector'],
-    asset_type: ['sector', 'subsector'],
-    hazard: ['sector', 'subsector', 'asset_type'],
-    rcp: ['sector', 'subsector', 'asset_type'],
-    adaptation_name: ['sector', 'subsector', 'asset_type', 'hazard'],
-    adaptation_protection_level: ['sector', 'subsector', 'asset_type', 'hazard', 'adaptation_name'],
-  }),
-};
+const assetFilters = assetLayerDefinitions.map(({ sector, subsector, asset_type }) => ({
+  sector,
+  subsector,
+  asset_type,
+}));
 
-export const NETWORK_DOMAINS: Record<
-  string,
-  DataParamGroupConfig<AdaptationOptionParams | TotalDamagesParams>
-> = {
-  all: totalDamagesConfig,
-  adaptation: adaptationDomainsConfig,
+export const NETWORK_DOMAINS: Record<string, DataParamGroupConfig<AdaptationOptionParams>> = {
+  adaptation: {
+    paramDefaults: { sector: 'power', subsector: 'transmission', asset_type: 'pole' },
+    paramDomains: inferDomainsFromData(assetFilters),
+    paramDependencies: inferDependenciesFromData(assetFilters, {
+      sector: [],
+      subsector: ['sector'],
+      asset_type: ['sector', 'subsector'],
+    }),
+  },
 };

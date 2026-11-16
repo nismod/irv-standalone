@@ -13,6 +13,7 @@ from map.views import (
 )
 from rest_framework.routers import DefaultRouter
 from django.urls import path
+from map.views.model_scenarios import ModelScenariosView
 
 router = DefaultRouter(trailing_slash=False)
 router.register(r'features', FeatureViewset)
@@ -30,6 +31,7 @@ router.register(
 
 urlpatterns = [
     *router.urls,
+    path('model-scenarios/<str:field_group>', ModelScenariosView.as_view()),
     path(
         'features/sorted-by/<str:field_group>',
         SortedFeaturesView.as_view(),

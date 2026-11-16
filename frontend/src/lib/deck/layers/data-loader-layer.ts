@@ -15,7 +15,14 @@ export function dataLoaderLayer(tileProps, { dataLoader, dataFetcher }: DataLoad
     tile: { content },
   } = tileProps;
   if (content && dataLoader) {
-    const ids: number[] = content.map((f: MapGeoJSONFeature) => getFeatureId(f, 'id'));
+    const ids: number[] = [
+      ...new Set<number>(
+        content
+          .map((f: MapGeoJSONFeature) => getFeatureId(f))
+          .filter((id: number | undefined) => Number.isSafeInteger(id) && id > 0),
+      ),
+    ];
+    if (!ids.length) return null;
     dataLoader?.loadData(dataFetcher, ids);
   }
 

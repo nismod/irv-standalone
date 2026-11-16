@@ -15,8 +15,13 @@ import {
 } from '@mui/material';
 
 import { titleCase, isNumeric, numFormat, paren, numRangeFormat } from 'lib/helpers';
-import { useAtomValue } from 'jotai';
-import { protectedFeatureAdaptationOptionsState } from 'lib/state/protected-features';
+import { useAtomValue, useSetAtom } from 'jotai';
+import {
+  protectedFeatureAdaptationOptionsState,
+  protectedFeatureScenarioState,
+} from 'lib/state/protected-features';
+import { modelParametersState } from 'lib/model-scenarios/state';
+import { ModelParameterControls } from 'lib/model-scenarios/ModelParameterControls';
 
 interface DataItemProps {
   label: string;
@@ -354,9 +359,9 @@ export const BuildingDetails: FC<DetailsComponentProps> = ({ f }) => (
 );
 
 export const CoastalDefenceDetails: FC<DetailsComponentProps> = ({ f }) => {
-  const { data } = useAtomValue(
-    protectedFeatureAdaptationOptionsState(JSON.stringify({ rcp: '8.5' })),
-  );
+  const { data } = useAtomValue(protectedFeatureAdaptationOptionsState(undefined));
+  const { catalog, parameters } = useAtomValue(protectedFeatureScenarioState);
+  const setParameters = useSetAtom(modelParametersState('adaptation'));
 
   // There may be adaptation results calculated for the coastal protection
   // region as a whole. They have a protected_feature_id == feature_id, so
@@ -378,6 +383,14 @@ export const CoastalDefenceDetails: FC<DetailsComponentProps> = ({ f }) => {
           value={`${numFormat(f.max_flood_height)}`}
         />
         <DataItem label="Asset type" value={f.asset_type} />
+        <ListItem disableGutters>
+          <ModelParameterControls
+            rows={catalog?.rows}
+            parameters={parameters}
+            onChange={setParameters}
+            error={catalog?.error}
+          />
+        </ListItem>
         <ListItem disableGutters disablePadding>
           <ListItemText
             primary="Protectee assets"

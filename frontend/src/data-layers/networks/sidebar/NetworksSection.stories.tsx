@@ -13,9 +13,7 @@ import {
   sectionVisibilityState,
 } from 'lib/state/sections';
 import { STORAGE_PREFIX } from 'lib/state/map-view/map-url';
-import {
-  networkTreeExpandedState,
-} from '../state/data-selection';
+import { networkTreeExpandedState } from '../state/data-selection';
 
 const hazardsResponse: PaginatedDatasetList = {
   count: 2,
@@ -257,6 +255,24 @@ const meta = {
   parameters: {
     msw: {
       handlers: [
+        http.get('/api/map/model-scenarios/:model', ({ params }) =>
+          HttpResponse.json(
+            params.model === 'damages_expected'
+              ? ['fluvial', 'coastal'].map((hazard) => ({
+                  hazard,
+                  parameters: { rcp: '4.5', epoch: 2050 },
+                  protection_standard: 0,
+                }))
+              : [
+                  {
+                    hazard: 'TC',
+                    parameters: { gwl: 2, slr: 0.5 },
+                    adaptation_name: 'Raise',
+                    adaptation_protection_level: 50,
+                  },
+                ],
+          ),
+        ),
         http.get('/api/map/infrastructure-tree', () => {
           return HttpResponse.json(mockInfrastructureTree);
         }),
@@ -266,9 +282,7 @@ const meta = {
             return HttpResponse.json({
               ...networksResponse,
               count: 2,
-              results: networksResponse.results.filter(
-                (dataset) => dataset.group === 'networks',
-              ),
+              results: networksResponse.results.filter((dataset) => dataset.group === 'networks'),
             });
           }
           if (url.searchParams.get('group') === 'hazards') {
@@ -337,6 +351,7 @@ export const Risk: Story = {
         'Infrastructure layers are currently following the Adaptation Options selection',
       ),
     ).toBeFalsy();
+    await userEvent.click(await canvas.findByRole('checkbox', { name: 'Class A' }));
     expect(await canvas.findByRole('radio', { name: 'River Flooding' })).toBeEnabled();
     expect(await canvas.findByRole('radio', { name: 'Coastal Flooding' })).toBeDisabled();
   },

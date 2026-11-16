@@ -65,6 +65,7 @@ class Feature(models.Model):
 
     class Meta:
         db_table = "features"
+        indexes = [models.Index(fields=["layer", "id"], name="features_layer_id_idx")]
 
 
 class DatasetQuerySet(models.QuerySet):

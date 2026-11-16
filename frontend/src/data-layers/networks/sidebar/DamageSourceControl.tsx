@@ -8,39 +8,59 @@ import {
   Select,
 } from '@mui/material';
 import { useEffect, useId } from 'react';
-import { useAtom, useAtomValue } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 
 import { StateEffectRoot } from 'lib/recoil/state-effects/StateEffectRoot';
 import { InputSection } from 'lib/sidebar/ui/InputSection';
-import { InputRow } from 'lib/sidebar/ui/InputRow';
-import { EpochControl } from 'lib/sidebar/ui/params/EpochControl';
-import { RCPControl } from 'lib/sidebar/ui/params/RCPControl';
-import { damageSourceState, damageTypeState } from 'lib/state/damage-map';
-import { damageSourceStateEffect } from 'app/state/damage-mapping/damage-map';
+import {
+  damageSourceState,
+  damageTypeState,
+  damageProtectionStandardState,
+} from 'lib/state/damage-map';
+import { damageScenarioState } from '../state/damage-scenarios';
+import { modelParametersState } from 'lib/model-scenarios/state';
+import { ModelParameterControls } from 'lib/model-scenarios/ModelParameterControls';
+import { parameterKey } from 'lib/model-scenarios/scenarios';
+import { ParamDropdown } from 'lib/controls/ParamDropdown';
+import {
+  damageScenarioSyncState,
+  damageSourceStateEffect,
+} from 'app/state/damage-mapping/damage-map';
 import { LayerStylePanel } from 'lib/sidebar/ui/LayerStylePanel';
 
-import { hazardsUIOrderState, hazardsMetadataState } from 'data-layers/hazards/state/metadata';
+import { hazardsMetadataState } from 'data-layers/hazards/state/metadata';
 
 export const DamageSourceControl = () => {
   const HAZARDS_METADATA = useAtomValue(hazardsMetadataState);
-  const hazardsUIOrder = useAtomValue(hazardsUIOrderState);
-  const [damageSource, setDamageSource] = useAtom(damageSourceState);
+  const {
+    catalog,
+    hazards,
+    hazard: damageSource,
+    rows,
+    result,
+  } = useAtomValue(damageScenarioState);
+  const [requestedSource, setDamageSource] = useAtom(damageSourceState);
+  const setParameters = useSetAtom(modelParametersState('damages_expected'));
+  const setProtection = useSetAtom(damageProtectionStandardState);
   const [damageType, setDamageType] = useAtom(damageTypeState);
   const id = useId();
 
   useEffect(() => {
-    if (
-      damageSource !== 'all' &&
-      Object.keys(HAZARDS_METADATA).length > 0 &&
-      !HAZARDS_METADATA[damageSource]?.has_access
-    ) {
-      setDamageSource('all');
-    }
-  }, [damageSource, HAZARDS_METADATA, setDamageSource]);
+    if (catalog && requestedSource != null && requestedSource !== damageSource)
+      setDamageSource(damageSource);
+  }, [catalog, requestedSource, damageSource, setDamageSource]);
+
+  const protectionLevels = [
+    ...new Set(
+      rows
+        .filter((row) => result && parameterKey(row.parameters) === parameterKey(result.parameters))
+        .map((row) => row.protection_standard),
+    ),
+  ];
 
   return (
     <>
-      <StateEffectRoot state={damageSourceState} effect={damageSourceStateEffect} />
+      <StateEffectRoot state={damageScenarioSyncState} effect={damageSourceStateEffect} />
       <LayerStylePanel>
         <InputSection>
           <FormControl fullWidth>
@@ -61,24 +81,37 @@ export const DamageSourceControl = () => {
             <FormLabel component="legend">Hazard</FormLabel>
             <RadioGroup value={damageSource} onChange={(e, value) => setDamageSource(value)}>
               <FormControlLabel label="All Hazards" control={<Radio value="all" />} />
-              {hazardsUIOrder
-                .filter((h) => !!HAZARDS_METADATA[h] && h !== 'storm')
-                .map((hazard) => (
-                  <FormControlLabel
-                    key={hazard}
-                    label={HAZARDS_METADATA[hazard].label}
-                    disabled={!HAZARDS_METADATA[hazard].has_access}
-                    control={<Radio value={hazard} />}
-                  />
-                ))}
+              {hazards.map((hazard) => (
+                <FormControlLabel
+                  key={hazard}
+                  label={HAZARDS_METADATA[hazard]?.label ?? hazard}
+                  disabled={HAZARDS_METADATA[hazard]?.has_access === false}
+                  control={<Radio value={hazard} />}
+                />
+              ))}
             </RadioGroup>
           </FormControl>
         </InputSection>
         <InputSection>
-          <InputRow>
-            <EpochControl group={damageSource} />
-            <RCPControl group={damageSource} />
-          </InputRow>
+          <ModelParameterControls
+            rows={catalog ? rows : undefined}
+            parameters={result?.parameters ?? null}
+            onChange={setParameters}
+            error={catalog?.error}
+            emptyMessage={
+              damageSource === 'all' && hazards.length > 0
+                ? 'No scenario is shared by all hazards. Choose a hazard.'
+                : undefined
+            }
+          />
+          {protectionLevels.length > 1 && (
+            <ParamDropdown<number>
+              title="Protection standard"
+              value={result.protection_standard}
+              options={protectionLevels}
+              onChange={setProtection}
+            />
+          )}
         </InputSection>
       </LayerStylePanel>
     </>

@@ -7,7 +7,7 @@ type HazardsMetadata = Record<string, { label: string }>;
 function getSourceLabel(eadSource: string, hazardsMetadata) {
   if (eadSource === 'all') return 'All Hazards';
 
-  return hazardsMetadata[eadSource].label;
+  return hazardsMetadata[eadSource]?.label ?? eadSource;
 }
 
 function getDamageTypeLabel(field: string) {
@@ -93,12 +93,18 @@ export function createAssetDataFormats(
   };
 }
 
-export function getAssetDataFormats(fieldSpec: FieldSpec, hazardsMetadata: HazardsMetadata): FormatConfig {
+export function getAssetDataFormats(
+  fieldSpec: FieldSpec,
+  hazardsMetadata: HazardsMetadata,
+): FormatConfig {
   const dataFormats = createAssetDataFormats(hazardsMetadata);
   return dataFormats[fieldSpec.fieldGroup].default;
 }
 
-export function getAssetLegendDataFormats(fieldSpec: FieldSpec, hazardsMetadata: HazardsMetadata): FormatConfig {
+export function getAssetLegendDataFormats(
+  fieldSpec: FieldSpec,
+  hazardsMetadata: HazardsMetadata,
+): FormatConfig {
   const dataFormats = createAssetDataFormats(hazardsMetadata);
   return dataFormats[fieldSpec.fieldGroup].legend;
 }

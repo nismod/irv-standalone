@@ -4,10 +4,9 @@ import { FormLabel } from '@mui/material';
 
 import { ParamDropdown } from 'lib/controls/ParamDropdown';
 
-import { InputRow } from 'lib/sidebar/ui/InputRow';
 import { InputSection } from 'lib/sidebar/ui/InputSection';
 import { LayerStylePanel } from 'lib/sidebar/ui/LayerStylePanel';
-import { DataParam } from 'lib/sidebar/ui/params/DataParam';
+import { ProtectedScenarioControls } from './ProtectedScenarioControls';
 
 import { adaptationFieldState } from '../state/layer';
 
@@ -17,13 +16,7 @@ export const ProtectedFeaturesControl: FC = () => {
     <LayerStylePanel>
       <InputSection>
         <FormLabel>Adaptation for</FormLabel>
-        <InputRow>
-          <DataParam group="adaptation" id="rcp">
-            {({ value, onChange, options }) => (
-              <ParamDropdown title="RCP" value={value} onChange={onChange} options={options} />
-            )}
-          </DataParam>
-        </InputRow>
+        <ProtectedScenarioControls />
       </InputSection>
       <InputSection>
         <ParamDropdown<typeof adaptationField>

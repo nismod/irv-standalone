@@ -13,6 +13,12 @@ import { sectionVisibilityState } from 'lib/state/sections';
 
 import { LayerSpec } from 'lib/asset-list/use-sorted-features';
 import { damageMapStyleParamsState } from 'app/state/damage-mapping/damage-style-params';
+import {
+  modelParametersState,
+  scenarioCatalogState,
+  scenarioQueryKey,
+} from 'lib/model-scenarios/state';
+import { parameterKey, scenarioDimensions, selectResult } from 'lib/model-scenarios/scenarios';
 
 import * as networkColorMaps from '../color-maps';
 import {
@@ -98,14 +104,35 @@ export const adaptationLayerSpecState = atom<LayerSpec>((get) => {
   };
 });
 
-export const adaptationFieldSpecState = atom<FieldSpec>((get) => {
-  const field = get(adaptationFieldState);
-  const hazard = get(dataParamState({ group: 'adaptation', param: 'hazard' }));
-  const rcp = get(dataParamState({ group: 'adaptation', param: 'rcp' }));
-  const adaptation_name = get(dataParamState({ group: 'adaptation', param: 'adaptation_name' }));
-  const adaptation_protection_level = get(
+export const adaptationScenarioState = atom((get) => {
+  const scope = get(adaptationLayerSpecState);
+  const catalog = Object.values(scope).some((value) => value !== undefined)
+    ? get(scenarioCatalogState(scenarioQueryKey('adaptation', scope)))
+    : undefined;
+  const hazards = [...new Set(catalog?.rows.map((row) => row.hazard) ?? [])];
+  const requestedHazard = get(dataParamState({ group: 'adaptation', param: 'hazard' }));
+  const hazard = hazards.find((value) => value === requestedHazard) ?? hazards[0];
+  const rows = catalog?.rows.filter((row) => row.hazard === hazard) ?? [];
+  const preferredName = get(dataParamState({ group: 'adaptation', param: 'adaptation_name' }));
+  const preferredLevel = get(
     dataParamState({ group: 'adaptation', param: 'adaptation_protection_level' }),
   );
+  const selected = selectResult(rows, get(modelParametersState('adaptation')));
+  const parameterRows = selected
+    ? rows.filter((row) => parameterKey(row.parameters) === parameterKey(selected.parameters))
+    : [];
+  const names = [...new Set(parameterRows.map((row) => row.adaptation_name))];
+  const name = names.find((value) => value === preferredName) ?? names[0];
+  const optionRows = parameterRows.filter((row) => row.adaptation_name === name);
+  const result =
+    optionRows.find((row) => row.adaptation_protection_level === preferredLevel) ?? optionRows[0];
+  return { catalog, hazards, hazard, rows, names, optionRows, result };
+});
+
+export const adaptationFieldSpecState = atom<FieldSpec | null>((get) => {
+  const field = get(adaptationFieldState);
+  const { result } = get(adaptationScenarioState);
+  if (!result) return null;
 
   let fieldParams: {
     eael_days?: number;
@@ -121,12 +148,7 @@ export const adaptationFieldSpecState = atom<FieldSpec>((get) => {
     unit: field === 'cost_benefit_ratio'
       ? undefined
       : `${get(mapViewConfig).app.currency}${field === 'avoided_eael_mean' ? '/day' : ''}`,
-    fieldDimensions: {
-      hazard,
-      parameters: { rcp },
-      adaptation_name,
-      adaptation_protection_level,
-    },
+    fieldDimensions: scenarioDimensions(result),
     field,
     fieldParams,
   };
@@ -140,6 +162,8 @@ export const adaptationColorSpecState = atom<ColorSpec>((get) => {
 export const adaptationStyleParamsState = atom<StyleParams>((get) => {
   const fieldSpec = get(adaptationFieldSpecState);
   const colorSpec = get(adaptationColorSpecState);
+
+  if (!fieldSpec) return {};
 
   return {
     colorMap: {

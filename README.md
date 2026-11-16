@@ -153,6 +153,17 @@ docker compose -f docker-compose.dev.yml exec django python manage.py createsupe
 
 #### Populating the database
 
+Model scenarios used by the map and asset list are discovered from result rows at
+`GET /api/map/model-scenarios/{field_group}`, where `field_group` is
+`damages_expected` or `adaptation`. The endpoint accepts repeated `layer` filters,
+asset filters (`sector`, `subsector`, `asset_type`), and an optional `hazard`.
+Adaptation scenarios can also be scoped by `protector_id`. Each row contains a
+complete `parameters` object alongside fixed result dimensions such as protection
+standard or adaptation option. The controls preserve these combinations and value
+types. “All hazards” offers only scenarios shared by the hazards in the selected
+asset scope. Flexible damage scenarios use the bulk attributes API; existing
+Jamaica tiles remain a fast path for their supported RCP/year scenarios.
+
 The first time that you run the Django app, the backend database will be empty.
 The next step runs `pg_restore` to load data to the database from a backup.
 This runs `pg_restore` on the host against the database running in

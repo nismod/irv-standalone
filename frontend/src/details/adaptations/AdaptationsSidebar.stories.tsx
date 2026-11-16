@@ -30,13 +30,22 @@ export const Default: Story = {
   parameters: {
     msw: {
       handlers: [
+        http.get('/api/map/model-scenarios/adaptation', () =>
+          HttpResponse.json([
+            {
+              hazard: 'TC',
+              parameters: { rcp: '4.5' },
+              adaptation_name: 'Upgrade wooden poles to steel',
+              adaptation_protection_level: 0.76,
+            },
+          ]),
+        ),
         http.get(API_SEARCH_PATH, ({ request }) => {
           const url = new URL(request.url);
           if (
             url.searchParams.get('sector') === 'power' &&
             url.searchParams.get('field') === 'avoided_ead_mean' &&
-            url.searchParams.get('dimensions') ===
-              '{"hazard":"TC","parameters":{"rcp":"4.5"},"adaptation_name":"Upgrade wooden poles to steel","adaptation_protection_level":0.76}'
+            JSON.parse(url.searchParams.get('dimensions')).parameters.rcp === '4.5'
           ) {
             return HttpResponse.json(mockItemSearch);
           }

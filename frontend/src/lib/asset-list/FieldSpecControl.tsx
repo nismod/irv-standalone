@@ -1,88 +1,97 @@
-import { Box, Typography } from '@mui/material';
-import { produce } from 'immer';
+import { Stack } from '@mui/material';
 import { ParamDropdown } from 'lib/controls/ParamDropdown';
-import { FieldSpec } from 'lib/data-map/view-layers';
-import { FC } from 'react';
+import { ModelParameterControls } from 'lib/model-scenarios/ModelParameterControls';
+import {
+  ModelParameters,
+  ModelScenario,
+  ModelType,
+  parameterKey,
+} from 'lib/model-scenarios/scenarios';
 
-export const FieldSpecControl: FC<{
-  fieldSpec: FieldSpec;
-  onFieldSpec: (fieldSpec: FieldSpec) => void;
-}> = ({ fieldSpec, onFieldSpec }) => {
-  const { fieldGroup, fieldDimensions } = fieldSpec;
-  const modelParameters = (fieldDimensions.parameters ?? {}) as Record<string, string | number>;
-
+export function FieldSpecControl({
+  model,
+  onModelChange,
+  hazards,
+  hazard,
+  onHazardChange,
+  rows,
+  result,
+  onParametersChange,
+  onDimensionChange,
+  error,
+}: {
+  model: ModelType;
+  onModelChange: (model: ModelType) => void;
+  hazards: string[];
+  hazard: string;
+  onHazardChange: (hazard: string) => void;
+  rows?: ModelScenario[];
+  result: ModelScenario | null;
+  onParametersChange: (parameters: ModelParameters) => void;
+  onDimensionChange: (dimensions: Partial<ModelScenario>) => void;
+  error?: string;
+}) {
+  const parameterRows =
+    rows?.filter(
+      (row) => result && parameterKey(row.parameters) === parameterKey(result.parameters),
+    ) ?? [];
   return (
-    <>
-      <Box mt={1}>
+    <Stack spacing={2}>
+      <ParamDropdown
+        title="Variable Group"
+        value={model}
+        onChange={onModelChange}
+        options={[
+          { value: 'damages_expected', label: 'Expected Damages' },
+          { value: 'adaptation', label: 'Adaptation Options' },
+        ]}
+      />
+      <ParamDropdown
+        title="Hazard"
+        value={hazard ?? ''}
+        onChange={onHazardChange}
+        options={hazards.map((value) => ({
+          value,
+          label: value === 'all' ? 'All Hazards' : value,
+        }))}
+      />
+      <ModelParameterControls
+        rows={rows}
+        parameters={result?.parameters ?? null}
+        onChange={onParametersChange}
+        error={error}
+        emptyMessage={
+          hazard === 'all' && rows?.length === 0
+            ? 'No scenario is shared by all hazards. Choose a hazard.'
+            : undefined
+        }
+      />
+      {result && model === 'damages_expected' && (
         <ParamDropdown
-          title="Variable Group"
-          value={fieldGroup}
-          onChange={(value) =>
-            onFieldSpec(
-              produce(fieldSpec, (draft) => {
-                draft.fieldGroup = value;
-              }),
-            )
-          }
-          options={[
-            { value: 'damages_expected', label: 'Expected Damages' },
-            { value: 'adaptation', label: 'Adaptation Options' },
-          ]}
+          title="Protection standard"
+          value={result.protection_standard}
+          options={[...new Set(parameterRows.map((row) => row.protection_standard))]}
+          onChange={(value) => onDimensionChange({ protection_standard: value })}
         />
-      </Box>
-      <Box mt={1}>
-        <Typography variant="h6">Dimensions</Typography>
-        <Box>
+      )}
+      {result && model === 'adaptation' && (
+        <>
           <ParamDropdown
-            title="Hazard"
-            value={fieldDimensions.hazard as string | number}
-            onChange={(value) =>
-              onFieldSpec(
-                produce(fieldSpec, (draft) => {
-                  draft.fieldDimensions.hazard = value;
-                }),
-              )
-            }
-            options={[
-              { value: 'all', label: 'All Hazards' },
-              { value: 'fluvial', label: 'River Flooding' },
-              { value: 'surface', label: 'Surface Flooding' },
-              { value: 'coastal', label: 'Coastal Flooding' },
-              { value: 'cyclone', label: 'Cyclones' },
-            ]}
+            title="Adaptation type"
+            value={result.adaptation_name}
+            options={[...new Set(parameterRows.map((row) => row.adaptation_name))]}
+            onChange={(value) => onDimensionChange({ adaptation_name: value })}
           />
           <ParamDropdown
-            title="RCP"
-            value={modelParameters.rcp}
-            onChange={(value) =>
-              onFieldSpec(
-                produce(fieldSpec, (draft) => {
-                  draft.fieldDimensions.parameters = {
-                    ...modelParameters,
-                    rcp: value,
-                  };
-                }),
-              )
-            }
-            options={[{ value: 'baseline', label: 'Baseline' }, '2.6', '4.5', '8.5']}
+            title="Protection level"
+            value={result.adaptation_protection_level}
+            options={parameterRows
+              .filter((row) => row.adaptation_name === result.adaptation_name)
+              .map((row) => row.adaptation_protection_level)}
+            onChange={(value) => onDimensionChange({ adaptation_protection_level: value })}
           />
-          <ParamDropdown
-            title="Epoch"
-            value={modelParameters.epoch}
-            onChange={(value) =>
-              onFieldSpec(
-                produce(fieldSpec, (draft) => {
-                  draft.fieldDimensions.parameters = {
-                    ...modelParameters,
-                    epoch: value,
-                  };
-                }),
-              )
-            }
-            options={[2010, 2050, 2100]}
-          />
-        </Box>
-      </Box>
-    </>
+        </>
+      )}
+    </Stack>
   );
-};
+}

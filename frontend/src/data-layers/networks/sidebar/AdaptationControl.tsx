@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { useAtom } from 'jotai';
+import { useAtom, useAtomValue, useSetAtom } from 'jotai';
 import startCase from 'lodash/startCase';
 import lowerCase from 'lodash/lowerCase';
 import { FormLabel, Slider, Typography } from '@mui/material';
@@ -13,12 +13,16 @@ import { InputRow } from 'lib/sidebar/ui/InputRow';
 import { InputSection } from 'lib/sidebar/ui/InputSection';
 import { LayerStylePanel } from 'lib/sidebar/ui/LayerStylePanel';
 import { DataParam } from 'lib/sidebar/ui/params/DataParam';
+import { dataParamState } from 'lib/state/data-params';
+import { modelParametersState } from 'lib/model-scenarios/state';
+import { ModelParameterControls } from 'lib/model-scenarios/ModelParameterControls';
 
 import {
   adaptationCostBenefitRatioEaelDaysState,
   adaptationDataParamsStateEffect,
   adaptationFieldState,
   adaptationLayerSpecState,
+  adaptationScenarioState,
 } from '../state/layer';
 
 function hazardLabel(val) {
@@ -28,7 +32,7 @@ function hazardLabel(val) {
     case 'TC':
       return 'Cyclones';
     default:
-      throw new Error('Unsupported hazard type: ' + val);
+      return autoLabel(val);
   }
 }
 
@@ -69,6 +73,15 @@ const CostBenefitRatioInputs: FC = () => {
 
 export const AdaptationControl: FC = () => {
   const [adaptationField, setAdaptationField] = useAtom(adaptationFieldState);
+  const { catalog, hazards, hazard, rows, names, optionRows, result } =
+    useAtomValue(adaptationScenarioState);
+  const setParameters = useSetAtom(modelParametersState('adaptation'));
+  const setHazard = useSetAtom(dataParamState({ group: 'adaptation', param: 'hazard' }));
+  const setName = useSetAtom(dataParamState({ group: 'adaptation', param: 'adaptation_name' }));
+  const setLevel = useSetAtom(
+    dataParamState({ group: 'adaptation', param: 'adaptation_protection_level' }),
+  );
+  const levels = optionRows.map((row) => row.adaptation_protection_level);
   return (
     <LayerStylePanel>
       <StateEffectRoot state={adaptationLayerSpecState} effect={adaptationDataParamsStateEffect} />
@@ -111,58 +124,47 @@ export const AdaptationControl: FC = () => {
       <InputSection>
         <FormLabel>Adaptation for</FormLabel>
         <InputRow>
-          <DataParam group="adaptation" id="hazard">
-            {({ value, onChange, options }) => (
-              <ParamDropdown
-                title="Hazard"
-                value={value}
-                onChange={onChange}
-                options={makeOptions(options, hazardLabel)}
-              />
-            )}
-          </DataParam>
-          <DataParam group="adaptation" id="rcp">
-            {({ value, onChange, options }) => (
-              <ParamDropdown title="RCP" value={value} onChange={onChange} options={options} />
-            )}
-          </DataParam>
+          <ParamDropdown
+            title="Hazard"
+            value={hazard ?? ''}
+            onChange={setHazard}
+            options={makeOptions(hazards, hazardLabel)}
+          />
         </InputRow>
+        <ModelParameterControls
+          rows={catalog ? rows : undefined}
+          parameters={result?.parameters ?? null}
+          onChange={setParameters}
+          error={catalog?.error}
+        />
       </InputSection>
       <InputSection>
-        <DataParam group="adaptation" id="adaptation_name">
-          {({ value, onChange, options }) => (
-            <ParamDropdown
-              title="Adaptation type"
-              value={value}
-              onChange={onChange}
-              options={options}
+        <ParamDropdown
+          title="Adaptation type"
+          value={result?.adaptation_name ?? ''}
+          onChange={setName}
+          options={names}
+        />
+      </InputSection>
+      <InputSection>
+        {levels.length > 2 ? (
+          <>
+            <FormLabel>Protection level</FormLabel>
+            <CustomNumberSlider
+              title="Protection level"
+              value={result?.adaptation_protection_level}
+              onChange={setLevel}
+              marks={levels}
             />
-          )}
-        </DataParam>
-      </InputSection>
-      <InputSection>
-        <DataParam group="adaptation" id="adaptation_protection_level">
-          {({ value, onChange, options }) =>
-            options.length > 2 ? (
-              <>
-                <FormLabel>Protection level</FormLabel>
-                <CustomNumberSlider
-                  title="Protection level"
-                  value={value}
-                  onChange={onChange}
-                  marks={options}
-                />
-              </>
-            ) : (
-              <ParamDropdown
-                title="Protection level"
-                value={value}
-                onChange={onChange}
-                options={options}
-              />
-            )
-          }
-        </DataParam>
+          </>
+        ) : (
+          <ParamDropdown
+            title="Protection level"
+            value={result?.adaptation_protection_level ?? ''}
+            onChange={setLevel}
+            options={levels}
+          />
+        )}
       </InputSection>
 
       <InputSection>
