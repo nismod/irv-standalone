@@ -10,6 +10,7 @@ import { StateEffect } from 'lib/recoil/state-effects/types';
 import { mapViewConfig } from 'lib/state/map-view/map-view-config';
 import { dataParamState } from 'lib/state/data-params';
 import { sectionVisibilityState } from 'lib/state/sections';
+import { protectedFeatureScenarioState } from 'lib/state/protected-features';
 
 import { LayerSpec } from 'lib/asset-list/use-sorted-features';
 import { damageMapStyleParamsState } from 'app/state/damage-mapping/damage-style-params';
@@ -131,7 +132,10 @@ export const adaptationScenarioState = atom((get) => {
 
 export const adaptationFieldSpecState = atom<FieldSpec | null>((get) => {
   const field = get(adaptationFieldState);
-  const { result } = get(adaptationScenarioState);
+  const protector = get(showProtectorFeaturesState) ? get(protectedFeatureScenarioState) : null;
+  const result = protector
+    ? selectResult(protector.catalog?.rows ?? [], protector.parameters)
+    : get(adaptationScenarioState).result;
   if (!result) return null;
 
   let fieldParams: {
@@ -148,7 +152,12 @@ export const adaptationFieldSpecState = atom<FieldSpec | null>((get) => {
     unit: field === 'cost_benefit_ratio'
       ? undefined
       : `${get(mapViewConfig).app.currency}${field === 'avoided_eael_mean' ? '/day' : ''}`,
-    fieldDimensions: scenarioDimensions(result),
+    fieldDimensions: {
+      ...scenarioDimensions(result),
+      // Protector results are supplied by the protected-features query. Keep
+      // their data-loader cache separate when another protector is selected.
+      ...(protector ? { protector_id: protector.protectorId } : {}),
+    },
     field,
     fieldParams,
   };

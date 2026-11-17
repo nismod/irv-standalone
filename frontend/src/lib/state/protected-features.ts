@@ -33,6 +33,7 @@ export const protectedFeatureScenarioState = atom((get) => {
       ? { rows: [] }
       : get(scenarioCatalogState(scenarioQueryKey('adaptation', { protector_id: Number(id) })));
   return {
+    protectorId: id == null ? null : Number(id),
     catalog,
     parameters: selectParameters(catalog?.rows ?? [], get(modelParametersState('adaptation'))),
   };

@@ -5,7 +5,7 @@ import * as sdk from 'lib/api-client/sdk.gen';
 import { modelParametersState } from 'lib/model-scenarios/state';
 import { dataParamState } from 'lib/state/data-params';
 import { damageSourceState } from 'lib/state/damage-map';
-import { selectedNetworkLayerIdsState } from './data-selection';
+import { networksStyleState, selectedNetworkLayerIdsState } from './data-selection';
 import { damagesFieldState } from './damage-scenarios';
 import { adaptationFieldSpecState } from './layer';
 import {
@@ -102,6 +102,47 @@ describe('model scenario query flow', () => {
     subscriptions.push(store.sub(adaptationFieldSpecState, () => {}));
     expect(store.get(adaptationFieldSpecState)).toBeNull();
     expect(request).not.toHaveBeenCalled();
+  });
+
+  it('uses protector scenarios for colouring and updates the cache scope with the selection', async () => {
+    const request = vi.spyOn(api, 'mapModelScenariosList').mockResolvedValue({
+      data: [2, 4].map((gwl) => ({
+        hazard: 'coastal',
+        parameters: { gwl },
+        adaptation_name: 'Wall',
+        adaptation_protection_level: 50,
+      })),
+    } as never);
+    const store = createStore();
+    store.set(networksStyleState as PrimitiveAtom<string>, 'protectedFeatures');
+    subscriptions.push(store.sub(adaptationFieldSpecState, () => {}));
+
+    await vi.waitFor(() => expect(store.get(adaptationFieldSpecState)).not.toBeNull());
+    const initial = store.get(adaptationFieldSpecState);
+    expect(initial.fieldDimensions).toEqual({
+      hazard: 'coastal',
+      parameters: { gwl: 2 },
+      adaptation_name: 'Wall',
+      adaptation_protection_level: 50,
+      protector_id: 123,
+    });
+    // There are no asset filters in this store: only the protector catalogue
+    // should be needed to construct the colour field.
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(request).toHaveBeenCalledWith(expect.objectContaining({ query: { protector_id: 123 } }));
+
+    store.set(modelParametersState('adaptation'), { gwl: 4 });
+    const nextScenario = store.get(adaptationFieldSpecState);
+    expect(nextScenario.fieldDimensions.parameters).toEqual({ gwl: 4 });
+    expect(nextScenario).not.toEqual(initial);
+
+    store.set(selectionState('assets'), { target: { feature: { id: 456 } } } as never);
+    expect(store.get(adaptationFieldSpecState)).toBeNull();
+    await vi.waitFor(() =>
+      expect(store.get(adaptationFieldSpecState)?.fieldDimensions.protector_id).toBe(456),
+    );
+    expect(store.get(adaptationFieldSpecState).fieldDimensions.parameters).toEqual({ gwl: 4 });
+    expect(store.get(adaptationFieldSpecState)).not.toEqual(nextScenario);
   });
 
   it('links matching raster dimensions and hides incompatible scenarios', () => {
