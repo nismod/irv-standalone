@@ -2,12 +2,13 @@ import { useAtomValue } from 'jotai';
 import { mapViewConfig } from 'lib/state/map-view/map-view-config';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 
-import { numFormat, numRangeFormat, unique } from 'lib/helpers';
+import { getCurrencySymbol, numFormat, numRangeFormat, unique } from 'lib/helpers';
 
 const padding = { px: 0.25, py: 0.25 };
 
 export const AdaptationTable = ({ options }) => {
   const currency = useAtomValue(mapViewConfig).app.currency;
+  const currencySymbol = getCurrencySymbol(currency);
   const numDays = 15;
   const parameterNames: string[] = unique<string>(
     options.flatMap((option) => Object.keys(option.parameters)),
@@ -29,7 +30,7 @@ export const AdaptationTable = ({ options }) => {
               Cost
             </TableCell>
             <TableCell sx={{ pr: 0, pl: padding.px, py: padding.py }} align="right">
-              Avoided Risk ({currency})
+              Avoided Risk ({currencySymbol})
             </TableCell>
           </TableRow>
         </TableHead>

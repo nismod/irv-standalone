@@ -36,6 +36,17 @@ export function numFormat(
   return n.toLocaleString(undefined, { maximumSignificantDigits });
 }
 
+export function getCurrencySymbol(currency: string) {
+  // Intl's narrow symbol for JMD is "$"; retain the app's unambiguous "J$" label.
+  if (currency === 'JMD') return 'J$';
+
+  return new Intl.NumberFormat(undefined, {
+    style: 'currency',
+    currency,
+    currencyDisplay: 'narrowSymbol',
+  }).formatToParts(0).find((part) => part.type === 'currency')?.value ?? currency;
+}
+
 export function numFormatMoney(value: number, currency: string = 'JMD') {
   return value.toLocaleString(undefined, {
     maximumSignificantDigits: 3,

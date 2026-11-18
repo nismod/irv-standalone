@@ -4,7 +4,7 @@ import Download from '@mui/icons-material/Download';
 import { FormControl, InputLabel, IconButton, MenuItem, Select, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 import { DamagesExpected, DamagesRp } from 'lib/api-client';
-import { downloadFile, titleCase, unique } from 'lib/helpers';
+import { downloadFile, getCurrencySymbol, titleCase, unique } from 'lib/helpers';
 import { useSelect } from 'lib/hooks/use-select';
 import { useMemo } from 'react';
 import { DamageTable } from './DamageTable';
@@ -159,6 +159,7 @@ function ParameterSelector({ id, names, options, value, onChange }: {
 
 export const DamagesSection = ({ fd }) => {
   const currency = useAtomValue(mapViewConfig).app.currency;
+  const currencySymbol = getCurrencySymbol(currency);
   const damagesData = useOrderedDamages(prepareExpectedDamages(fd?.damages_expected ?? []));
   const returnPeriodDamagesData = useOrderedRPDamages(prepareRPDamages(fd?.damages_return_period ?? []));
 
@@ -249,7 +250,7 @@ export const DamagesSection = ({ fd }) => {
                 field="ead_mean"
                 field_min="ead_amin"
                 field_max="ead_amax"
-                field_title={`EAD (${currency})`}
+                field_title={`EAD (${currencySymbol})`}
                 xField={expectedDimensions.x ? parameterField(expectedDimensions.x) : 'hazard'}
                 xTitle={expectedDimensions.x ? parameterLabel(expectedDimensions.x) : null}
                 seriesField={expectedDimensions.series ? parameterField(expectedDimensions.series) : undefined}
@@ -273,7 +274,7 @@ export const DamagesSection = ({ fd }) => {
                   field="eael_mean"
                   field_min="eael_amin"
                   field_max="eael_amax"
-                  field_title={`EAEL (${currency}/day)`}
+                  field_title={`EAEL (${currencySymbol}/day)`}
                   xField={expectedDimensions.x ? parameterField(expectedDimensions.x) : 'hazard'}
                   xTitle={expectedDimensions.x ? parameterLabel(expectedDimensions.x) : null}
                   seriesField={expectedDimensions.series ? parameterField(expectedDimensions.series) : undefined}
@@ -334,7 +335,7 @@ export const DamagesSection = ({ fd }) => {
                   table: selectedRPData,
                 }}
                 field_key="damage_mean"
-                field_title={`Damage (${currency})`}
+                field_title={`Damage (${currencySymbol})`}
                 seriesField={rpDimensions.series ? parameterField(rpDimensions.series) : undefined}
                 seriesTitle={rpDimensions.series ? parameterLabel(rpDimensions.series) : null}
                 tooltipFields={rpTooltipFields}

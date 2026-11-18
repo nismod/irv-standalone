@@ -118,7 +118,7 @@ export const Default: Story = {
     await expect(canvas.findByText('Risk')).resolves.toBeVisible();
     await expect(canvas.findByText('Return Period Damages')).resolves.toBeVisible();
     await expect(canvas.findByText('Adaptation Options')).resolves.toBeVisible();
-    await expect(canvas.findByText('EAD (JMD)', { selector: 'abbr' })).resolves.toBeVisible();
+    await expect(canvas.findByText('EAD (J$)', { selector: 'abbr' })).resolves.toBeVisible();
   },
 };
 
@@ -126,14 +126,14 @@ export const MauritianRupees: Story = {
   parameters: sidebarParameters('MUR'),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.findByText('EAD (MUR)', { selector: 'abbr' })).resolves.toBeVisible();
-    await expect(canvas.findByRole('columnheader', { name: /EAEL.*\(MUR\/day\)/ }))
+    await expect(canvas.findByText('EAD (Rs)', { selector: 'abbr' })).resolves.toBeVisible();
+    await expect(canvas.findByRole('columnheader', { name: /EAEL.*\(Rs\/day\)/ }))
       .resolves.toBeVisible();
-    await expect(canvas.findByRole('columnheader', { name: 'Damages (MUR)' }))
+    await expect(canvas.findByRole('columnheader', { name: 'Damages (Rs)' }))
       .resolves.toBeVisible();
-    await expect(canvas.findByRole('columnheader', { name: 'Loss (MUR/day)' }))
+    await expect(canvas.findByRole('columnheader', { name: 'Loss (Rs/day)' }))
       .resolves.toBeVisible();
-    await expect(canvas.findAllByRole('columnheader', { name: 'Avoided Risk (MUR)' }))
+    await expect(canvas.findAllByRole('columnheader', { name: 'Avoided Risk (Rs)' }))
       .resolves.not.toHaveLength(0);
   },
 };
