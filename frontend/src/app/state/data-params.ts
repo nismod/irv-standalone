@@ -1,4 +1,5 @@
 import { atom, useAtom, useAtomValue } from 'jotai';
+import { useEffect } from 'react';
 
 import { DataParamGroupConfig } from 'lib/controls/data-params';
 import { syncExternalConfigState } from 'lib/state/data-params';
@@ -25,8 +26,7 @@ const dataParamConfigState =
 export function useSyncConfigState() {
   const [config, setConfig] = useAtom(syncExternalConfigState);
   const dataParamConfig = useAtomValue(dataParamConfigState);
-  console.log('Syncing config state with data param config:', dataParamConfig);
-  if (config !== dataParamConfig) {
-    setConfig(dataParamConfig);
-  }
+  useEffect(() => {
+    if (config !== dataParamConfig) setConfig(dataParamConfig);
+  }, [config, dataParamConfig, setConfig]);
 }

@@ -3,7 +3,7 @@ import { createStore, type PrimitiveAtom } from 'jotai';
 import * as api from 'lib/api-client';
 import * as sdk from 'lib/api-client/sdk.gen';
 import { modelParametersState } from 'lib/model-scenarios/state';
-import { dataParamState } from 'lib/state/data-params';
+import { dataParamState, syncExternalConfigState } from 'lib/state/data-params';
 import { damageSourceState } from 'lib/state/damage-map';
 import { networksStyleState, selectedNetworkLayerIdsState } from './data-selection';
 import { damagesFieldState } from './damage-scenarios';
@@ -210,6 +210,42 @@ describe('model scenario query flow', () => {
         { scheme: 'blues', range: [0, 10] },
       ),
     ).toContain('/fluvial/2/100/');
+  });
+
+  it('preserves a synchronised raster selection when sidebar configuration finishes loading', () => {
+    const store = createStore();
+    const hazardDomains = {
+      fluvial: {
+        paramDefaults: { gwl: 2, returnPeriod: 100 },
+        paramDomains: { gwl: [2, 3], returnPeriod: [100, 500] },
+      },
+    };
+    damageSourceStateEffect({ get: store.get, set: store.set }, {
+      scenario: { hazard: 'fluvial', parameters: { gwl: 3 } },
+      hazardDomains,
+    });
+    expect(store.get(dataParamState({ group: 'fluvial', param: 'returnPeriod' }))).toBe(500);
+
+    // The combined sidebar config can arrive after damage/raster discovery.
+    store.set(syncExternalConfigState, hazardDomains);
+    expect(store.get(dataParamState({ group: 'fluvial', param: 'returnPeriod' }))).toBe(500);
+    expect(store.get(dataParamState({ group: 'fluvial', param: 'gwl' }))).toBe(3);
+
+    // Loading another group must not reset an already initialised hazard.
+    store.set(syncExternalConfigState, {
+      ...hazardDomains,
+      risks: { paramDefaults: { sector: 'all' }, paramDomains: { sector: ['all', 'power'] } },
+    });
+    expect(store.get(dataParamState({ group: 'fluvial', param: 'returnPeriod' }))).toBe(500);
+    expect(store.get(dataParamState({ group: 'fluvial', param: 'gwl' }))).toBe(3);
+    expect(store.get(dataParamState({ group: 'risks', param: 'sector' }))).toBe('all');
+
+    // Values removed by a catalogue refresh still fall back to valid defaults.
+    store.set(syncExternalConfigState, {
+      fluvial: { ...hazardDomains.fluvial, paramDomains: { gwl: [2], returnPeriod: [100] } },
+    });
+    expect(store.get(dataParamState({ group: 'fluvial', param: 'returnPeriod' }))).toBe(100);
+    expect(store.get(dataParamState({ group: 'fluvial', param: 'gwl' }))).toBe(2);
   });
 
   it('links only complete raster catalogue rows, including sparse RP and confidence values', async () => {

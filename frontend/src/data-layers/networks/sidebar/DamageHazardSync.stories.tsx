@@ -199,6 +199,9 @@ export const CompatibleScenarios: Story = {
     const body = within(canvasElement.ownerDocument.body);
 
     await userEvent.click(await damagePanel.findByRole('radio', { name: 'River Flooding' }));
+    // The hazard headers can render before the asynchronously loaded sidebar
+    // configuration supplies their parameter controls.
+    await riverControls.findByRole('combobox', { name: 'Epoch' }, { timeout: 10000 });
     await waitFor(() => {
       expect(river).toHaveAttribute('aria-expanded', 'true');
       expect(coastal).toHaveAttribute('aria-expanded', 'false');
