@@ -7,16 +7,6 @@ import { getFeatureId } from 'lib/deck/utils/get-feature-id';
 
 type ModelParameters = Record<string, string | number | boolean | null>;
 
-function getExpectedDamageKey(direct: boolean, hazard: string, parameters: ModelParameters) {
-  // Existing tiles put RCP before epoch. Append other parameters in a stable order.
-  const parameterOrder = (name: string) => (name === 'rcp' ? 0 : name === 'epoch' ? 1 : 2);
-  const parameterKey = Object.entries(parameters)
-    .sort(([a], [b]) => parameterOrder(a) - parameterOrder(b) || a.localeCompare(b))
-    .map(([name, value]) => `${name}_${String(value)}`)
-    .join('__');
-  return `${direct ? 'ead' : 'eael'}__${hazard}__${parameterKey}__conf_None`;
-}
-
 /**
  * Decorate a data access function with update triggers.
  * @param fn data access function
@@ -41,26 +31,12 @@ export function getAssetDataAccessor(layer: string, fieldSpec: FieldSpec): Acces
   const { fieldGroup, fieldDimensions, field } = fieldSpec;
 
   if (fieldGroup === 'damages_expected') {
-    const { hazard, parameters } = fieldDimensions as {
+    const { parameters } = fieldDimensions as {
       hazard: string;
       parameters: ModelParameters;
     };
-
-    const isDirect = field.startsWith('ead_');
     if (!parameters) return () => null;
-    // Only this precise case is covered by the existing Jamaica tile export.
-    // Other scenarios, protection levels, metrics and totals use the same
-    // attributes API as the asset list and adaptations.
-    const legacyTile =
-      Object.keys(parameters).length === 2 &&
-      typeof parameters.rcp === 'string' &&
-      typeof parameters.epoch === 'number' &&
-      ['fluvial', 'surface', 'coastal', 'cyclone'].includes(hazard) &&
-      fieldDimensions.protection_standard === 0 &&
-      ['ead_mean', 'eael_mean'].includes(field);
-    if (legacyTile) {
-      return featureProperty(getExpectedDamageKey(isDirect, hazard, parameters));
-    }
+
     const dataLoader = dataLoaderManager.getDataLoader(layer, fieldSpec);
     return withLoaderTriggers((f) => dataLoader.getData(getFeatureId(f)), dataLoader);
   } else if (fieldGroup === 'damages_return_period') {
