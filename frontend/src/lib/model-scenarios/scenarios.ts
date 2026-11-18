@@ -9,6 +9,7 @@ export interface ModelScenario {
   protection_standard?: number;
   adaptation_name?: string;
   adaptation_protection_level?: number;
+  hazard_parameters?: Record<string, ModelParameters>;
 }
 
 export const parameterKey = (parameters: ModelParameters) => stringify(parameters);
@@ -28,17 +29,47 @@ export function valueLabel(value: unknown) {
 
 export function scenariosForHazard(rows: ModelScenario[], hazard: string): ModelScenario[] {
   if (hazard !== 'all') return rows.filter((row) => row.hazard === hazard);
-  const hazards = new Set(rows.map((row) => row.hazard));
-  const combinations = new Map<string, { row: ModelScenario; hazards: Set<string> }>();
+  const hazards = new Map<string, ModelScenario[]>();
   for (const row of rows) {
-    const key = stringify([row.parameters, row.protection_standard]);
-    const combination = combinations.get(key) ?? { row, hazards: new Set<string>() };
-    combination.hazards.add(row.hazard);
-    combinations.set(key, combination);
+    hazards.set(row.hazard, [...(hazards.get(row.hazard) ?? []), row]);
   }
-  return [...combinations.values()]
-    .filter((combination) => combination.hazards.size === hazards.size)
-    .map(({ row }) => ({ ...row, hazard: 'all' }));
+  let combinations: ModelScenario[] | null = null;
+  for (const [name, candidates] of hazards) {
+    if (combinations === null) {
+      combinations = candidates.map((row) => ({
+        ...row, hazard: 'all', hazard_parameters: { [name]: row.parameters },
+      }));
+      continue;
+    }
+    const joined = new Map<string, ModelScenario>();
+    for (const combination of combinations) {
+      for (const row of candidates) {
+        if (valueKey(combination.protection_standard) !== valueKey(row.protection_standard)) continue;
+        if (Object.entries(row.parameters).some(([key, value]) =>
+          Object.hasOwn(combination.parameters, key) &&
+          valueKey(combination.parameters[key]) !== valueKey(value),
+        )) continue;
+        const next = {
+          ...combination,
+          parameters: { ...combination.parameters, ...row.parameters },
+          hazard_parameters: { ...combination.hazard_parameters, [name]: row.parameters },
+        };
+        joined.set(stringify([next.parameters, next.protection_standard, next.hazard_parameters]), next);
+      }
+    }
+    combinations = [...joined.values()];
+  }
+  return (combinations ?? []).map((row) => {
+    // Identical schemas retain the existing all-hazard API request format.
+    if (Object.values(row.hazard_parameters).every((parameters) =>
+      parameterKey(parameters) === parameterKey(row.parameters),
+    )) {
+      const shared = { ...row };
+      delete shared.hazard_parameters;
+      return shared;
+    }
+    return row;
+  });
 }
 
 // Preserve as much of the selection as possible when the scope changes, while

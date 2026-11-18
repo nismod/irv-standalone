@@ -168,3 +168,60 @@ class ModelScenarioTests(TestCase):
             {"ids": [self.features[0].pk]}, format="json",
         )
         self.assertEqual(response.json()[str(self.features[0].pk)], None)
+
+    def test_all_hazards_uses_one_exact_parameter_set_per_hazard(self):
+        road, power = self.features
+        self.damage(road, {"SLR": 20}, hazard="coastal", amount=100)
+        self.damage(road, {"GWL": 2}, hazard="fluvial", amount=10)
+        self.damage(road, {"GWL": 2}, hazard="pluvial", amount=5)
+        self.damage(power, {"GWL": 2}, hazard="fluvial", amount=7)
+        # These rows must not be counted: other scenarios, protection standards,
+        # schemas, and hazards outside the selected combination.
+        self.damage(road, {"SLR": 0}, hazard="coastal", amount=1000)
+        self.damage(road, {"GWL": 3}, hazard="fluvial", amount=1000)
+        self.damage(road, {"GWL": 2, "SLR": 20}, hazard="fluvial", amount=1000)
+        self.damage(road, {"GWL": 2}, hazard="fluvial", protection=100, amount=1000)
+        self.damage(road, {"GWL": 2}, hazard="wind", amount=1000)
+        dimensions = {
+            "hazard": "all", "parameters": {"SLR": 20, "GWL": 2}, "protection_standard": 0,
+            "hazard_parameters": {"coastal": {"SLR": 20}, "fluvial": {"GWL": 2}, "pluvial": {"GWL": 2}},
+        }
+
+        def check(expected):
+            query = {"layer": "roads", "field": "ead_mean", "dimensions": json.dumps(dimensions)}
+            response = self.client.post(
+                "/map/attributes/damages_expected?" + urlencode(query),
+                {"ids": [road.pk, power.pk, 999999]}, format="json",
+            )
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json(), {str(road.pk): expected, str(power.pk): None, "999999": None})
+            response = self.client.get("/map/features/sorted-by/damages_expected", query)
+            self.assertEqual(response.status_code, 200)
+            self.assertEqual(response.json()["total"], 1)
+            self.assertEqual(response.json()["items"][0]["value"], expected)
+
+        check(115)
+        Dataset.objects.create(
+            id="coastal", label="Coastal", group="hazards", quantity="depth", unit="m",
+            stacking_order=0, display_order=0,
+        )
+        check(15)  # Explicit hazard selections must still respect permissions.
+
+    def test_all_hazard_parameter_mapping_must_match_the_combined_controls(self):
+        self.damage(self.features[0], {"GWL": 2})
+        base = {"hazard": "all", "parameters": {"GWL": 2}, "protection_standard": 0}
+        for extra in (
+            {"hazard_parameters": {}},
+            {"hazard_parameters": {"flood": {"GWL": 3}}},
+            {"hazard_parameters": {"flood": {"other": 2}}},
+            {"hazard_parameters": {"all": {"GWL": 2}}},
+            {"hazard_parameters": {"flood": {"GWL": 2}}, "hazard": "flood"},
+        ):
+            query = {"layer": "roads", "field": "ead_mean", "dimensions": json.dumps({**base, **extra})}
+            with self.subTest(extra=extra):
+                response = self.client.post(
+                    "/map/attributes/damages_expected?" + urlencode(query),
+                    {"ids": [self.features[0].pk]}, format="json",
+                )
+                self.assertEqual(response.status_code, 400)
+                self.assertEqual(self.client.get("/map/features/sorted-by/damages_expected", query).status_code, 400)

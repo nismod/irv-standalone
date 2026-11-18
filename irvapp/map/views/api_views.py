@@ -3,7 +3,7 @@ from typing import cast
 
 from django.core.exceptions import FieldError
 from django.contrib.gis.db.models.functions import AsWKT, Envelope
-from django.db.models import ExpressionWrapper, F, FloatField, Sum, Value
+from django.db.models import ExpressionWrapper, F, FloatField, Q, Sum, Value
 from drf_spectacular.utils import (
     OpenApiParameter,
     OpenApiResponse,
@@ -38,6 +38,18 @@ def parameter_filter(model_type, parameters):
         "parameter_set__model_type": model_type,
         "parameter_set__canonical_key": canonical_parameter_key(parameters),
     }
+
+
+def expected_damage_filter(dimensions):
+    """Match exactly one selected scenario per hazard before summing results."""
+    selections = dimensions.get("hazard_parameters")
+    if selections is None:
+        scenarios = Q(**parameter_filter("damages_expected", dimensions["parameters"]))
+    else:
+        scenarios = Q(pk__in=[])
+        for hazard, parameters in selections.items():
+            scenarios |= Q(hazard=hazard, **parameter_filter("damages_expected", parameters))
+    return scenarios & Q(protection_standard=dimensions["protection_standard"])
 
 
 class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
@@ -208,11 +220,8 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
         try:
             if field_group == "damages_expected":
                 query = DamagesExpected.objects.filter(
+                    expected_damage_filter(dimensions),
                     **base_filters,
-                    **parameter_filter(
-                        "damages_expected", dimensions["parameters"]
-                    ),
-                    protection_standard=dimensions["protection_standard"],
                 ).exclude(hazard__in=restricted_hazards).annotate(
                     bbox_wkt=AsWKT(Envelope("feature__geom")),
                 )
@@ -498,11 +507,8 @@ class AttributeLookupView(FieldGroupQueryParsingMixin, APIView):
 
         if field_group == "damages_expected":
             query = DamagesExpected.objects.filter(
+                expected_damage_filter(dimensions),
                 feature_id__in=base_feature_ids,
-                **parameter_filter(
-                    "damages_expected", dimensions["parameters"]
-                ),
-                protection_standard=dimensions["protection_standard"],
             ).exclude(hazard__in=restricted_hazards)
 
             if dimensions["hazard"] != "all":

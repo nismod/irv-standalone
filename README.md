@@ -160,9 +160,14 @@ asset filters (`sector`, `subsector`, `asset_type`), and an optional `hazard`.
 Adaptation scenarios can also be scoped by `protector_id`. Each row contains a
 complete `parameters` object alongside fixed result dimensions such as protection
 standard or adaptation option. The controls preserve these combinations and value
-types. “All hazards” offers only scenarios shared by the hazards in the selected
-asset scope. Flexible damage scenarios use the bulk attributes API; existing
-Jamaica tiles remain a fast path for their supported RCP/year scenarios.
+types. “All Hazards” combines the available parameters in the selected asset
+scope: for example, coastal SLR and river/surface GWL can be selected together.
+Shared parameter values and protection standards must agree across hazards.
+Damage requests use the bulk attributes API, which sums exactly one selected
+scenario per accessible hazard. The optional `hazard_parameters` dimension maps
+each hazard to its parameter object when their schemas differ; `parameters`
+contains the combined control values. Requests with a shared parameter object
+continue to work without this mapping.
 
 The first time that you run the Django app, the backend database will be empty.
 The next step runs `pg_restore` to load data to the database from a backup.

@@ -65,6 +65,26 @@ describe('model scenarios', () => {
     expect(selectParameters(nested, { config: { a: [1, '1'] } })).toEqual(nested[0].parameters);
   });
 
+  it('combines independent hazard parameters and keeps shared dimensions compatible', () => {
+    const catalogue: ModelScenario[] = [
+      ...[0, 20].map((SLR) => ({ hazard: 'coastal', parameters: { SLR }, protection_standard: 0 })),
+      ...[2, 3].map((GWL) => ({ hazard: 'fluvial', parameters: { GWL }, protection_standard: 0 })),
+      { hazard: 'pluvial', parameters: { GWL: 2 }, protection_standard: 0 },
+    ];
+    const all = scenariosForHazard(catalogue, 'all');
+    expect(all.map((row) => row.parameters)).toEqual([{ SLR: 0, GWL: 2 }, { SLR: 20, GWL: 2 }]);
+    const selected = selectResult(all, { SLR: 20, GWL: 2 });
+    expect(scenarioDimensions(selected)).toEqual({
+      hazard: 'all', parameters: { SLR: 20, GWL: 2 }, protection_standard: 0,
+      hazard_parameters: { coastal: { SLR: 20 }, fluvial: { GWL: 2 }, pluvial: { GWL: 2 } },
+    });
+    expect(parameterOptions(all, all[0].parameters, 'SLR').map((option) => option.value)).toEqual([0, 20]);
+    expect(scenariosForHazard([...catalogue, {
+      hazard: 'wind', parameters: { GWL: '2' }, protection_standard: 0,
+    }], 'all')).toEqual([]);
+    expect(scenariosForHazard([], 'all')).toEqual([]);
+  });
+
   it('keeps fixed result dimensions outside the parameter set', () => {
     const result = selectResult(rows, rows[1].parameters, { protection_standard: 0 });
     expect(scenarioDimensions(result)).toEqual({

@@ -62,7 +62,7 @@ export function FieldSpecControl({
         error={error}
         emptyMessage={
           hazard === 'all' && rows?.length === 0
-            ? 'No scenario is shared by all hazards. Choose a hazard.'
+            ? 'No compatible combination is available across all hazards. Choose a hazard.'
             : undefined
         }
       />

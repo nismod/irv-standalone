@@ -59,6 +59,30 @@ afterEach(() => {
 });
 
 describe('model scenario query flow', () => {
+  it('uses the combined all-hazard controls to request exact per-hazard scenarios', async () => {
+    vi.spyOn(api, 'mapModelScenariosList').mockResolvedValue({
+      data: [
+        ...[0, 20].map((SLR) => ({ hazard: 'coastal', parameters: { SLR }, protection_standard: 0 })),
+        ...['fluvial', 'pluvial'].flatMap((hazard) => [2, 3].map((GWL) => ({
+          hazard, parameters: { GWL }, protection_standard: 0,
+        }))),
+      ],
+    } as never);
+    const store = createStore();
+    store.set(damageSourceState, 'all');
+    subscriptions.push(store.sub(damagesFieldState, () => {}));
+    await vi.waitFor(() => expect(store.get(damagesFieldState)).not.toBeNull());
+    store.set(modelParametersState('damages_expected'), { SLR: 20, GWL: 3 });
+    expect(store.get(damagesFieldState).fieldDimensions).toEqual({
+      hazard: 'all', parameters: { SLR: 20, GWL: 3 }, protection_standard: 0,
+      hazard_parameters: { coastal: { SLR: 20 }, fluvial: { GWL: 3 }, pluvial: { GWL: 3 } },
+    });
+    store.set(damageSourceState, 'coastal');
+    expect(store.get(damagesFieldState).fieldDimensions).toEqual({
+      hazard: 'coastal', parameters: { SLR: 20 }, protection_standard: 0,
+    });
+  });
+
   it('drops a restricted persisted hazard and excludes it from all-hazard scenarios', async () => {
     vi.spyOn(api, 'mapModelScenariosList').mockResolvedValue({
       data: [
