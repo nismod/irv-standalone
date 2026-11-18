@@ -18,6 +18,7 @@ import { hazardSelectionState } from 'data-layers/hazards/state/data-selection';
 import { matchRasterScenario } from 'data-layers/hazards/raster-scenario';
 import { HAZARD_SOURCE } from 'data-layers/hazards/source';
 import { hazardsMetadataState } from 'data-layers/hazards/state/metadata';
+import { hazardDomainState } from 'data-layers/hazards/state/domains';
 import type { Dataset } from 'lib/api-client';
 
 vi.mock('./data-selection', async () => {
@@ -209,6 +210,52 @@ describe('model scenario query flow', () => {
         { scheme: 'blues', range: [0, 10] },
       ),
     ).toContain('/fluvial/2/100/');
+  });
+
+  it('links only complete raster catalogue rows, including sparse RP and confidence values', async () => {
+    vi.spyOn(api, 'rasterTileSourceDomains').mockResolvedValue({
+      data: {
+        domains: [
+          { type: 'heat', GWL: '2', SLR: '0', rp: '20', confidence: 'None' },
+          { type: 'heat', GWL: '2', SLR: '0', rp: '100', confidence: 'None' },
+          { type: 'heat', GWL: '3', SLR: '0.5', rp: '500', confidence: '50' },
+        ],
+      },
+    } as never);
+    const store = createStore();
+    store.set(hazardsMetadataState as PrimitiveAtom<Record<string, Dataset>>, {
+      heat: { id: 'heat', has_access: true } as Dataset,
+    });
+    subscriptions.push(store.sub(hazardDomainState, () => {}));
+    await vi.waitFor(() =>
+      expect(store.get(hazardDomainState)?.heat?.paramCombinations).toHaveLength(3),
+    );
+    const hazardDomains = store.get(hazardDomainState);
+    const ops = { get: store.get, set: store.set };
+    damageSourceStateEffect(ops, {
+      scenario: { hazard: 'heat', parameters: { gwl: 2, slr: 0 } },
+      hazardDomains,
+    });
+    expect(store.get(hazardSelectionState('heat'))).toBe(true);
+    expect(store.get(dataParamState({ group: 'heat', param: 'returnPeriod' }))).toBe(100);
+    expect(store.get(dataParamState({ group: 'heat', param: 'confidence' }))).toBe('None');
+
+    damageSourceStateEffect(ops, {
+      scenario: { hazard: 'heat', parameters: { gwl: 2, slr: 0.5 } },
+      hazardDomains,
+    });
+    expect(store.get(hazardSelectionState('heat'))).toBe(false);
+    expect(store.get(dataParamState({ group: 'heat', param: 'SLR' }))).toBe(0);
+
+    damageSourceStateEffect(ops, {
+      scenario: { hazard: 'heat', parameters: { gwl: 3, slr: 0.5 } },
+      hazardDomains,
+    });
+    expect(store.get(hazardSelectionState('heat'))).toBe(true);
+    expect(store.get(dataParamState({ group: 'heat', param: 'GWL' }))).toBe(3);
+    expect(store.get(dataParamState({ group: 'heat', param: 'SLR' }))).toBe(0.5);
+    expect(store.get(dataParamState({ group: 'heat', param: 'returnPeriod' }))).toBe(500);
+    expect(store.get(dataParamState({ group: 'heat', param: 'confidence' }))).toBe(50);
   });
 
   it('defers damage requests until metadata loads and shares the selected JSON object', async () => {

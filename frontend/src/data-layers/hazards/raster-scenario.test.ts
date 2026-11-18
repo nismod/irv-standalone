@@ -41,4 +41,25 @@ describe('raster scenario linking', () => {
       ),
     ).toEqual({ linked: false, desired: {} });
   });
+
+  it('requires the selected values to occur together in a raster catalogue row', () => {
+    const sparseConfig = {
+      paramDefaults: { GWL: 2, SLR: 0, RP: 100 },
+      paramDomains: { GWL: [2, 3], SLR: [0, 0.5], RP: [100, 500] },
+      paramCombinations: [
+        { GWL: 2, SLR: 0, RP: 100 },
+        { GWL: 3, SLR: 0.5, RP: 500 },
+      ],
+    };
+    expect(matchRasterScenario({ gwl: 2, slr: 0.5 }, sparseConfig)).toEqual({
+      linked: false,
+      desired: {},
+    });
+    expect(matchRasterScenario({ gwl: '3', slr: 0.5 }, sparseConfig)).toEqual({
+      linked: true,
+      desired: { GWL: 3, SLR: 0.5 },
+    });
+    expect(matchRasterScenario({ gwl: 2, returnPeriod: 500 }, sparseConfig).linked).toBe(false);
+    expect(matchRasterScenario({ gwl: 3 }, { ...sparseConfig, paramCombinations: [] }).linked).toBe(false);
+  });
 });
