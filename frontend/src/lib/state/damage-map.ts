@@ -1,5 +1,6 @@
 import { atom } from 'jotai';
 import { FieldSpec } from 'lib/data-map/view-layers';
+import { mapViewConfig } from './map-view/map-view-config';
 import { dataParamState } from './data-params';
 
 export const damageSourceState = atom('all');
@@ -22,5 +23,6 @@ export const damagesFieldState = atom<FieldSpec | null>((get) => {
       protection_standard: 0,
     },
     field: damageType === 'direct' ? 'ead_mean' : 'eael_mean',
+    unit: `${get(mapViewConfig).app.currency}${damageType === 'direct' ? '' : '/day'}`,
   };
 });

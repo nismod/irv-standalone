@@ -1,3 +1,5 @@
+import { useAtomValue } from 'jotai';
+import { mapViewConfig } from 'lib/state/map-view/map-view-config';
 import Download from '@mui/icons-material/Download';
 import { FormControl, InputLabel, IconButton, MenuItem, Select, Typography } from '@mui/material';
 import { Box } from '@mui/system';
@@ -156,6 +158,7 @@ function ParameterSelector({ id, names, options, value, onChange }: {
 }
 
 export const DamagesSection = ({ fd }) => {
+  const currency = useAtomValue(mapViewConfig).app.currency;
   const damagesData = useOrderedDamages(prepareExpectedDamages(fd?.damages_expected ?? []));
   const returnPeriodDamagesData = useOrderedRPDamages(prepareRPDamages(fd?.damages_return_period ?? []));
 
@@ -246,7 +249,7 @@ export const DamagesSection = ({ fd }) => {
                 field="ead_mean"
                 field_min="ead_amin"
                 field_max="ead_amax"
-                field_title="EAD (J$)"
+                field_title={`EAD (${currency})`}
                 xField={expectedDimensions.x ? parameterField(expectedDimensions.x) : 'hazard'}
                 xTitle={expectedDimensions.x ? parameterLabel(expectedDimensions.x) : null}
                 seriesField={expectedDimensions.series ? parameterField(expectedDimensions.series) : undefined}
@@ -270,7 +273,7 @@ export const DamagesSection = ({ fd }) => {
                   field="eael_mean"
                   field_min="eael_amin"
                   field_max="eael_amax"
-                  field_title="EAEL (J$/day)"
+                  field_title={`EAEL (${currency}/day)`}
                   xField={expectedDimensions.x ? parameterField(expectedDimensions.x) : 'hazard'}
                   xTitle={expectedDimensions.x ? parameterLabel(expectedDimensions.x) : null}
                   seriesField={expectedDimensions.series ? parameterField(expectedDimensions.series) : undefined}
@@ -331,7 +334,7 @@ export const DamagesSection = ({ fd }) => {
                   table: selectedRPData,
                 }}
                 field_key="damage_mean"
-                field_title="Damage (J$)"
+                field_title={`Damage (${currency})`}
                 seriesField={rpDimensions.series ? parameterField(rpDimensions.series) : undefined}
                 seriesTitle={rpDimensions.series ? parameterLabel(rpDimensions.series) : null}
                 tooltipFields={rpTooltipFields}

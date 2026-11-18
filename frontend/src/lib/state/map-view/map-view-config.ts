@@ -6,6 +6,7 @@ import { MapConfig, mapConfigList } from '../../api-client';
 interface MapViewConfig {
   app: {
     name: string;
+    currency: string;
   };
   initialViewState: {
     latitude: number;
@@ -23,7 +24,7 @@ interface MapViewConfig {
 type MapViewConfigNumberKey =
   | keyof MapViewConfig['initialViewState']
   | keyof MapViewConfig['viewLimits'];
-type MapViewConfigStringKey = 'appName';
+type MapViewConfigStringKey = 'appName' | 'currency';
 
 const mapViewConfigNumberKeys = new Set<string>([
   'latitude',
@@ -34,11 +35,12 @@ const mapViewConfigNumberKeys = new Set<string>([
   'minPitch',
   'maxPitch',
 ]);
-const mapViewConfigStringKeys = new Set<string>(['appName']);
+const mapViewConfigStringKeys = new Set<string>(['appName', 'currency']);
 
 const defaultViewConfig: MapViewConfig = {
   app: {
     name: '',
+    currency: 'JMD',
   },
   initialViewState: {
     latitude: 0,
@@ -80,6 +82,9 @@ function configFromApiResponse(data: MapConfig[]): MapViewConfig {
   return {
     app: {
       name: stringState.appName || defaultViewConfig.app.name,
+      currency: /^[A-Z]{3}$/.test(stringState.currency?.toUpperCase() ?? '')
+        ? stringState.currency.toUpperCase()
+        : defaultViewConfig.app.currency,
     },
     initialViewState: {
       latitude: numberState.latitude ?? defaultViewConfig.initialViewState.latitude,

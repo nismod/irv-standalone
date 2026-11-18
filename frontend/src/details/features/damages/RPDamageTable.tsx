@@ -1,7 +1,10 @@
+import { useAtomValue } from 'jotai';
+import { mapViewConfig } from 'lib/state/map-view/map-view-config';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow } from '@mui/material';
 import { numFormat, numRangeFormat, unique } from 'lib/helpers';
 const padding = { px: 0.25, py: 0.25 };
 export const RPDamageTable = ({ damages }) => {
+  const currency = useAtomValue(mapViewConfig).app.currency;
   const parameterNames: string[] = unique<string>(
     damages.flatMap((damage) => Object.keys(damage.parameters)),
   );
@@ -15,10 +18,10 @@ export const RPDamageTable = ({ damages }) => {
           </TableCell>
           {parameterNames.map((name) => <TableCell sx={padding} key={name}>{name}</TableCell>)}
           <TableCell sx={padding} align="right">
-            Damages (J$)
+            Damages ({currency})
           </TableCell>
           <TableCell sx={{ pr: 0, pl: padding.px, py: padding.py }} align="right">
-            Loss (J$/day)
+            Loss ({currency}/day)
           </TableCell>
         </TableRow>
       </TableHead>

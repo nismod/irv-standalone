@@ -1,5 +1,5 @@
 import { FieldSpec, FormatConfig } from 'lib/data-map/view-layers';
-import { isNullish, numFormat, numFormatMoney, paren } from 'lib/helpers';
+import { isNullish, numFormat, numFormatFinancial, paren } from 'lib/helpers';
 import startCase from 'lodash/startCase';
 
 type HazardsMetadata = Record<string, { label: string }>;
@@ -15,10 +15,10 @@ function getDamageTypeLabel(field: string) {
   else if (field === 'eael_mean') return 'Economic Losses';
 }
 
-function formatDamageValue(value: number) {
+function formatDamageValue(value: number, { unit }: FieldSpec) {
   if (isNullish(value)) return value;
 
-  return numFormatMoney(value);
+  return numFormatFinancial(value, unit);
 }
 
 const DAMAGES_EXPECTED_LEGEND_FORMAT: FormatConfig = {
@@ -39,14 +39,14 @@ function getAdaptationFieldLabel(field: string) {
   return adaptationFieldLabels[field] || startCase(field);
 }
 
-function formatAdaptationValue(value: number, { field }: FieldSpec) {
+function formatAdaptationValue(value: number, { field, unit }: FieldSpec) {
   if (isNullish(value)) return value;
 
   if (field === 'cost_benefit_ratio') {
     return `${numFormat(value)}x`;
   }
 
-  return `$${numFormat(value)}`;
+  return numFormatFinancial(value, unit);
 }
 
 const ADAPTATION_DEFAULT_FORMAT: FormatConfig<number> = {

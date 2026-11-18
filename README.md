@@ -35,6 +35,20 @@ The visualisation tool runs using prepared versions of analysis data and results
 
 See `./etl` directory for details.
 
+### App currency
+
+After applying Django migrations, edit the `currency` entry under **Map configs**
+in Django admin. Set its type to **String** and its value to a three-letter ISO
+currency code, such as `MUR`, `GBP`, or `USD`, then reload the app. The default is
+`JMD`.
+
+The frontend exposes this as `mapViewConfig.app.currency`. Asset damage and
+adaptation field specs carry a display `unit`, such as `MUR` or `MUR/day`, which
+their legend, tooltip, and list formatters use. Damage chart and table headings
+also use the configured currency. Number formatting follows the browser locale.
+The data must already be expressed in that currency; this setting does not
+convert values. Raster financial layers retain their dataset-specific units.
+
 ## Build and run
 
 Running the application requires several server processes: the vector and raster
