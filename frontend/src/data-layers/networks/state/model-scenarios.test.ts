@@ -17,8 +17,9 @@ import { damageSourceStateEffect } from 'app/state/damage-mapping/damage-map';
 import { hazardSelectionState } from 'data-layers/hazards/state/data-selection';
 import { matchRasterScenario } from 'data-layers/hazards/raster-scenario';
 import { HAZARD_SOURCE } from 'data-layers/hazards/source';
-import { hazardsMetadataState } from 'data-layers/hazards/state/metadata';
+import { hazardsMetadataState, hazardsMapOrderState } from 'data-layers/hazards/state/metadata';
 import { hazardDomainState } from 'data-layers/hazards/state/domains';
+import { hazardVisibilityState } from 'data-layers/hazards/state/hazard-visibility';
 import type { Dataset } from 'lib/api-client';
 
 vi.mock('./data-selection', async () => {
@@ -34,7 +35,7 @@ vi.mock('../view-layers', () => ({ getInfrastructureViewLayers: () => ({}) }));
 vi.mock('data-layers/hazards/state/metadata', async (importOriginal) => {
   const actual = await importOriginal<typeof import('data-layers/hazards/state/metadata')>();
   const { atom } = await import('jotai');
-  return { ...actual, hazardsMetadataState: atom({}) };
+  return { ...actual, hazardsMetadataState: atom({}), hazardsMapOrderState: atom([]) };
 });
 vi.mock('lib/state/interactions/interaction-state', async () => {
   const { atom } = await import('jotai');
@@ -59,6 +60,59 @@ afterEach(() => {
 });
 
 describe('model scenario query flow', () => {
+  it('activates each matching all-hazard raster using its own parameters', () => {
+    const store = createStore();
+    store.set(damageSourceState, 'all');
+    store.set(hazardsMetadataState as PrimitiveAtom<Record<string, Dataset>>, Object.fromEntries(
+      ['coastal', 'fluvial', 'pluvial', 'wind'].map((id) => [id, { id, has_access: true } as Dataset]),
+    ));
+    store.set(hazardsMapOrderState as PrimitiveAtom<string[]>, ['coastal', 'fluvial', 'pluvial', 'wind']);
+    const hazardDomains = {
+      coastal: { paramDefaults: { SLR: 0, RP: 100 }, paramDomains: { SLR: [0, 20], RP: [100, 500] } },
+      fluvial: { paramDefaults: { GWL: 2, RP: 100 }, paramDomains: { GWL: [2, 3], RP: [100, 500] } },
+      pluvial: { paramDefaults: { GWL: 2, RP: 100 }, paramDomains: { GWL: [2], RP: [100] } },
+      wind: { paramDefaults: { GWL: 2 }, paramDomains: { GWL: [2, 3] } },
+    };
+    store.set(hazardSelectionState('wind'), true);
+    const ops = { get: store.get, set: store.set };
+    damageSourceStateEffect(ops, {
+      scenario: {
+        hazard: 'all', parameters: { SLR: 20, GWL: 3 },
+        hazard_parameters: { coastal: { SLR: 20 }, fluvial: { GWL: 3 }, pluvial: { GWL: 3 } },
+      },
+      hazardDomains,
+    });
+    expect(store.get(hazardVisibilityState)).toEqual({ coastal: true, fluvial: true, pluvial: false, wind: false });
+    expect(store.get(dataParamState({ group: 'coastal', param: 'SLR' }))).toBe(20);
+    expect(store.get(dataParamState({ group: 'fluvial', param: 'GWL' }))).toBe(3);
+
+    damageSourceStateEffect(ops, {
+      scenario: { hazard: 'coastal', parameters: { SLR: 0 } }, hazardDomains,
+    });
+    expect(store.get(hazardSelectionState('coastal'))).toBe(true);
+    expect(store.get(hazardSelectionState('fluvial'))).toBe(false);
+    damageSourceStateEffect(ops, { scenario: null, hazardDomains });
+    expect(store.get(hazardSelectionState('coastal'))).toBe(false);
+  });
+
+  it('limits shared-schema all-hazard rasters to the damage scope and accessible datasets', () => {
+    const store = createStore();
+    store.set(hazardsMetadataState as PrimitiveAtom<Record<string, Dataset>>, {
+      fluvial: { id: 'fluvial', has_access: true } as Dataset,
+      coastal: { id: 'coastal', has_access: false } as Dataset,
+      wind: { id: 'wind', has_access: true } as Dataset,
+    });
+    store.set(hazardsMapOrderState as PrimitiveAtom<string[]>, ['fluvial', 'coastal', 'wind']);
+    const config = { paramDefaults: { GWL: 2 }, paramDomains: { GWL: [2, 3] } };
+    damageSourceStateEffect({ get: store.get, set: store.set }, {
+      scenario: { hazard: 'all', parameters: { GWL: 3 } },
+      hazards: ['fluvial', 'coastal'],
+      hazardDomains: { fluvial: config, coastal: config, wind: config },
+    });
+    expect(store.get(hazardVisibilityState)).toEqual({ fluvial: true, wind: false });
+    expect(store.get(dataParamState({ group: 'fluvial', param: 'GWL' }))).toBe(3);
+  });
+
   it('uses the combined all-hazard controls to request exact per-hazard scenarios', async () => {
     vi.spyOn(api, 'mapModelScenariosList').mockResolvedValue({
       data: [

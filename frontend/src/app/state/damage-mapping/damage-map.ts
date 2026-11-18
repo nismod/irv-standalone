@@ -11,14 +11,18 @@ import { networksStyleState } from 'data-layers/networks/state/data-selection';
 
 export const showDamagesState = atom((get) => get(networksStyleState) === 'damages');
 
-export const damageScenarioSyncState = atom((get) => ({
-  scenario: get(damageScenarioState).result,
-  hazardDomains: get(hazardDomainState),
-}));
+export const damageScenarioSyncState = atom((get) => {
+  const { result, hazards } = get(damageScenarioState);
+  return { scenario: result, hazards, hazardDomains: get(hazardDomainState) };
+});
 
-export const damageSourceStateEffect = ({ get, set }, { scenario, hazardDomains }) => {
+export const damageSourceStateEffect = ({ get, set }, { scenario, hazards = [], hazardDomains }) => {
+  const selections = scenario?.hazard === 'all'
+    ? scenario.hazard_parameters ?? Object.fromEntries(hazards.map((hazard) => [hazard, scenario.parameters]))
+    : scenario ? { [scenario.hazard]: scenario.parameters } : {};
   forEach(hazardDomains, (groupConfig, group) => {
-    const matches = group === scenario?.hazard && Boolean(groupConfig);
+    const parameters = selections[group];
+    const matches = parameters != null && Boolean(groupConfig);
     if (matches && groupConfig) {
       const names = Object.keys(groupConfig.paramDefaults);
       const current = Object.fromEntries(
@@ -27,7 +31,7 @@ export const damageSourceStateEffect = ({ get, set }, { scenario, hazardDomains 
           get(dataParamState({ group, param })) ?? groupConfig.paramDefaults[param],
         ]),
       );
-      const { linked, desired } = matchRasterScenario(scenario.parameters, groupConfig);
+      const { linked, desired } = matchRasterScenario(parameters, groupConfig);
       if (!linked) {
         set(hazardSelectionState(group), false);
         return;
