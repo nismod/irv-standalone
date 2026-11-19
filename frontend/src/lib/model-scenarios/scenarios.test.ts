@@ -124,12 +124,14 @@ describe('model scenarios', () => {
       hazard, parameters: { GWL: 2 }, protection_standard: 0,
     }));
     expect(scenariosForHazards(catalogue, ['fluvial', 'pluvial'])).toEqual([{
-      hazard: 'all', parameters: { GWL: 2 }, protection_standard: 0,
+      parameters: { GWL: 2 }, protection_standard: 0,
       hazard_parameters: { fluvial: { GWL: 2 }, pluvial: { GWL: 2 } },
     }]);
     expect(scenariosForHazards(catalogue, ['fluvial'])).toEqual([catalogue[1]]);
     expect(scenariosForHazards(catalogue, [])).toEqual([]);
     expect(scenariosForHazards(catalogue, ['fluvial', 'missing'])).toEqual([]);
     expect(scenariosForHazards(catalogue, 'all')).toEqual(scenariosForHazard(catalogue, 'all'));
+    expect(scenariosForHazards(catalogue, ['pluvial', 'coastal', 'fluvial']))
+      .toEqual(scenariosForHazard(catalogue, 'all'));
   });
 });

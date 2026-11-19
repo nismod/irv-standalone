@@ -8,6 +8,7 @@ import { damageSourceState, damageTypeState } from 'lib/state/damage-map';
 import { mapViewConfig } from 'lib/state/map-view/map-view-config';
 import { networksStyleState, selectedNetworkLayerIdsState } from './data-selection';
 import { damageScenarioState, damagesFieldState } from './damage-scenarios';
+import { getAssetDataFormats } from 'data-layers/assets/data-formats';
 import { adaptationFieldSpecState, adaptationFieldState } from './layer';
 import {
   protectedFeatureAdaptationOptionsState,
@@ -162,19 +163,38 @@ describe('model scenario query flow', () => {
     subscriptions.push(store.sub(damagesFieldState, () => {}));
     await vi.waitFor(() => expect(store.get(damagesFieldState)).not.toBeNull());
     store.set(modelParametersState('damages_expected'), { SLR: 20, GWL: 3 });
+    // The damage catalogue defines "all", even if other hazard rasters exist.
+    const metadata = {
+      coastal: { label: 'Coastal flooding' },
+      fluvial: { label: 'River flooding' },
+      pluvial: { label: 'Surface flooding' },
+      wind: { label: 'Wind' },
+    };
+    const label = () => {
+      const field = store.get(damagesFieldState);
+      return getAssetDataFormats(field, metadata).getDataLabel(field);
+    };
+    expect(label()).toBe('Direct Damages (All Hazards)');
+    store.set(damageSourceState, ['coastal', 'fluvial', 'pluvial']);
+    expect(label()).toBe('Direct Damages (All Hazards)');
+    store.set(damageTypeState, 'indirect');
+    expect(label()).toBe('Economic Losses (All Hazards)');
+    store.set(damageTypeState, 'direct');
     expect(store.get(damagesFieldState).fieldDimensions).toEqual({
       hazard: 'all', parameters: { SLR: 20, GWL: 3 }, protection_standard: 0,
       hazard_parameters: { coastal: { SLR: 20 }, fluvial: { GWL: 3 }, pluvial: { GWL: 3 } },
     });
     store.set(damageSourceState, ['fluvial', 'pluvial']);
+    expect(label()).toBe('Direct Damages (River flooding + Surface flooding)');
     expect(store.get(damageScenarioState).selectedHazards).toEqual(['fluvial', 'pluvial']);
     expect(store.get(damagesFieldState).fieldDimensions).toEqual({
-      hazard: 'all', parameters: { GWL: 3 }, protection_standard: 0,
+      parameters: { GWL: 3 }, protection_standard: 0,
       hazard_parameters: { fluvial: { GWL: 3 }, pluvial: { GWL: 3 } },
     });
     store.set(damageSourceState, []);
     expect(store.get(damagesFieldState)).toBeNull();
     store.set(damageSourceState, ['coastal']);
+    expect(label()).toBe('Direct Damages (Coastal flooding)');
     expect(store.get(damagesFieldState).fieldDimensions).toEqual({
       hazard: 'coastal', parameters: { SLR: 20 }, protection_standard: 0,
     });

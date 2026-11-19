@@ -48,12 +48,12 @@ export const damageSourceStateEffect = (
   { scenario, hazards = [], hazardDomains },
 ) => {
   const selections =
-    scenario?.hazard === 'all'
-      ? (scenario.hazard_parameters ??
-        Object.fromEntries(hazards.map((hazard) => [hazard, scenario.parameters])))
+    scenario?.hazard_parameters ??
+    (scenario?.hazard === 'all'
+      ? Object.fromEntries(hazards.map((hazard) => [hazard, scenario.parameters]))
       : scenario
         ? { [scenario.hazard]: scenario.parameters }
-        : {};
+        : {});
   forEach(hazardDomains, (groupConfig, group) => {
     const parameters = selections[group];
     const matches = parameters != null && Boolean(groupConfig);

@@ -6,7 +6,7 @@ describe('damage labels', () => {
     const fieldSpec = {
       fieldGroup: 'damages_expected', field: 'ead_mean',
       fieldDimensions: {
-        hazard: 'all', parameters: { GWL: 2 }, protection_standard: 0,
+        parameters: { GWL: 2 }, protection_standard: 0,
         hazard_parameters: { fluvial: { GWL: 2 }, pluvial: { GWL: 2 } },
       },
     };

@@ -4,7 +4,8 @@ export type ModelParameters = Record<string, unknown>;
 export type ModelType = 'damages_expected' | 'adaptation';
 
 export interface ModelScenario {
-  hazard: string;
+  // Partial totals are scoped solely by hazard_parameters; "all" means every hazard.
+  hazard?: string;
   parameters: ModelParameters;
   protection_standard?: number;
   adaptation_name?: string;
@@ -81,16 +82,22 @@ export function scenariosForHazards(
   if (!hazards.length || hazards.some((hazard) => !rows.some((row) => row.hazard === hazard)))
     return [];
   if (hazards.length === 1) return scenariosForHazard(rows, hazards[0]);
+  if (hazards.length === new Set(rows.map((row) => row.hazard)).size)
+    return scenariosForHazard(rows, 'all');
   return scenariosForHazard(
     rows.filter((row) => hazards.includes(row.hazard)),
     'all',
-  ).map((row) => ({
-    ...row,
-    // Explicitly scope totals even when the selected hazards share a schema.
-    hazard_parameters:
-      row.hazard_parameters ??
-      Object.fromEntries(hazards.map((hazard) => [hazard, row.parameters])),
-  }));
+  ).map((row) => {
+    const selected = {
+      ...row,
+      // Explicitly scope totals even when the selected hazards share a schema.
+      hazard_parameters:
+        row.hazard_parameters ??
+        Object.fromEntries(hazards.map((hazard) => [hazard, row.parameters])),
+    };
+    delete selected.hazard;
+    return selected;
+  });
 }
 
 // Preserve as much of the selection as possible when the scope changes, while

@@ -6,7 +6,8 @@ type HazardsMetadata = Record<string, { label: string }>;
 
 function getSourceLabel(fieldDimensions: FieldSpec['fieldDimensions'], hazardsMetadata: HazardsMetadata) {
   const eadSource = String(fieldDimensions.hazard);
-  if (eadSource === 'all') {
+  if (eadSource === 'all') return 'All Hazards';
+  if (fieldDimensions.hazard == null) {
     const selected = Object.keys(fieldDimensions.hazard_parameters ?? {});
     return selected.length
       ? selected.map((hazard) => hazardsMetadata[hazard]?.label ?? hazard).join(' + ')

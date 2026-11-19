@@ -225,7 +225,7 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
                 ).exclude(hazard__in=restricted_hazards).annotate(
                     bbox_wkt=AsWKT(Envelope("feature__geom")),
                 )
-                if dimensions["hazard"] != "all":
+                if dimensions.get("hazard") not in (None, "all"):
                     query = query.filter(hazard=dimensions["hazard"])
                     query = query.annotate(value=F(field))
                 else:
@@ -277,7 +277,7 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if field_group == "damages_expected" and dimensions["hazard"] != "all":
+        if field_group == "damages_expected" and dimensions.get("hazard") not in (None, "all"):
             query = query.values(
                 "feature_id",
                 "feature__string_id",
@@ -511,7 +511,7 @@ class AttributeLookupView(FieldGroupQueryParsingMixin, APIView):
                 feature_id__in=base_feature_ids,
             ).exclude(hazard__in=restricted_hazards)
 
-            if dimensions["hazard"] != "all":
+            if dimensions.get("hazard") not in (None, "all"):
                 query = query.filter(hazard=dimensions["hazard"])
                 try:
                     lookup = dict(query.values_list("feature_id", field))

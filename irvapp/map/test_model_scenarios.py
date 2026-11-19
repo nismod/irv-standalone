@@ -202,8 +202,12 @@ class ModelScenarioTests(TestCase):
 
         check(115)
         check(15, {
-            "hazard": "all", "parameters": {"GWL": 2}, "protection_standard": 0,
+            "parameters": {"GWL": 2}, "protection_standard": 0,
             "hazard_parameters": {"fluvial": {"GWL": 2}, "pluvial": {"GWL": 2}},
+        })
+        check(110, {
+            "parameters": {"SLR": 20, "GWL": 2}, "protection_standard": 0,
+            "hazard_parameters": {"coastal": {"SLR": 20}, "fluvial": {"GWL": 2}},
         })
         Dataset.objects.create(
             id="coastal", label="Coastal", group="hazards", quantity="depth", unit="m",
@@ -215,6 +219,7 @@ class ModelScenarioTests(TestCase):
         self.damage(self.features[0], {"GWL": 2})
         base = {"hazard": "all", "parameters": {"GWL": 2}, "protection_standard": 0}
         for extra in (
+            {"hazard": None},
             {"hazard_parameters": {}},
             {"hazard_parameters": {"flood": {"GWL": 3}}},
             {"hazard_parameters": {"flood": {"other": 2}}},
@@ -229,3 +234,12 @@ class ModelScenarioTests(TestCase):
                 )
                 self.assertEqual(response.status_code, 400)
                 self.assertEqual(self.client.get("/map/features/sorted-by/damages_expected", query).status_code, 400)
+
+        # Omitting hazard is valid only when the contributing hazards are explicit.
+        query["dimensions"] = json.dumps({"parameters": {"GWL": 2}, "protection_standard": 0})
+        response = self.client.post(
+            "/map/attributes/damages_expected?" + urlencode(query),
+            {"ids": [self.features[0].pk]}, format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(self.client.get("/map/features/sorted-by/damages_expected", query).status_code, 400)

@@ -173,7 +173,7 @@ class AttributeLookupRequestSerializer(serializers.Serializer):
 
 
 class ExpectedDamagesDimensionsSerializer(serializers.Serializer):
-    hazard = serializers.CharField()
+    hazard = serializers.CharField(required=False)
     parameters = serializers.DictField(child=serializers.JSONField())
     protection_standard = serializers.IntegerField()
     hazard_parameters = serializers.DictField(
@@ -185,9 +185,11 @@ class ExpectedDamagesDimensionsSerializer(serializers.Serializer):
     def validate(self, attrs):
         selections = attrs.get("hazard_parameters")
         if selections is None:
+            if "hazard" not in attrs:
+                raise serializers.ValidationError({"hazard": "Specify a hazard or an explicit hazard_parameters selection."})
             return attrs
-        if attrs["hazard"] != "all" or "all" in selections:
-            raise serializers.ValidationError({"hazard_parameters": "Only supported for individual hazards in an All Hazards selection."})
+        if attrs.get("hazard") not in (None, "all") or "all" in selections:
+            raise serializers.ValidationError({"hazard_parameters": "Specify individual hazards without a single-hazard filter."})
         combined = attrs["parameters"]
         names = set()
         for parameters in selections.values():
