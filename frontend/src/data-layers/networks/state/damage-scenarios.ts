@@ -13,7 +13,7 @@ import {
 } from 'lib/model-scenarios/state';
 import {
   scenarioDimensions,
-  scenariosForHazard,
+  scenariosForHazards,
   selectResult,
 } from 'lib/model-scenarios/scenarios';
 import { selectedNetworkLayerIdsState } from './data-selection';
@@ -33,12 +33,12 @@ export const damageScenarioState = atom((get) => {
   const available = catalog?.rows.filter((row) => metadata[row.hazard]?.has_access !== false) ?? [];
   const hazards = [...new Set(available.map((row) => row.hazard))];
   const requested = get(damageSourceState);
-  const hazard = requested === 'all' || hazards.includes(requested) ? requested : 'all';
-  const rows = scenariosForHazard(available, hazard);
+  const selectedHazards = requested === 'all' ? hazards : hazards.filter((hazard) => requested.includes(hazard));
+  const rows = scenariosForHazards(available, requested === 'all' ? 'all' : selectedHazards);
   const result = selectResult(rows, get(modelParametersState('damages_expected')), {
     protection_standard: get(damageProtectionStandardState),
   });
-  return { catalog, hazards, hazard, rows, result };
+  return { catalog, hazards, selectedHazards, rows, result };
 });
 
 export const damagesFieldState = atom<FieldSpec | null>((get) => {

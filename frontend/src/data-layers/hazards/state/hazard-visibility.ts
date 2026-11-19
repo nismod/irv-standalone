@@ -10,9 +10,9 @@ export const hazardVisibilityState = atom((get) => {
   if (get(showDamagesState)) {
     const selectedDamageSource = get(damageSourceState);
     const metadata = get(hazardsMetadataState);
-    const hazards = selectedDamageSource === 'all'
-      ? get(hazardsMapOrderState)
-      : [selectedDamageSource];
+    const hazards = get(hazardsMapOrderState).filter((hazard) =>
+      selectedDamageSource === 'all' || selectedDamageSource.includes(hazard),
+    );
     return getHazardSelectionAggregate({ get }, hazards.filter((hazard) => metadata[hazard]?.has_access));
   } else {
     const hazardsMapOrder = get(hazardsMapOrderState);

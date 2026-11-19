@@ -1,10 +1,10 @@
 import {
   FormControl,
   FormControlLabel,
+  FormGroup,
   FormLabel,
   MenuItem,
-  Radio,
-  RadioGroup,
+  Checkbox,
   Select,
 } from '@mui/material';
 import { useEffect, useId } from 'react';
@@ -32,13 +32,7 @@ import { hazardsMetadataState } from 'data-layers/hazards/state/metadata';
 
 export const DamageSourceControl = () => {
   const HAZARDS_METADATA = useAtomValue(hazardsMetadataState);
-  const {
-    catalog,
-    hazards,
-    hazard: damageSource,
-    rows,
-    result,
-  } = useAtomValue(damageScenarioState);
+  const { catalog, hazards, selectedHazards, rows, result } = useAtomValue(damageScenarioState);
   const [requestedSource, setDamageSource] = useAtom(damageSourceState);
   const setParameters = useSetAtom(modelParametersState('damages_expected'));
   const setProtection = useSetAtom(damageProtectionStandardState);
@@ -46,9 +40,17 @@ export const DamageSourceControl = () => {
   const id = useId();
 
   useEffect(() => {
-    if (catalog && requestedSource != null && requestedSource !== damageSource)
-      setDamageSource(damageSource);
-  }, [catalog, requestedSource, damageSource, setDamageSource]);
+    if (
+      catalog &&
+      requestedSource !== 'all' &&
+      (requestedSource.length !== selectedHazards.length ||
+        requestedSource.some((hazard) => !selectedHazards.includes(hazard)))
+    )
+      setDamageSource(selectedHazards);
+  }, [catalog, requestedSource, selectedHazards, setDamageSource]);
+
+  const allSelected = hazards.length > 0 && selectedHazards.length === hazards.length;
+  const partiallySelected = selectedHazards.length > 0 && !allSelected;
 
   const protectionLevels = [
     ...new Set(
@@ -78,18 +80,41 @@ export const DamageSourceControl = () => {
         </InputSection>
         <InputSection>
           <FormControl component="fieldset" fullWidth>
-            <FormLabel component="legend">Hazard</FormLabel>
-            <RadioGroup value={damageSource} onChange={(e, value) => setDamageSource(value)}>
-              <FormControlLabel label="All Hazards" control={<Radio value="all" />} />
+            <FormLabel component="legend">Hazards</FormLabel>
+            <FormGroup>
+              <FormControlLabel
+                label="All Hazards"
+                control={
+                  <Checkbox
+                    checked={allSelected}
+                    indeterminate={partiallySelected}
+                    disabled={!hazards.length}
+                    slotProps={{
+                      input: { 'aria-checked': partiallySelected ? 'mixed' : allSelected },
+                    }}
+                    onChange={(_event, checked) => setDamageSource(checked ? 'all' : [])}
+                  />
+                }
+              />
               {hazards.map((hazard) => (
                 <FormControlLabel
                   key={hazard}
                   label={HAZARDS_METADATA[hazard]?.label ?? hazard}
                   disabled={HAZARDS_METADATA[hazard]?.has_access === false}
-                  control={<Radio value={hazard} />}
+                  control={
+                    <Checkbox
+                      checked={selectedHazards.includes(hazard)}
+                      onChange={(_event, checked) => {
+                        const next = hazards.filter((candidate) =>
+                          candidate === hazard ? checked : selectedHazards.includes(candidate),
+                        );
+                        setDamageSource(next.length === hazards.length ? 'all' : next);
+                      }}
+                    />
+                  }
                 />
               ))}
-            </RadioGroup>
+            </FormGroup>
           </FormControl>
         </InputSection>
         <InputSection>
@@ -99,8 +124,10 @@ export const DamageSourceControl = () => {
             onChange={setParameters}
             error={catalog?.error}
             emptyMessage={
-              damageSource === 'all' && hazards.length > 0
-                ? 'No compatible combination is available across all hazards. Choose a hazard.'
+              hazards.length > 0
+                ? selectedHazards.length === 0
+                  ? 'Select at least one hazard.'
+                  : 'No compatible combination is available for the selected hazards.'
                 : undefined
             }
           />

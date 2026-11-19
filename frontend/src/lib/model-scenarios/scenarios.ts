@@ -72,6 +72,27 @@ export function scenariosForHazard(rows: ModelScenario[], hazard: string): Model
   });
 }
 
+export function scenariosForHazards(
+  rows: ModelScenario[],
+  selection: 'all' | string[],
+): ModelScenario[] {
+  if (selection === 'all') return scenariosForHazard(rows, 'all');
+  const hazards = [...new Set(selection)];
+  if (!hazards.length || hazards.some((hazard) => !rows.some((row) => row.hazard === hazard)))
+    return [];
+  if (hazards.length === 1) return scenariosForHazard(rows, hazards[0]);
+  return scenariosForHazard(
+    rows.filter((row) => hazards.includes(row.hazard)),
+    'all',
+  ).map((row) => ({
+    ...row,
+    // Explicitly scope totals even when the selected hazards share a schema.
+    hazard_parameters:
+      row.hazard_parameters ??
+      Object.fromEntries(hazards.map((hazard) => [hazard, row.parameters])),
+  }));
+}
+
 // Preserve as much of the selection as possible when the scope changes, while
 // always returning a complete scenario that exists in the new catalogue.
 export function selectParameters(rows: ModelScenario[], preferred: ModelParameters | null) {

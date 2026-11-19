@@ -6,7 +6,7 @@ import { modelParametersState } from 'lib/model-scenarios/state';
 import { dataParamState, syncExternalConfigState } from 'lib/state/data-params';
 import { damageSourceState } from 'lib/state/damage-map';
 import { networksStyleState, selectedNetworkLayerIdsState } from './data-selection';
-import { damagesFieldState } from './damage-scenarios';
+import { damageScenarioState, damagesFieldState } from './damage-scenarios';
 import { adaptationFieldSpecState } from './layer';
 import {
   protectedFeatureAdaptationOptionsState,
@@ -131,13 +131,21 @@ describe('model scenario query flow', () => {
       hazard: 'all', parameters: { SLR: 20, GWL: 3 }, protection_standard: 0,
       hazard_parameters: { coastal: { SLR: 20 }, fluvial: { GWL: 3 }, pluvial: { GWL: 3 } },
     });
-    store.set(damageSourceState, 'coastal');
+    store.set(damageSourceState, ['fluvial', 'pluvial']);
+    expect(store.get(damageScenarioState).selectedHazards).toEqual(['fluvial', 'pluvial']);
+    expect(store.get(damagesFieldState).fieldDimensions).toEqual({
+      hazard: 'all', parameters: { GWL: 3 }, protection_standard: 0,
+      hazard_parameters: { fluvial: { GWL: 3 }, pluvial: { GWL: 3 } },
+    });
+    store.set(damageSourceState, []);
+    expect(store.get(damagesFieldState)).toBeNull();
+    store.set(damageSourceState, ['coastal']);
     expect(store.get(damagesFieldState).fieldDimensions).toEqual({
       hazard: 'coastal', parameters: { SLR: 20 }, protection_standard: 0,
     });
   });
 
-  it('drops a restricted persisted hazard and excludes it from all-hazard scenarios', async () => {
+  it('drops a restricted persisted hazard without selecting a different hazard', async () => {
     vi.spyOn(api, 'mapModelScenariosList').mockResolvedValue({
       data: [
         { hazard: 'fluvial', parameters: { gwl: 2 }, protection_standard: 0 },
@@ -148,14 +156,11 @@ describe('model scenario query flow', () => {
     store.set(hazardsMetadataState as PrimitiveAtom<Record<string, Dataset>>, {
       coastal: { id: 'coastal', has_access: false } as Dataset,
     });
-    store.set(damageSourceState, 'coastal');
+    store.set(damageSourceState, ['coastal']);
     subscriptions.push(store.sub(damagesFieldState, () => {}));
-    await vi.waitFor(() => expect(store.get(damagesFieldState)).not.toBeNull());
-    expect(store.get(damagesFieldState).fieldDimensions).toEqual({
-      hazard: 'all',
-      parameters: { gwl: 2 },
-      protection_standard: 0,
-    });
+    await vi.waitFor(() => expect(store.get(damageScenarioState).hazards).toEqual(['fluvial']));
+    expect(store.get(damagesFieldState)).toBeNull();
+    expect(store.get(damageScenarioState).selectedHazards).toEqual([]);
   });
 
   it('revalidates an active selection when permissions change while the catalogue is cached', async () => {
@@ -165,7 +170,7 @@ describe('model scenario query flow', () => {
     const store = createStore();
     const metadata = hazardsMetadataState as PrimitiveAtom<Record<string, Dataset>>;
     store.set(metadata, { coastal: { id: 'coastal', has_access: true } as Dataset });
-    store.set(damageSourceState, 'coastal');
+    store.set(damageSourceState, ['coastal']);
     subscriptions.push(store.sub(damagesFieldState, () => {}));
     await vi.waitFor(() =>
       expect(store.get(damagesFieldState)?.fieldDimensions.hazard).toBe('coastal'),
@@ -392,7 +397,7 @@ describe('model scenario query flow', () => {
     });
     await vi.waitFor(() => expect(store.get(damagesFieldState)).not.toBeNull());
     store.set(modelParametersState('damages_expected'), { slr: 1, gwl: 4 });
-    store.set(damageSourceState, 'heat');
+    store.set(damageSourceState, ['heat']);
     expect(store.get(damagesFieldState).fieldDimensions).toEqual({
       hazard: 'heat',
       parameters: { gwl: 4, slr: 1 },

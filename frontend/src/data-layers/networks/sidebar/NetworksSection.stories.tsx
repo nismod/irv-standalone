@@ -352,8 +352,8 @@ export const Risk: Story = {
       ),
     ).toBeFalsy();
     await userEvent.click(await canvas.findByRole('checkbox', { name: 'Class A' }));
-    expect(await canvas.findByRole('radio', { name: 'River Flooding' })).toBeEnabled();
-    expect(canvas.queryByRole('radio', { name: 'Coastal Flooding' })).not.toBeInTheDocument();
+    expect(await canvas.findByRole('checkbox', { name: 'River Flooding' })).toBeEnabled();
+    expect(canvas.queryByRole('checkbox', { name: 'Coastal Flooding' })).not.toBeInTheDocument();
   },
 };
 

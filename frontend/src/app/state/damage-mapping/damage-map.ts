@@ -12,8 +12,8 @@ import { networksStyleState } from 'data-layers/networks/state/data-selection';
 export const showDamagesState = atom((get) => get(networksStyleState) === 'damages');
 
 export const damageScenarioSyncState = atom((get) => {
-  const { result, hazards } = get(damageScenarioState);
-  return { scenario: result, hazards, hazardDomains: get(hazardDomainState) };
+  const { result, selectedHazards } = get(damageScenarioState);
+  return { scenario: result, hazards: selectedHazards, hazardDomains: get(hazardDomainState) };
 });
 
 export const damageSourceStateEffect = ({ get, set }, { scenario, hazards = [], hazardDomains }) => {

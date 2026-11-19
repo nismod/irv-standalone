@@ -20,6 +20,7 @@ const hazards = [
   { id: 'fluvial', label: 'River Flooding' },
   { id: 'coastal', label: 'Coastal Flooding' },
 ];
+const allHazards = [...hazards, { id: 'pluvial', label: 'Surface Flooding' }];
 const scenarios = [
   { rcp: 'baseline', epoch: 2010 },
   { rcp: '4.5', epoch: 2050 },
@@ -27,12 +28,12 @@ const scenarios = [
 ];
 const assetLayer = 'road_edges_class_a';
 
-const handlers = [
+const datasetsHandler = (availableHazards = hazards) =>
   http.get('/api/map/datasets', ({ request }) => {
     const group = new URL(request.url).searchParams.get('group');
     const results =
       group === 'hazards'
-        ? hazards.map((hazard, index) => ({
+        ? availableHazards.map((hazard, index) => ({
             ...hazard,
             group: 'hazards',
             quantity: 'depth',
@@ -56,7 +57,10 @@ const handlers = [
             },
           ];
     return HttpResponse.json({ count: results.length, next: null, previous: null, results });
-  }),
+  });
+
+const handlers = [
+  datasetsHandler(),
   http.get('/api/map/infrastructure-tree', () =>
     HttpResponse.json({
       count: 1,
@@ -124,7 +128,7 @@ function DamageAndHazardPanels() {
       next.set(sectionVisibilityState(id), true);
       next.set(sidebarSectionExpandedState(id), true);
     }
-    hazards.forEach(({ id }) => next.set(hazardSelectionState(id), false));
+    allHazards.forEach(({ id }) => next.set(hazardSelectionState(id), false));
     return next;
   });
 
@@ -169,7 +173,7 @@ const meta = {
   },
   beforeEach: () => {
     const url = window.location.href;
-    const keys = ['netTree', 'assetsStyle', 'assets', 'hazards', ...hazards.map(({ id }) => id)];
+    const keys = ['netTree', 'assetsStyle', 'assets', 'hazards', ...allHazards.map(({ id }) => id)];
     const saved = keys.map((key) => [
       STORAGE_PREFIX + key,
       sessionStorage.getItem(STORAGE_PREFIX + key),
@@ -198,7 +202,7 @@ export const CompatibleScenarios: Story = {
     const coastalControls = within(coastal.closest('.MuiAccordion-root') as HTMLElement);
     const body = within(canvasElement.ownerDocument.body);
 
-    await userEvent.click(await damagePanel.findByRole('radio', { name: 'River Flooding' }));
+    await userEvent.click(await damagePanel.findByRole('checkbox', { name: 'Coastal Flooding' }));
     // The hazard headers can render before the asynchronously loaded sidebar
     // configuration supplies their parameter controls.
     await riverControls.findByRole('combobox', { name: 'Epoch' }, { timeout: 10000 });
@@ -235,7 +239,8 @@ export const CompatibleScenarios: Story = {
       expect(riverControls.getByRole('combobox', { name: 'RCP' })).toHaveTextContent('8.5'),
     );
 
-    await userEvent.click(damagePanel.getByRole('radio', { name: 'Coastal Flooding' }));
+    await userEvent.click(damagePanel.getByRole('checkbox', { name: 'Coastal Flooding' }));
+    await userEvent.click(damagePanel.getByRole('checkbox', { name: 'River Flooding' }));
     await waitFor(() => {
       expect(river).toHaveAttribute('aria-expanded', 'false');
       expect(coastal).toHaveAttribute('aria-expanded', 'true');
@@ -243,7 +248,7 @@ export const CompatibleScenarios: Story = {
       expect(coastalControls.getByRole('combobox', { name: 'RCP' })).toHaveTextContent('8.5');
     });
 
-    await userEvent.click(damagePanel.getByRole('radio', { name: 'All Hazards' }));
+    await userEvent.click(damagePanel.getByRole('checkbox', { name: 'All Hazards' }));
     await waitFor(() => {
       expect(river).toHaveAttribute('aria-expanded', 'true');
       expect(coastal).toHaveAttribute('aria-expanded', 'true');
@@ -251,7 +256,7 @@ export const CompatibleScenarios: Story = {
       expect(coastalControls.getByRole('combobox', { name: 'RCP' })).toHaveTextContent('8.5');
     });
     // Leave an individual hazard open for visual inspection in Storybook.
-    await userEvent.click(damagePanel.getByRole('radio', { name: 'River Flooding' }));
+    await userEvent.click(damagePanel.getByRole('checkbox', { name: 'Coastal Flooding' }));
     await waitFor(() => expect(river).toHaveAttribute('aria-expanded', 'true'));
   },
 };
@@ -308,8 +313,8 @@ export const AllHazardParameters: Story = {
     const damagePanel = within(canvas.getByRole('region', { name: 'Damage controls' }));
     const hazardPanel = within(canvas.getByRole('region', { name: 'Hazard controls' }));
     const body = within(canvasElement.ownerDocument.body);
-    await expect(await damagePanel.findByRole('radio', { name: 'All Hazards' })).toBeChecked();
-    await damagePanel.findByRole('combobox', { name: 'GWL' });
+    await damagePanel.findByRole('combobox', { name: 'GWL' }, { timeout: 10000 });
+    expect(damagePanel.getByRole('checkbox', { name: 'All Hazards' })).toBeChecked();
     await expect(damagePanel.getByRole('combobox', { name: 'SLR' })).toHaveTextContent('0');
     const river = await hazardPanel.findByRole('button', { name: 'River Flooding' });
     const coastal = await hazardPanel.findByRole('button', { name: 'Coastal Flooding' });
@@ -332,7 +337,7 @@ export const AllHazardParameters: Story = {
     });
     riverControls.getAllByRole('slider').forEach((slider) => expect(slider).toBeDisabled());
     coastalControls.getAllByRole('slider').forEach((slider) => expect(slider).toBeDisabled());
-    await userEvent.click(damagePanel.getByRole('radio', { name: 'Coastal Flooding' }));
+    await userEvent.click(damagePanel.getByRole('checkbox', { name: 'River Flooding' }));
     await waitFor(() => {
       expect(damagePanel.queryByRole('combobox', { name: 'GWL' })).not.toBeInTheDocument();
       expect(damagePanel.getByRole('combobox', { name: 'SLR' })).toHaveTextContent('20');
@@ -342,11 +347,99 @@ export const AllHazardParameters: Story = {
         'true',
       );
     });
-    await userEvent.click(damagePanel.getByRole('radio', { name: 'All Hazards' }));
+    await userEvent.click(damagePanel.getByRole('checkbox', { name: 'All Hazards' }));
     await damagePanel.findByRole('combobox', { name: 'GWL' });
     await waitFor(() => {
       expect(river).toHaveAttribute('aria-expanded', 'true');
       expect(coastal).toHaveAttribute('aria-expanded', 'true');
     });
+  },
+};
+
+export const SelectedHazards: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Uncheck coastal flooding to total river and surface damages together. Only GWL is needed, and only the selected hazard rasters are active.',
+      },
+    },
+    msw: {
+      handlers: [
+        datasetsHandler(allHazards),
+        http.get('/api/map/model-scenarios/damages_expected', () =>
+          HttpResponse.json([
+            ...[0, 20].map((SLR) => ({
+              hazard: 'coastal',
+              parameters: { SLR },
+              protection_standard: 0,
+            })),
+            ...['fluvial', 'pluvial'].flatMap((hazard) =>
+              [2, 3].map((GWL) => ({ hazard, parameters: { GWL }, protection_standard: 0 })),
+            ),
+          ]),
+        ),
+        ...AllHazardParameters.parameters.msw.handlers.filter(
+          (handler) =>
+            !['/api/map/datasets', '/api/map/model-scenarios/damages_expected'].includes(
+              String(handler.info.path),
+            ),
+        ),
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const damagePanel = within(canvas.getByRole('region', { name: 'Damage controls' }));
+    const hazardPanel = within(canvas.getByRole('region', { name: 'Hazard controls' }));
+    const body = within(canvasElement.ownerDocument.body);
+    const all = await damagePanel.findByRole('checkbox', { name: 'All Hazards' });
+    const coastal = await damagePanel.findByRole('checkbox', { name: 'Coastal Flooding' });
+    const river = damagePanel.getByRole('checkbox', { name: 'River Flooding' });
+    const surface = damagePanel.getByRole('checkbox', { name: 'Surface Flooding' });
+    await expect(all).toBeChecked();
+    await userEvent.click(coastal);
+    expect(all).toBePartiallyChecked();
+    expect(coastal).not.toBeChecked();
+    expect(river).toBeChecked();
+    expect(surface).toBeChecked();
+    expect(damagePanel.queryByRole('combobox', { name: 'SLR' })).not.toBeInTheDocument();
+    await userEvent.click(await damagePanel.findByRole('combobox', { name: 'GWL' }));
+    await userEvent.click(await body.findByRole('option', { name: '3' }));
+    await waitFor(() => {
+      expect(hazardPanel.getByRole('button', { name: 'Coastal Flooding' })).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+      expect(hazardPanel.getByRole('button', { name: 'River Flooding' })).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      );
+      expect(hazardPanel.getByRole('button', { name: 'Surface Flooding' })).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      );
+    });
+    await userEvent.click(all);
+    expect(all).toBeChecked();
+    expect(coastal).toBeChecked();
+    await damagePanel.findByRole('combobox', { name: 'SLR' });
+    await userEvent.click(all);
+    expect(all).not.toBeChecked();
+    expect(coastal).not.toBeChecked();
+    expect(river).not.toBeChecked();
+    expect(surface).not.toBeChecked();
+    await damagePanel.findByText('Select at least one hazard.');
+    await waitFor(() => {
+      for (const { label } of allHazards) {
+        expect(hazardPanel.getByRole('button', { name: label })).toHaveAttribute(
+          'aria-expanded',
+          'false',
+        );
+      }
+    });
+    await userEvent.click(river);
+    await userEvent.click(surface);
+    expect(all).toBePartiallyChecked();
   },
 };

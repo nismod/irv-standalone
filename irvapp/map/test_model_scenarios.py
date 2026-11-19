@@ -187,8 +187,8 @@ class ModelScenarioTests(TestCase):
             "hazard_parameters": {"coastal": {"SLR": 20}, "fluvial": {"GWL": 2}, "pluvial": {"GWL": 2}},
         }
 
-        def check(expected):
-            query = {"layer": "roads", "field": "ead_mean", "dimensions": json.dumps(dimensions)}
+        def check(expected, selected_dimensions=None):
+            query = {"layer": "roads", "field": "ead_mean", "dimensions": json.dumps(selected_dimensions or dimensions)}
             response = self.client.post(
                 "/map/attributes/damages_expected?" + urlencode(query),
                 {"ids": [road.pk, power.pk, 999999]}, format="json",
@@ -201,6 +201,10 @@ class ModelScenarioTests(TestCase):
             self.assertEqual(response.json()["items"][0]["value"], expected)
 
         check(115)
+        check(15, {
+            "hazard": "all", "parameters": {"GWL": 2}, "protection_standard": 0,
+            "hazard_parameters": {"fluvial": {"GWL": 2}, "pluvial": {"GWL": 2}},
+        })
         Dataset.objects.create(
             id="coastal", label="Coastal", group="hazards", quantity="depth", unit="m",
             stacking_order=0, display_order=0,

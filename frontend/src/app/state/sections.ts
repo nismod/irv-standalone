@@ -9,7 +9,7 @@ export const networksStyleStateEffect: StateEffect<string> = ({ get, set }, styl
     const hazardsUIOrder = get(hazardsUIOrderState);
     const hazardSelection = getHazardSelectionAggregate({ get }, hazardsUIOrder);
     const visibleHazards = truthyKeys(hazardSelection);
-    const defaultDamageSource = visibleHazards[0] ?? 'all';
+    const defaultDamageSource = visibleHazards.length ? visibleHazards : 'all';
 
     set(damageSourceState, defaultDamageSource);
   }

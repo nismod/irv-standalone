@@ -4,8 +4,14 @@ import startCase from 'lodash/startCase';
 
 type HazardsMetadata = Record<string, { label: string }>;
 
-function getSourceLabel(eadSource: string, hazardsMetadata) {
-  if (eadSource === 'all') return 'All Hazards';
+function getSourceLabel(fieldDimensions: FieldSpec['fieldDimensions'], hazardsMetadata: HazardsMetadata) {
+  const eadSource = String(fieldDimensions.hazard);
+  if (eadSource === 'all') {
+    const selected = Object.keys(fieldDimensions.hazard_parameters ?? {});
+    return selected.length
+      ? selected.map((hazard) => hazardsMetadata[hazard]?.label ?? hazard).join(' + ')
+      : 'All Hazards';
+  }
 
   return hazardsMetadata[eadSource]?.label ?? eadSource;
 }
@@ -76,7 +82,7 @@ export function createAssetDataFormats(
         getDataLabel: (colorField) => {
           const variableLabel = getDamageTypeLabel(colorField.field);
           const sourceLabel = getSourceLabel(
-            String(colorField.fieldDimensions.hazard),
+            colorField.fieldDimensions,
             hazardsMetadata,
           );
 

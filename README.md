@@ -162,10 +162,13 @@ complete `parameters` object alongside fixed result dimensions such as protectio
 standard or adaptation option. The controls preserve these combinations and value
 types. “All Hazards” combines the available parameters in the selected asset
 scope: for example, coastal SLR and river/surface GWL can be selected together.
+The hazard checkboxes can also select a subset, such as river and surface
+flooding without coastal flooding. The controls, totals, and matching raster
+layers follow that selection; clearing every checkbox clears damage colouring.
 Shared parameter values and protection standards must agree across hazards.
 Damage requests use the bulk attributes API, which sums exactly one selected
 scenario per accessible hazard. The optional `hazard_parameters` dimension maps
-each hazard to its parameter object when their schemas differ; `parameters`
+each selected hazard to its parameter object for subsets or differing schemas; `parameters`
 contains the combined control values. Requests with a shared parameter object
 continue to work without this mapping.
 
