@@ -21,7 +21,7 @@ import { damageScenarioState } from '../state/damage-scenarios';
 import { modelParametersState } from 'lib/model-scenarios/state';
 import { ModelParameterControls } from 'lib/model-scenarios/ModelParameterControls';
 import { parameterKey } from 'lib/model-scenarios/scenarios';
-import { ParamDropdown } from 'lib/controls/ParamDropdown';
+import { ModelParameterControl, type NumericControl } from 'lib/model-scenarios/ModelParameterControl';
 import {
   damageScenarioSyncState,
   damageSourceStateEffect,
@@ -30,7 +30,7 @@ import { LayerStylePanel } from 'lib/sidebar/ui/LayerStylePanel';
 
 import { hazardsMetadataState } from 'data-layers/hazards/state/metadata';
 
-export const DamageSourceControl = () => {
+export const DamageSourceControl = ({ numericControl = 'select' }: { numericControl?: NumericControl }) => {
   const HAZARDS_METADATA = useAtomValue(hazardsMetadataState);
   const { catalog, hazards, selectedHazards, rows, result } = useAtomValue(damageScenarioState);
   const [requestedSource, setDamageSource] = useAtom(damageSourceState);
@@ -122,6 +122,7 @@ export const DamageSourceControl = () => {
             rows={catalog ? rows : undefined}
             parameters={result?.parameters ?? null}
             onChange={setParameters}
+            numericControl={numericControl}
             error={catalog?.error}
             emptyMessage={
               hazards.length > 0
@@ -132,11 +133,12 @@ export const DamageSourceControl = () => {
             }
           />
           {protectionLevels.length > 1 && (
-            <ParamDropdown<number>
+            <ModelParameterControl
               title="Protection standard"
               value={result.protection_standard}
               options={protectionLevels}
               onChange={setProtection}
+              numericControl={numericControl}
             />
           )}
         </InputSection>

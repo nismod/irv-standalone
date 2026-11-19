@@ -1,5 +1,5 @@
 import { Stack, Typography } from '@mui/material';
-import { ParamDropdown } from 'lib/controls/ParamDropdown';
+import { ModelParameterControl, type NumericControl } from './ModelParameterControl';
 import {
   changeParameter,
   ModelParameters,
@@ -15,12 +15,14 @@ export function ModelParameterControls({
   parameters,
   onChange,
   error,
+  numericControl = 'select',
   emptyMessage = 'No model scenarios available.',
 }: {
   rows?: ModelScenario[];
   parameters: ModelParameters | null;
   onChange: (value: ModelParameters) => void;
   error?: string;
+  numericControl?: NumericControl;
   emptyMessage?: string;
 }) {
   if (error) return <Typography role="alert">{error}</Typography>;
@@ -29,16 +31,14 @@ export function ModelParameterControls({
   return (
     <Stack spacing={1}>
       {parameterNames(rows).map((name) => (
-        <ParamDropdown
+        <ModelParameterControl
           key={name}
           title={parameterLabel(name)}
-          value={valueKey(parameters[name])}
-          options={parameterOptions(rows, parameters, name).map((option) => ({
-            value: option.key,
-            label: option.label,
-          }))}
-          onChange={(key) => {
-            const next = changeParameter(rows, parameters, name, key);
+          value={parameters[name]}
+          options={parameterOptions(rows, parameters, name).map((option) => option.value)}
+          numericControl={numericControl}
+          onChange={(value) => {
+            const next = changeParameter(rows, parameters, name, valueKey(value));
             if (next !== null) onChange(next);
           }}
         />

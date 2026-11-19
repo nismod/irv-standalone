@@ -202,6 +202,16 @@ This should automatically open a browser tab. If not, open:
 
 See `./deploy` directory for details.
 
+#### Numeric scenario controls
+
+Scenario controls use selects by default. Set `numericControl="slider"` on
+`ModelParameterControls`, `DamageSourceControl`, or `FieldSpecControl` to render
+finite numeric options as sliders, including GWL, SLR, and protection standards.
+Sliders stop only at available catalogue values and preserve valid scenario
+combinations. Categorical values and numeric strings remain selects; controls
+with a single available value are disabled.
+The network-layer damage panel enables slider mode for its numeric parameters.
+
 
 ## Acknowledgements
 

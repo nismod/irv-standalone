@@ -180,13 +180,15 @@ type Story = StoryObj<typeof meta>;
 
 async function expectProtectedMapValue(canvasElement: HTMLElement, assetScenarioCount: number) {
   const canvas = within(canvasElement);
+  // Sidebar configuration and scenario catalogues can finish loading after
+  // the controls mount, especially during parallel browser tests.
   await waitFor(() => {
     expect(canvas.getByRole('checkbox', { name: 'Coastal protection' })).toBeChecked();
     expect(canvas.getByTestId('asset-scenario-count')).toHaveTextContent(
       String(assetScenarioCount),
     );
     expect(canvas.getByTestId('protected-result-count')).toHaveTextContent('1');
-  });
+  }, { timeout: 10000 });
   await waitFor(() =>
     expect(canvas.getByTestId('protected-map-value')).toHaveTextContent(String(avoidedDamages)),
   );

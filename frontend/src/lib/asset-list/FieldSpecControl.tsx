@@ -1,6 +1,7 @@
 import { Stack } from '@mui/material';
 import { ParamDropdown } from 'lib/controls/ParamDropdown';
 import { ModelParameterControls } from 'lib/model-scenarios/ModelParameterControls';
+import { ModelParameterControl, type NumericControl } from 'lib/model-scenarios/ModelParameterControl';
 import {
   ModelParameters,
   ModelScenario,
@@ -19,6 +20,7 @@ export function FieldSpecControl({
   onParametersChange,
   onDimensionChange,
   error,
+  numericControl = 'select',
 }: {
   model: ModelType;
   onModelChange: (model: ModelType) => void;
@@ -30,6 +32,7 @@ export function FieldSpecControl({
   onParametersChange: (parameters: ModelParameters) => void;
   onDimensionChange: (dimensions: Partial<ModelScenario>) => void;
   error?: string;
+  numericControl?: NumericControl;
 }) {
   const parameterRows =
     rows?.filter(
@@ -59,6 +62,7 @@ export function FieldSpecControl({
         rows={rows}
         parameters={result?.parameters ?? null}
         onChange={onParametersChange}
+        numericControl={numericControl}
         error={error}
         emptyMessage={
           hazard === 'all' && rows?.length === 0
@@ -67,11 +71,12 @@ export function FieldSpecControl({
         }
       />
       {result && model === 'damages_expected' && (
-        <ParamDropdown
+        <ModelParameterControl
           title="Protection standard"
           value={result.protection_standard}
           options={[...new Set(parameterRows.map((row) => row.protection_standard))]}
           onChange={(value) => onDimensionChange({ protection_standard: value })}
+          numericControl={numericControl}
         />
       )}
       {result && model === 'adaptation' && (

@@ -227,8 +227,9 @@ export const CompatibleScenarios: Story = {
     );
     expect(riverControls.getByRole('slider', { name: 'Return Period' })).toBeDisabled();
 
-    await userEvent.click(damagePanel.getByRole('combobox', { name: 'Year' }));
-    await userEvent.click(await body.findByRole('option', { name: '2050' }));
+    const year = damagePanel.getByRole('slider', { name: 'Year' });
+    year.focus();
+    await userEvent.keyboard('{End}');
     await waitFor(() => {
       expect(riverControls.getByRole('combobox', { name: 'Epoch' })).toHaveTextContent('2050');
       expect(riverControls.getByRole('combobox', { name: 'RCP' })).toHaveTextContent('4.5');
@@ -273,16 +274,20 @@ export const AllHazardParameters: Story = {
       handlers: [
         http.get('/api/map/model-scenarios/damages_expected', () =>
           HttpResponse.json([
-            ...[0, 20].map((SLR) => ({
-              hazard: 'coastal',
-              parameters: { SLR },
-              protection_standard: 0,
-            })),
-            ...[2, 3].map((GWL) => ({
-              hazard: 'fluvial',
-              parameters: { GWL },
-              protection_standard: 0,
-            })),
+            ...[0, 20].flatMap((SLR) =>
+              [0, 100].map((protection_standard) => ({
+                hazard: 'coastal',
+                parameters: { SLR },
+                protection_standard,
+              })),
+            ),
+            ...[2, 3].flatMap((GWL) =>
+              [0, 100].map((protection_standard) => ({
+                hazard: 'fluvial',
+                parameters: { GWL },
+                protection_standard,
+              })),
+            ),
           ]),
         ),
         http.get('/api/tiles/raster/sources/:datasetId/domains', ({ params }) =>
@@ -312,35 +317,46 @@ export const AllHazardParameters: Story = {
     const canvas = within(canvasElement);
     const damagePanel = within(canvas.getByRole('region', { name: 'Damage controls' }));
     const hazardPanel = within(canvas.getByRole('region', { name: 'Hazard controls' }));
-    const body = within(canvasElement.ownerDocument.body);
-    await damagePanel.findByRole('combobox', { name: 'GWL' }, { timeout: 10000 });
+    const gwl = await damagePanel.findByRole('slider', { name: 'GWL' }, { timeout: 10000 });
     expect(damagePanel.getByRole('checkbox', { name: 'All Hazards' })).toBeChecked();
-    await expect(damagePanel.getByRole('combobox', { name: 'SLR' })).toHaveTextContent('0');
+    const slr = damagePanel.getByRole('slider', { name: 'SLR' });
+    expect(slr).toHaveAttribute('aria-valuetext', '0');
     const river = await hazardPanel.findByRole('button', { name: 'River Flooding' });
     const coastal = await hazardPanel.findByRole('button', { name: 'Coastal Flooding' });
     const riverControls = within(river.closest('.MuiAccordion-root') as HTMLElement);
     const coastalControls = within(coastal.closest('.MuiAccordion-root') as HTMLElement);
     await riverControls.findAllByRole('slider', {}, { timeout: 10000 });
-    await userEvent.click(damagePanel.getByRole('combobox', { name: 'SLR' }));
-    await userEvent.click(await body.findByRole('option', { name: '20' }));
-    await userEvent.click(damagePanel.getByRole('combobox', { name: 'GWL' }));
-    await userEvent.click(await body.findByRole('option', { name: '3' }));
-    expect(damagePanel.getByRole('combobox', { name: 'GWL' })).toHaveTextContent('3');
-    expect(damagePanel.getByRole('combobox', { name: 'SLR' })).toHaveTextContent('20');
+    slr.focus();
+    await userEvent.keyboard('{End}');
+    gwl.focus();
+    await userEvent.keyboard('{End}');
+    expect(gwl).toHaveAttribute('aria-valuetext', '3');
+    expect(slr).toHaveAttribute('aria-valuetext', '20');
+    const protection = damagePanel.getByRole('slider', { name: 'Protection standard' });
+    protection.focus();
+    await userEvent.keyboard('{End}');
+    expect(protection).toHaveAttribute('aria-valuetext', '100');
     await waitFor(() => {
       expect(river).toHaveAttribute('aria-expanded', 'true');
       expect(coastal).toHaveAttribute('aria-expanded', 'true');
-      expect(riverControls.getAllByRole('slider').map((slider) => slider.getAttribute('aria-valuetext')))
-        .toEqual(expect.arrayContaining(['500', '3']));
-      expect(coastalControls.getAllByRole('slider').map((slider) => slider.getAttribute('aria-valuetext')))
-        .toEqual(expect.arrayContaining(['500', '20']));
+      expect(
+        riverControls.getAllByRole('slider').map((slider) => slider.getAttribute('aria-valuetext')),
+      ).toEqual(expect.arrayContaining(['500', '3']));
+      expect(
+        coastalControls
+          .getAllByRole('slider')
+          .map((slider) => slider.getAttribute('aria-valuetext')),
+      ).toEqual(expect.arrayContaining(['500', '20']));
     });
     riverControls.getAllByRole('slider').forEach((slider) => expect(slider).toBeDisabled());
     coastalControls.getAllByRole('slider').forEach((slider) => expect(slider).toBeDisabled());
     await userEvent.click(damagePanel.getByRole('checkbox', { name: 'River Flooding' }));
     await waitFor(() => {
-      expect(damagePanel.queryByRole('combobox', { name: 'GWL' })).not.toBeInTheDocument();
-      expect(damagePanel.getByRole('combobox', { name: 'SLR' })).toHaveTextContent('20');
+      expect(damagePanel.queryByRole('slider', { name: 'GWL' })).not.toBeInTheDocument();
+      expect(damagePanel.getByRole('slider', { name: 'SLR' })).toHaveAttribute(
+        'aria-valuetext',
+        '20',
+      );
       expect(river).toHaveAttribute('aria-expanded', 'false');
       expect(hazardPanel.getByRole('button', { name: 'Coastal Flooding' })).toHaveAttribute(
         'aria-expanded',
@@ -348,7 +364,7 @@ export const AllHazardParameters: Story = {
       );
     });
     await userEvent.click(damagePanel.getByRole('checkbox', { name: 'All Hazards' }));
-    await damagePanel.findByRole('combobox', { name: 'GWL' });
+    await damagePanel.findByRole('slider', { name: 'GWL' });
     await waitFor(() => {
       expect(river).toHaveAttribute('aria-expanded', 'true');
       expect(coastal).toHaveAttribute('aria-expanded', 'true');
@@ -392,7 +408,6 @@ export const SelectedHazards: Story = {
     const canvas = within(canvasElement);
     const damagePanel = within(canvas.getByRole('region', { name: 'Damage controls' }));
     const hazardPanel = within(canvas.getByRole('region', { name: 'Hazard controls' }));
-    const body = within(canvasElement.ownerDocument.body);
     const all = await damagePanel.findByRole('checkbox', { name: 'All Hazards' });
     const coastal = await damagePanel.findByRole('checkbox', { name: 'Coastal Flooding' });
     const river = damagePanel.getByRole('checkbox', { name: 'River Flooding' });
@@ -403,9 +418,10 @@ export const SelectedHazards: Story = {
     expect(coastal).not.toBeChecked();
     expect(river).toBeChecked();
     expect(surface).toBeChecked();
-    expect(damagePanel.queryByRole('combobox', { name: 'SLR' })).not.toBeInTheDocument();
-    await userEvent.click(await damagePanel.findByRole('combobox', { name: 'GWL' }));
-    await userEvent.click(await body.findByRole('option', { name: '3' }));
+    expect(damagePanel.queryByRole('slider', { name: 'SLR' })).not.toBeInTheDocument();
+    const gwl = await damagePanel.findByRole('slider', { name: 'GWL' });
+    gwl.focus();
+    await userEvent.keyboard('{End}');
     await waitFor(() => {
       expect(hazardPanel.getByRole('button', { name: 'Coastal Flooding' })).toHaveAttribute(
         'aria-expanded',
@@ -423,7 +439,7 @@ export const SelectedHazards: Story = {
     await userEvent.click(all);
     expect(all).toBeChecked();
     expect(coastal).toBeChecked();
-    await damagePanel.findByRole('combobox', { name: 'SLR' });
+    await damagePanel.findByRole('slider', { name: 'SLR' });
     await userEvent.click(all);
     expect(all).not.toBeChecked();
     expect(coastal).not.toBeChecked();
