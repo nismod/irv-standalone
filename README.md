@@ -211,6 +211,10 @@ Sliders stop only at available catalogue values and preserve valid scenario
 combinations. Categorical values and numeric strings remain selects; controls
 with a single available value are disabled.
 The network-layer damage panel enables slider mode for its numeric parameters.
+It also shows a disabled return-period control at the maximum available for the
+matching hazard rasters. Hazards with different return periods have separate
+controls. This describes the displayed hazard maps; damage values remain
+expected annual estimates.
 
 
 ## Acknowledgements

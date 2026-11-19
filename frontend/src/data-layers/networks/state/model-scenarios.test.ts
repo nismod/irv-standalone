@@ -327,7 +327,7 @@ describe('model scenario query flow', () => {
         },
         { scheme: 'blues', range: [0, 10] },
       ),
-    ).toContain('/fluvial/2/100/');
+    ).toContain('/fluvial/2/500/');
   });
 
   it('preserves a synchronised raster selection when sidebar configuration finishes loading', () => {

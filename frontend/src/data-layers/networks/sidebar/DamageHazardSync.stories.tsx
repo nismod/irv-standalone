@@ -318,6 +318,9 @@ export const AllHazardParameters: Story = {
     const damagePanel = within(canvas.getByRole('region', { name: 'Damage controls' }));
     const hazardPanel = within(canvas.getByRole('region', { name: 'Hazard controls' }));
     const gwl = await damagePanel.findByRole('slider', { name: 'GWL' }, { timeout: 10000 });
+    const rp = await damagePanel.findByRole('slider', { name: 'Return period (years)' });
+    expect(rp).toBeDisabled();
+    expect(rp).toHaveAttribute('aria-valuetext', '500');
     expect(damagePanel.getByRole('checkbox', { name: 'All Hazards' })).toBeChecked();
     const slr = damagePanel.getByRole('slider', { name: 'SLR' });
     expect(slr).toHaveAttribute('aria-valuetext', '0');
@@ -446,6 +449,7 @@ export const SelectedHazards: Story = {
     expect(river).not.toBeChecked();
     expect(surface).not.toBeChecked();
     await damagePanel.findByText('Select at least one hazard.');
+    expect(damagePanel.queryByRole('slider', { name: /return period/i })).not.toBeInTheDocument();
     await waitFor(() => {
       for (const { label } of allHazards) {
         expect(hazardPanel.getByRole('button', { name: label })).toHaveAttribute(
@@ -457,5 +461,87 @@ export const SelectedHazards: Story = {
     await userEvent.click(river);
     await userEvent.click(surface);
     expect(all).toBePartiallyChecked();
+  },
+};
+
+export const DifferentReturnPeriods: Story = {
+  parameters: {
+    docs: {
+      description: {
+        story:
+          'Read-only return periods show the maximum available for each matching raster. Coastal flooding uses 1,500 years; river flooding uses 100 years at GWL 2 and 500 years at GWL 3. These describe the hazard maps; damage values remain expected annual estimates.',
+      },
+    },
+    msw: {
+      handlers: [
+        http.get('/api/tiles/raster/sources/:datasetId/domains', ({ params }) =>
+          HttpResponse.json({
+            domains:
+              params.datasetId === 'coastal'
+                ? [0, 20].flatMap((SLR) =>
+                    [100, 1500].map((rp) => ({
+                      type: params.datasetId,
+                      SLR: String(SLR),
+                      rp: String(rp),
+                      confidence: 'None',
+                    })),
+                  )
+                : [2, 3].flatMap((GWL) =>
+                    (GWL === 2 ? [20, 100] : [100, 500]).map((rp) => ({
+                      type: params.datasetId,
+                      GWL: String(GWL),
+                      rp: String(rp),
+                      confidence: 'None',
+                    })),
+                  ),
+          }),
+        ),
+        ...AllHazardParameters.parameters.msw.handlers.filter(
+          (handler) => !String(handler.info.path).includes('/domains'),
+        ),
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const damagePanel = within(canvas.getByRole('region', { name: 'Damage controls' }));
+    const hazardPanel = within(canvas.getByRole('region', { name: 'Hazard controls' }));
+    const coastalRP = await damagePanel.findByRole(
+      'slider',
+      {
+        name: 'Coastal Flooding return period (years)',
+      },
+      { timeout: 10000 },
+    );
+    const riverRP = damagePanel.getByRole('slider', {
+      name: 'River Flooding return period (years)',
+    });
+    expect(coastalRP).toBeDisabled();
+    expect(riverRP).toBeDisabled();
+    expect(coastalRP).toHaveAttribute('aria-valuetext', '1500');
+    expect(riverRP).toHaveAttribute('aria-valuetext', '100');
+    const river = await hazardPanel.findByRole('button', { name: 'River Flooding' });
+    const riverControls = within(river.closest('.MuiAccordion-root') as HTMLElement);
+    await waitFor(() =>
+      expect(riverControls.getByRole('slider', { name: 'Return Period' })).toHaveAttribute(
+        'aria-valuetext',
+        '100',
+      ),
+    );
+
+    damagePanel.getByRole('slider', { name: 'GWL' }).focus();
+    await userEvent.keyboard('{End}');
+    await waitFor(() => {
+      expect(
+        damagePanel.getByRole('slider', { name: 'River Flooding return period (years)' }),
+      ).toHaveAttribute('aria-valuetext', '500');
+      expect(riverControls.getByRole('slider', { name: 'Return Period' })).toHaveAttribute(
+        'aria-valuetext',
+        '500',
+      );
+    });
+    expect(
+      damagePanel.getByRole('slider', { name: 'Coastal Flooding return period (years)' }),
+    ).toHaveAttribute('aria-valuetext', '1500');
   },
 };

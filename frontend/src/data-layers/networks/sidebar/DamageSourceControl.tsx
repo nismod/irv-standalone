@@ -6,6 +6,7 @@ import {
   MenuItem,
   Checkbox,
   Select,
+  FormHelperText,
 } from '@mui/material';
 import { useEffect, useId } from 'react';
 import { useAtom, useAtomValue, useSetAtom } from 'jotai';
@@ -21,16 +22,24 @@ import { damageScenarioState } from '../state/damage-scenarios';
 import { modelParametersState } from 'lib/model-scenarios/state';
 import { ModelParameterControls } from 'lib/model-scenarios/ModelParameterControls';
 import { parameterKey } from 'lib/model-scenarios/scenarios';
-import { ModelParameterControl, type NumericControl } from 'lib/model-scenarios/ModelParameterControl';
+import {
+  ModelParameterControl,
+  type NumericControl,
+} from 'lib/model-scenarios/ModelParameterControl';
 import {
   damageScenarioSyncState,
   damageSourceStateEffect,
+  damageRasterReturnPeriodsState,
 } from 'app/state/damage-mapping/damage-map';
 import { LayerStylePanel } from 'lib/sidebar/ui/LayerStylePanel';
 
 import { hazardsMetadataState } from 'data-layers/hazards/state/metadata';
 
-export const DamageSourceControl = ({ numericControl = 'select' }: { numericControl?: NumericControl }) => {
+export const DamageSourceControl = ({
+  numericControl = 'select',
+}: {
+  numericControl?: NumericControl;
+}) => {
   const HAZARDS_METADATA = useAtomValue(hazardsMetadataState);
   const { catalog, hazards, selectedHazards, rows, result } = useAtomValue(damageScenarioState);
   const [requestedSource, setDamageSource] = useAtom(damageSourceState);
@@ -38,6 +47,14 @@ export const DamageSourceControl = ({ numericControl = 'select' }: { numericCont
   const setProtection = useSetAtom(damageProtectionStandardState);
   const [damageType, setDamageType] = useAtom(damageTypeState);
   const id = useId();
+  const returnPeriods = useAtomValue(damageRasterReturnPeriodsState);
+  const periodGroups = new Map<string, { hazards: string[]; value: number; options: number[] }>();
+  for (const { hazard, value, options } of returnPeriods) {
+    const key = JSON.stringify([value, options]);
+    const group = periodGroups.get(key) ?? { hazards: [], value, options };
+    group.hazards.push(HAZARDS_METADATA[hazard]?.label ?? hazard);
+    periodGroups.set(key, group);
+  }
 
   useEffect(() => {
     if (
@@ -140,6 +157,29 @@ export const DamageSourceControl = ({ numericControl = 'select' }: { numericCont
               onChange={setProtection}
               numericControl={numericControl}
             />
+          )}
+          {periodGroups.size > 0 && (
+            <>
+              {[...periodGroups].map(([key, { hazards: labels, value, options }]) => (
+                <ModelParameterControl
+                  key={key}
+                  title={
+                    periodGroups.size === 1
+                      ? 'Return period (years)'
+                      : `${labels.join(' + ')} return period (years)`
+                  }
+                  value={value}
+                  options={options}
+                  onChange={() => undefined}
+                  numericControl={numericControl}
+                  disabled
+                />
+              ))}
+              <FormHelperText>
+                Fixed to the maximum available for the matching hazard maps. Damage values are
+                expected annual estimates.
+              </FormHelperText>
+            </>
           )}
         </InputSection>
       </LayerStylePanel>

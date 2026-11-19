@@ -1,13 +1,43 @@
 import { DataParamGroupConfig, Param, resolveParamDependencies } from 'lib/controls/data-params';
 import { ModelParameters, valueKey } from 'lib/model-scenarios/scenarios';
 
-export type RasterParamGroupConfig<PGT extends object = object> =
-  DataParamGroupConfig<PGT> & { paramCombinations?: Record<string, Param>[] };
+export type RasterParamGroupConfig<PGT extends object = object> = DataParamGroupConfig<PGT> & {
+  paramCombinations?: Record<string, Param>[];
+};
 
 const parameterName = (name: string) => {
   const lower = name.toLowerCase();
   return lower === 'rp' ? 'returnperiod' : lower;
 };
+
+export function rasterReturnPeriodKey(config: RasterParamGroupConfig) {
+  return Object.keys(config.paramDefaults).find((name) => parameterName(name) === 'returnperiod');
+}
+
+export function rasterReturnPeriodOptions(
+  current: Record<string, Param>,
+  config: RasterParamGroupConfig,
+) {
+  const key = rasterReturnPeriodKey(config);
+  if (!key) return [];
+  const values: Param[] =
+    (config.paramCombinations
+      ? config.paramCombinations
+          .filter((row) =>
+            Object.entries(row).every(
+              ([name, value]) => name === key || valueKey(current[name]) === valueKey(value),
+            ),
+          )
+          .map((row) => row[key])
+      : config.paramDomains[key]) ?? [];
+  return [
+    ...new Set(
+      values.filter(
+        (value): value is number => typeof value === 'number' && Number.isFinite(value),
+      ),
+    ),
+  ].sort((a, b) => a - b);
+}
 
 // Link only parameters whose identity and values are represented by the raster.
 // Model-only dimensions (e.g. an ensemble member) cannot silently be discarded.
@@ -54,24 +84,26 @@ export function resolveRasterScenario(
   desired: Record<string, Param>,
   config: RasterParamGroupConfig,
 ) {
+  const returnPeriod = rasterReturnPeriodKey(config);
   if (!config.paramCombinations) {
-    const returnPeriods = config.paramDomains['returnPeriod'] as Param[] | undefined;
-    const preferred = returnPeriods?.length
-      ? { ...current, returnPeriod: returnPeriods[returnPeriods.length - 1] }
-      : current;
+    const returnPeriods = returnPeriod ? (config.paramDomains[returnPeriod] as Param[]) : undefined;
+    const preferred = { ...current };
+    if (returnPeriods?.length) {
+      preferred[returnPeriod] = returnPeriods.reduce((best, value) =>
+        Number(value) > Number(best) ? value : best,
+      );
+    }
     return resolveParamDependencies({ ...preferred, ...desired }, config);
   }
 
   let candidates = matchingCombinations(desired, config);
-  const returnPeriod = Object.keys(config.paramDefaults).find(
-    (name) => parameterName(name) === 'returnperiod',
-  );
   if (returnPeriod && candidates.length) {
     const maximum = Math.max(...candidates.map((row) => Number(row[returnPeriod])));
     candidates = candidates.filter((row) => Number(row[returnPeriod]) === maximum);
   }
   const score = (row: Record<string, Param>) =>
-    Object.entries(current).filter(([name, value]) => valueKey(row[name]) === valueKey(value)).length;
+    Object.entries(current).filter(([name, value]) => valueKey(row[name]) === valueKey(value))
+      .length;
   const selected = candidates.reduce<Record<string, Param> | undefined>(
     (best, row) => (!best || score(row) > score(best) ? row : best),
     undefined,
