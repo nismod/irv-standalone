@@ -1,10 +1,10 @@
 import {
   FormControl,
   FormControlLabel,
-  FormGroup,
+  RadioGroup,
   FormLabel,
   MenuItem,
-  Checkbox,
+  Radio,
   Select,
   FormHelperText,
 } from '@mui/material';
@@ -67,7 +67,14 @@ export const DamageSourceControl = ({
   }, [catalog, requestedSource, selectedHazards, setDamageSource]);
 
   const allSelected = hazards.length > 0 && selectedHazards.length === hazards.length;
-  const partiallySelected = selectedHazards.length > 0 && !allSelected;
+  const selectedSource =
+    requestedSource === 'all'
+      ? 'all'
+      : selectedHazards.length === 1
+        ? selectedHazards[0]
+        : allSelected
+          ? 'all'
+          : '';
 
   const protectionLevels = [
     ...new Set(
@@ -97,41 +104,31 @@ export const DamageSourceControl = ({
         </InputSection>
         <InputSection>
           <FormControl component="fieldset" fullWidth>
-            <FormLabel component="legend">Hazards</FormLabel>
-            <FormGroup>
+            <FormLabel component="legend" id={`${id}-hazard`}>
+              Hazard
+            </FormLabel>
+            <RadioGroup
+              aria-labelledby={`${id}-hazard`}
+              name={`${id}-hazard`}
+              value={selectedSource}
+              onChange={(_event, value) => setDamageSource(value === 'all' ? 'all' : [value])}
+            >
               <FormControlLabel
                 label="All Hazards"
-                control={
-                  <Checkbox
-                    checked={allSelected}
-                    indeterminate={partiallySelected}
-                    disabled={!hazards.length}
-                    slotProps={{
-                      input: { 'aria-checked': partiallySelected ? 'mixed' : allSelected },
-                    }}
-                    onChange={(_event, checked) => setDamageSource(checked ? 'all' : [])}
-                  />
-                }
+                value="all"
+                disabled={!hazards.length}
+                control={<Radio />}
               />
               {hazards.map((hazard) => (
                 <FormControlLabel
                   key={hazard}
                   label={HAZARDS_METADATA[hazard]?.label ?? hazard}
+                  value={hazard}
                   disabled={HAZARDS_METADATA[hazard]?.has_access === false}
-                  control={
-                    <Checkbox
-                      checked={selectedHazards.includes(hazard)}
-                      onChange={(_event, checked) => {
-                        const next = hazards.filter((candidate) =>
-                          candidate === hazard ? checked : selectedHazards.includes(candidate),
-                        );
-                        setDamageSource(next.length === hazards.length ? 'all' : next);
-                      }}
-                    />
-                  }
+                  control={<Radio />}
                 />
               ))}
-            </FormGroup>
+            </RadioGroup>
           </FormControl>
         </InputSection>
         <InputSection>

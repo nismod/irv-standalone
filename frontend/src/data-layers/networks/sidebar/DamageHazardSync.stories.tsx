@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { HttpResponse, http } from 'msw';
-import { useState } from 'react';
-import { Provider, createStore } from 'jotai';
+import { useEffect, useState } from 'react';
+import { Provider, createStore, useAtomValue, useSetAtom } from 'jotai';
 
 import { NetworksSection } from './NetworksSection';
 import { HazardsSection } from 'data-layers/hazards/sidebar/HazardsSection';
@@ -15,6 +15,7 @@ import {
   sidebarSectionExpandedState,
 } from 'lib/state/sections';
 import { STORAGE_PREFIX } from 'lib/state/map-view/map-url';
+import { damageScenarioCatalogState } from '../state/damage-scenarios';
 
 const hazards = [
   { id: 'fluvial', label: 'River Flooding' },
@@ -111,7 +112,18 @@ const handlers = [
   ),
 ];
 
-function DamageAndHazardPanels() {
+function InitialDamageSelection({ value }: { value: 'all' | string[] }) {
+  const catalog = useAtomValue(damageScenarioCatalogState);
+  const setSource = useSetAtom(damageSourceState);
+  // Entering damage mode initializes the selection from visible rasters. Apply
+  // the story's explicit selection after that effect and catalogue loading.
+  useEffect(() => {
+    if (catalog?.rows.length) setSource(value);
+  }, [catalog, setSource, value]);
+  return null;
+}
+
+function DamageAndHazardPanels({ initialHazards = 'all' }: { initialHazards?: 'all' | string[] }) {
   const [store] = useState(() => {
     // Use a known asset selection independently of the development app's URL
     // and session storage. The controls and scenario synchronisation are real.
@@ -123,7 +135,7 @@ function DamageAndHazardPanels() {
     const next = createStore();
     next.set(sectionStyleOptionsState('assets'), [{ id: 'damages', label: 'Damages' }]);
     next.set(sectionStyleValueState('assets'), 'damages');
-    next.set(damageSourceState, 'all');
+    next.set(damageSourceState, initialHazards);
     for (const id of ['assets', 'hazards']) {
       next.set(sectionVisibilityState(id), true);
       next.set(sidebarSectionExpandedState(id), true);
@@ -150,6 +162,7 @@ function DamageAndHazardPanels() {
           <HazardsSection />
         </section>
       </div>
+      <InitialDamageSelection value={initialHazards} />
     </Provider>
   );
 }
@@ -202,7 +215,7 @@ export const CompatibleScenarios: Story = {
     const coastalControls = within(coastal.closest('.MuiAccordion-root') as HTMLElement);
     const body = within(canvasElement.ownerDocument.body);
 
-    await userEvent.click(await damagePanel.findByRole('checkbox', { name: 'Coastal Flooding' }));
+    await userEvent.click(await damagePanel.findByRole('radio', { name: 'River Flooding' }));
     // The hazard headers can render before the asynchronously loaded sidebar
     // configuration supplies their parameter controls.
     await riverControls.findByRole('combobox', { name: 'Epoch' }, { timeout: 10000 });
@@ -240,8 +253,7 @@ export const CompatibleScenarios: Story = {
       expect(riverControls.getByRole('combobox', { name: 'RCP' })).toHaveTextContent('8.5'),
     );
 
-    await userEvent.click(damagePanel.getByRole('checkbox', { name: 'Coastal Flooding' }));
-    await userEvent.click(damagePanel.getByRole('checkbox', { name: 'River Flooding' }));
+    await userEvent.click(damagePanel.getByRole('radio', { name: 'Coastal Flooding' }));
     await waitFor(() => {
       expect(river).toHaveAttribute('aria-expanded', 'false');
       expect(coastal).toHaveAttribute('aria-expanded', 'true');
@@ -249,7 +261,7 @@ export const CompatibleScenarios: Story = {
       expect(coastalControls.getByRole('combobox', { name: 'RCP' })).toHaveTextContent('8.5');
     });
 
-    await userEvent.click(damagePanel.getByRole('checkbox', { name: 'All Hazards' }));
+    await userEvent.click(damagePanel.getByRole('radio', { name: 'All Hazards' }));
     await waitFor(() => {
       expect(river).toHaveAttribute('aria-expanded', 'true');
       expect(coastal).toHaveAttribute('aria-expanded', 'true');
@@ -257,7 +269,7 @@ export const CompatibleScenarios: Story = {
       expect(coastalControls.getByRole('combobox', { name: 'RCP' })).toHaveTextContent('8.5');
     });
     // Leave an individual hazard open for visual inspection in Storybook.
-    await userEvent.click(damagePanel.getByRole('checkbox', { name: 'Coastal Flooding' }));
+    await userEvent.click(damagePanel.getByRole('radio', { name: 'River Flooding' }));
     await waitFor(() => expect(river).toHaveAttribute('aria-expanded', 'true'));
   },
 };
@@ -321,7 +333,7 @@ export const AllHazardParameters: Story = {
     const rp = await damagePanel.findByRole('slider', { name: 'Return period (years)' });
     expect(rp).toBeDisabled();
     expect(rp).toHaveAttribute('aria-valuetext', '500');
-    expect(damagePanel.getByRole('checkbox', { name: 'All Hazards' })).toBeChecked();
+    expect(damagePanel.getByRole('radio', { name: 'All Hazards' })).toBeChecked();
     const slr = damagePanel.getByRole('slider', { name: 'SLR' });
     expect(slr).toHaveAttribute('aria-valuetext', '0');
     const river = await hazardPanel.findByRole('button', { name: 'River Flooding' });
@@ -353,7 +365,7 @@ export const AllHazardParameters: Story = {
     });
     riverControls.getAllByRole('slider').forEach((slider) => expect(slider).toBeDisabled());
     coastalControls.getAllByRole('slider').forEach((slider) => expect(slider).toBeDisabled());
-    await userEvent.click(damagePanel.getByRole('checkbox', { name: 'River Flooding' }));
+    await userEvent.click(damagePanel.getByRole('radio', { name: 'Coastal Flooding' }));
     await waitFor(() => {
       expect(damagePanel.queryByRole('slider', { name: 'GWL' })).not.toBeInTheDocument();
       expect(damagePanel.getByRole('slider', { name: 'SLR' })).toHaveAttribute(
@@ -366,7 +378,7 @@ export const AllHazardParameters: Story = {
         'true',
       );
     });
-    await userEvent.click(damagePanel.getByRole('checkbox', { name: 'All Hazards' }));
+    await userEvent.click(damagePanel.getByRole('radio', { name: 'All Hazards' }));
     await damagePanel.findByRole('slider', { name: 'GWL' });
     await waitFor(() => {
       expect(river).toHaveAttribute('aria-expanded', 'true');
@@ -376,11 +388,12 @@ export const AllHazardParameters: Story = {
 };
 
 export const SelectedHazards: Story = {
+  args: { initialHazards: ['fluvial', 'pluvial'] },
   parameters: {
     docs: {
       description: {
         story:
-          'Uncheck coastal flooding to total river and surface damages together. Only GWL is needed, and only the selected hazard rasters are active.',
+          'A partial selection supplied through state still totals river and surface damages and synchronises their rasters. The radio group can replace this with one hazard or All Hazards.',
       },
     },
     msw: {
@@ -411,16 +424,13 @@ export const SelectedHazards: Story = {
     const canvas = within(canvasElement);
     const damagePanel = within(canvas.getByRole('region', { name: 'Damage controls' }));
     const hazardPanel = within(canvas.getByRole('region', { name: 'Hazard controls' }));
-    const all = await damagePanel.findByRole('checkbox', { name: 'All Hazards' });
-    const coastal = await damagePanel.findByRole('checkbox', { name: 'Coastal Flooding' });
-    const river = damagePanel.getByRole('checkbox', { name: 'River Flooding' });
-    const surface = damagePanel.getByRole('checkbox', { name: 'Surface Flooding' });
-    await expect(all).toBeChecked();
-    await userEvent.click(coastal);
-    expect(all).toBePartiallyChecked();
-    expect(coastal).not.toBeChecked();
-    expect(river).toBeChecked();
-    expect(surface).toBeChecked();
+    const group = await damagePanel.findByRole('radiogroup', { name: 'Hazard' });
+    const coastal = await within(group).findByRole('radio', { name: 'Coastal Flooding' });
+    const all = within(group).getByRole('radio', { name: 'All Hazards' });
+    const river = within(group).getByRole('radio', { name: 'River Flooding' });
+    await waitFor(() =>
+      expect(within(group).queryByRole('radio', { checked: true })).not.toBeInTheDocument(),
+    );
     expect(damagePanel.queryByRole('slider', { name: 'SLR' })).not.toBeInTheDocument();
     const gwl = await damagePanel.findByRole('slider', { name: 'GWL' });
     gwl.focus();
@@ -439,28 +449,41 @@ export const SelectedHazards: Story = {
         'true',
       );
     });
+    await userEvent.click(coastal);
+    expect(coastal).toBeChecked();
+    expect(river).not.toBeChecked();
+    await damagePanel.findByRole('slider', { name: 'SLR' });
+    expect(damagePanel.queryByRole('slider', { name: 'GWL' })).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(hazardPanel.getByRole('button', { name: 'Coastal Flooding' })).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      );
+      expect(hazardPanel.getByRole('button', { name: 'River Flooding' })).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+      expect(hazardPanel.getByRole('button', { name: 'Surface Flooding' })).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
+    });
     await userEvent.click(all);
     expect(all).toBeChecked();
-    expect(coastal).toBeChecked();
-    await damagePanel.findByRole('slider', { name: 'SLR' });
-    await userEvent.click(all);
-    expect(all).not.toBeChecked();
     expect(coastal).not.toBeChecked();
     expect(river).not.toBeChecked();
-    expect(surface).not.toBeChecked();
-    await damagePanel.findByText('Select at least one hazard.');
-    expect(damagePanel.queryByRole('slider', { name: /return period/i })).not.toBeInTheDocument();
+    await damagePanel.findByRole('slider', { name: 'GWL' });
     await waitFor(() => {
       for (const { label } of allHazards) {
         expect(hazardPanel.getByRole('button', { name: label })).toHaveAttribute(
           'aria-expanded',
-          'false',
+          'true',
         );
       }
     });
-    await userEvent.click(river);
-    await userEvent.click(surface);
-    expect(all).toBePartiallyChecked();
+    await userEvent.click(all);
+    expect(all).toBeChecked();
+    expect(within(group).getAllByRole('radio', { checked: true })).toHaveLength(1);
   },
 };
 
