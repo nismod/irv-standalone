@@ -4,10 +4,11 @@ import * as api from 'lib/api-client';
 import * as sdk from 'lib/api-client/sdk.gen';
 import { modelParametersState } from 'lib/model-scenarios/state';
 import { dataParamState, syncExternalConfigState } from 'lib/state/data-params';
-import { damageSourceState } from 'lib/state/damage-map';
+import { damageSourceState, damageTypeState } from 'lib/state/damage-map';
+import { mapViewConfig } from 'lib/state/map-view/map-view-config';
 import { networksStyleState, selectedNetworkLayerIdsState } from './data-selection';
 import { damageScenarioState, damagesFieldState } from './damage-scenarios';
-import { adaptationFieldSpecState } from './layer';
+import { adaptationFieldSpecState, adaptationFieldState } from './layer';
 import {
   protectedFeatureAdaptationOptionsState,
   protectedFeatureScenarioState,
@@ -52,6 +53,10 @@ vi.mock('lib/state/map-view/map-url', async () => {
     setUrlParam: vi.fn(),
   };
 });
+vi.mock('lib/state/map-view/map-view-config', async () => {
+  const { atom } = await import('jotai');
+  return { mapViewConfig: atom({ app: { name: 'Test', currency: 'MUR' }, initialViewState: { latitude: 0, longitude: 0, zoom: 0 }, viewLimits: {} }) };
+});
 
 const subscriptions: (() => void)[] = [];
 afterEach(() => {
@@ -60,6 +65,36 @@ afterEach(() => {
 });
 
 describe('model scenario query flow', () => {
+  it('keeps configured currency and daily units with discovered damage and adaptation scenarios', async () => {
+    vi.spyOn(api, 'mapModelScenariosList').mockImplementation(async ({ path }) => ({
+      data: path.field_group === 'damages_expected'
+        ? [{ hazard: 'fluvial', parameters: { GWL: 2 }, protection_standard: 0 }]
+        : [{ hazard: 'fluvial', parameters: { GWL: 2 }, adaptation_name: 'Wall', adaptation_protection_level: 50 }],
+    }) as never);
+    const store = createStore();
+    store.set(dataParamState({ group: 'adaptation', param: 'sector' }), 'power');
+    subscriptions.push(store.sub(damagesFieldState, () => {}));
+    subscriptions.push(store.sub(adaptationFieldSpecState, () => {}));
+    await vi.waitFor(() => {
+      expect(store.get(damagesFieldState)?.unit).toBe('MUR');
+      expect(store.get(adaptationFieldSpecState)?.unit).toBe('MUR');
+    });
+    store.set(damageTypeState, 'indirect');
+    store.set(adaptationFieldState, 'avoided_eael_mean');
+    expect(store.get(damagesFieldState).unit).toBe('MUR/day');
+    expect(store.get(adaptationFieldSpecState).unit).toBe('MUR/day');
+    const config = store.get(mapViewConfig);
+    store.set(mapViewConfig as PrimitiveAtom<typeof config>, {
+      ...config, app: { ...config.app, currency: 'USD' },
+    });
+    expect(store.get(damagesFieldState).unit).toBe('USD/day');
+    expect(store.get(adaptationFieldSpecState).unit).toBe('USD/day');
+    store.set(damageTypeState, 'direct');
+    store.set(adaptationFieldState, 'cost_benefit_ratio');
+    expect(store.get(damagesFieldState).unit).toBe('USD');
+    expect(store.get(adaptationFieldSpecState).unit).toBeUndefined();
+  });
+
   it('activates each matching all-hazard raster using its own parameters', () => {
     const store = createStore();
     store.set(damageSourceState, 'all');
