@@ -59,26 +59,28 @@ function DataLoaderDecorator(Story, { args }) {
   return <Story />;
 }
 
-const meta = {
-  title: 'Details/FeatureSidebar',
-  component: FeatureSidebar,
-  decorators: [FixedWidthDecorator, DataLoaderDecorator],
-} as Meta;
-
-export default meta;
-
-type Story = StoryObj<typeof meta>;
-
-export const Default: Story = {
-  args: {
-    feature: mockFeature,
-    id: 'road_edges_class_b',
-  },
-  parameters: {
+function sidebarParameters(currency: string) {
+  return {
     msw: {
       handlers: [
+        http.get('/api/map/config', () => HttpResponse.json({
+          count: 1,
+          next: null,
+          previous: null,
+          results: [{
+            config_name: 'currency',
+            config_value: currency,
+            config_type: 'string',
+          }],
+        })),
         http.get('/api/map/features/1000036526', () => {
-          return HttpResponse.json(mockFeatureDetails);
+          return HttpResponse.json({
+            ...mockFeatureDetails,
+            properties: {
+              ...mockFeatureDetails.properties,
+              cost_unit: `${currency}/m`,
+            },
+          });
         }),
         http.get('/api/map/network-layer-styles', () => {
           return HttpResponse.json(networkLayerStylesResponse);
@@ -91,12 +93,47 @@ export const Default: Story = {
         }),
       ],
     },
+  };
+}
+
+const meta = {
+  title: 'Details/FeatureSidebar',
+  component: FeatureSidebar,
+  decorators: [FixedWidthDecorator, DataLoaderDecorator],
+  args: {
+    feature: mockFeature,
+    id: 'road_edges_class_b',
   },
+  parameters: sidebarParameters('JMD'),
+} as Meta;
+
+export default meta;
+
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await canvas.findByText('Roads (Class B)');
-    expect(await canvas.findByText('Risk')).toBeTruthy();
-    expect(await canvas.findByText('Return Period Damages')).toBeTruthy();
-    expect(await canvas.findByText('Adaptation Options')).toBeTruthy();
+    await expect(canvas.findByText('Roads (Class B)')).resolves.toBeVisible();
+    await expect(canvas.findByText('Risk')).resolves.toBeVisible();
+    await expect(canvas.findByText('Return Period Damages')).resolves.toBeVisible();
+    await expect(canvas.findByText('Adaptation Options')).resolves.toBeVisible();
+    await expect(canvas.findByText('EAD (J$)', { selector: 'abbr' })).resolves.toBeVisible();
+  },
+};
+
+export const MauritianRupees: Story = {
+  parameters: sidebarParameters('MUR'),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    await expect(canvas.findByText('EAD (Rs)', { selector: 'abbr' })).resolves.toBeVisible();
+    await expect(canvas.findByRole('columnheader', { name: /EAEL.*\(Rs\/day\)/ }))
+      .resolves.toBeVisible();
+    await expect(canvas.findByRole('columnheader', { name: 'Damages (Rs)' }))
+      .resolves.toBeVisible();
+    await expect(canvas.findByRole('columnheader', { name: 'Loss (Rs/day)' }))
+      .resolves.toBeVisible();
+    await expect(canvas.findAllByRole('columnheader', { name: 'Avoided Risk (Rs)' }))
+      .resolves.not.toHaveLength(0);
   },
 };

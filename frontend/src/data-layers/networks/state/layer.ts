@@ -7,6 +7,7 @@ import mapValues from 'lodash/mapValues';
 import { recalculateCheckboxStates } from 'lib/controls/checkbox-tree/CheckboxTree';
 import { ViewLayer, StyleParams, ColorSpec, FieldSpec } from 'lib/data-map/view-layers';
 import { StateEffect } from 'lib/recoil/state-effects/types';
+import { mapViewConfig } from 'lib/state/map-view/map-view-config';
 import { dataParamState } from 'lib/state/data-params';
 import { sectionVisibilityState } from 'lib/state/sections';
 
@@ -117,6 +118,9 @@ export const adaptationFieldSpecState = atom<FieldSpec>((get) => {
 
   return {
     fieldGroup: 'adaptation',
+    unit: field === 'cost_benefit_ratio'
+      ? undefined
+      : `${get(mapViewConfig).app.currency}${field === 'avoided_eael_mean' ? '/day' : ''}`,
     fieldDimensions: {
       hazard,
       parameters: { rcp },

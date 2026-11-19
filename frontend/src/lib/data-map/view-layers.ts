@@ -10,6 +10,8 @@ export interface FieldSpec {
   fieldGroup: string;
   fieldDimensions?: Record<string, string | number | Record<string, unknown>>;
   field: string;
+  /** Display unit, for example an ISO currency code or a currency per day. */
+  unit?: string;
   fieldParams?: Record<string, string | number>;
 }
 

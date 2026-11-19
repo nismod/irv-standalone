@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Box, Stack, TableCell, Typography } from '@mui/material';
 import { useAtomValue } from 'jotai';
 
+import { mapViewConfig } from 'lib/state/map-view/map-view-config';
 import { FieldSpec } from 'lib/data-map/view-layers';
 
 import { FieldSpecControl } from 'lib/asset-list/FieldSpecControl';
@@ -20,7 +21,7 @@ export const AssetListPage = () => {
     asset_type: 'High Voltage',
   });
 
-  const [fieldSpec, setFieldSpec] = useState<FieldSpec>({
+  const [selectedFieldSpec, setFieldSpec] = useState<FieldSpec>({
     fieldGroup: 'damages_expected',
     fieldDimensions: {
       hazard: 'cyclone',
@@ -33,6 +34,14 @@ export const AssetListPage = () => {
     fieldParams: {},
     field: 'ead_mean',
   });
+
+  const currency = useAtomValue(mapViewConfig).app.currency;
+  const fieldSpec: FieldSpec = {
+    ...selectedFieldSpec,
+    unit: selectedFieldSpec.field === 'cost_benefit_ratio'
+      ? undefined
+      : `${currency}${['eael_mean', 'avoided_eael_mean'].includes(selectedFieldSpec.field) ? '/day' : ''}`,
+  };
 
   const [selectedFeature, setSelectedFeature] = useState<ListFeature>(null);
 
