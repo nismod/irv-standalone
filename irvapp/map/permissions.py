@@ -69,3 +69,18 @@ class HasDatasetAccess(BasePermission):
             obj,
             user_group_ids=user_group_ids,
         )
+
+
+def inaccessible_hazard_ids(user):
+    """Known hazard datasets that this user cannot access.
+
+    Result hazards without a raster catalogue entry are left available: a
+    damage model does not require a matching raster dataset.
+    """
+    if user.is_superuser:
+        return set()
+    from .models import Dataset
+
+    return set(Dataset.objects.filter(group__iexact="hazards").exclude(
+        pk__in=Dataset.objects.visible_to(user),
+    ).values_list("pk", flat=True))

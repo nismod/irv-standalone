@@ -7,11 +7,14 @@ import { viewLayersFlatState } from 'lib/state/layers/view-layers';
 import { MobileTabContentWatcher } from 'lib/map/layouts/tab-has-content';
 
 interface MapLegendProps {
-  currentHazard?: string;
+  currentHazard?: string | string[];
 }
 
 export const MapLegend: FC<MapLegendProps> = ({ currentHazard }) => {
   const viewLayers = useAtomValue(viewLayersFlatState);
+  const damageHazard = Array.isArray(currentHazard)
+    ? currentHazard.length === 1 ? currentHazard[0] : 'all'
+    : currentHazard;
 
   const rasterViewLayers = [];
 
@@ -31,7 +34,7 @@ export const MapLegend: FC<MapLegendProps> = ({ currentHazard }) => {
         // Skip damage legends that don't match the current hazard selection
         if (colorMap.fieldSpec.fieldGroup === 'damages_expected') {
           const layerHazard = colorMap.fieldSpec.fieldDimensions?.hazard;
-          if (layerHazard && layerHazard !== currentHazard) {
+          if (layerHazard && layerHazard !== damageHazard) {
             return;
           }
         }

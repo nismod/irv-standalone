@@ -2,7 +2,7 @@ import { atom } from 'jotai';
 import { atomFamily } from 'jotai-family';
 
 import { StyleParams } from 'lib/data-map/view-layers';
-import { damagesFieldState } from 'lib/state/damage-map';
+import { damagesFieldState } from 'data-layers/networks/state/damage-scenarios';
 
 import { damages, damagesCoastalDefence } from 'data-layers/networks/color-maps';
 

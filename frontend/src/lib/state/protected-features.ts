@@ -7,7 +7,12 @@ import { mapFeaturesProtectedByList } from 'lib/api-client/sdk.gen';
 import { ProtectedFeature } from 'lib/api-client/types.gen';
 import { selectionState } from './interactions/interaction-state';
 import { VectorTarget } from 'lib/data-map/types';
-import { dataParamState } from './data-params';
+import {
+  modelParametersState,
+  scenarioCatalogState,
+  scenarioQueryKey,
+} from 'lib/model-scenarios/state';
+import { parameterKey, selectParameters } from 'lib/model-scenarios/scenarios';
 import { viewLayerState } from './layers/view-layers';
 import { sectionStyleValueState } from './sections';
 
@@ -20,30 +25,45 @@ const apiClient = createClient({
  * for features protected by the current selected feature,
  * filtered by model parameters.
  */
-const DEFAULT_ADAPTATION_PARAMETERS = JSON.stringify({ rcp: '2.6' });
+export const protectedFeatureScenarioState = atom((get) => {
+  const target = get(selectionState('assets'))?.target as VectorTarget;
+  const id = target?.feature?.id;
+  const catalog =
+    id == null
+      ? { rows: [] }
+      : get(scenarioCatalogState(scenarioQueryKey('adaptation', { protector_id: Number(id) })));
+  return {
+    protectorId: id == null ? null : Number(id),
+    catalog,
+    parameters: selectParameters(catalog?.rows ?? [], get(modelParametersState('adaptation'))),
+  };
+});
 
-const protectedFeatureAdaptationOptionsQuery = atomFamily((parameters: string = DEFAULT_ADAPTATION_PARAMETERS) =>
+const protectedFeatureAdaptationOptionsQuery = atomFamily((parameters?: string) =>
   atom(async (get) => {
     const selection = get(selectionState('assets'));
     const target = selection?.target as VectorTarget;
     if (!target?.feature?.id) {
       return [];
     }
+    const selected = get(protectedFeatureScenarioState).parameters;
+    if (parameters === undefined && selected === null) return [];
     const { data } = await mapFeaturesProtectedByList({
       client: apiClient,
+      throwOnError: true,
       path: {
         protector_id: +target.feature.id,
       },
       query: {
-        parameters,
+        parameters: parameters ?? parameterKey(selected),
       },
     });
-    return data;
+    return data ?? [];
   }),
 );
 
-const protectedFeatureAdaptationOptionsCached = atomFamily((parameters: string = DEFAULT_ADAPTATION_PARAMETERS) =>
-  unwrap(protectedFeatureAdaptationOptionsQuery(parameters), (prev) => prev ?? []),
+const protectedFeatureAdaptationOptionsCached = atomFamily((parameters?: string) =>
+  unwrap(protectedFeatureAdaptationOptionsQuery(parameters), () => []),
 );
 
 /**
@@ -51,12 +71,10 @@ const protectedFeatureAdaptationOptionsCached = atomFamily((parameters: string =
  * for features protected by the current selected feature.
  * Components using this atom will not suspend while waiting for the API.
  */
-export const protectedFeatureAdaptationOptionsState = atomFamily((parameters: string = DEFAULT_ADAPTATION_PARAMETERS) =>
+export const protectedFeatureAdaptationOptionsState = atomFamily((parameters?: string) =>
   atom((get) => {
     try {
-      const data: ProtectedFeature[] = get(
-        protectedFeatureAdaptationOptionsCached(parameters),
-      );
+      const data: ProtectedFeature[] = get(protectedFeatureAdaptationOptionsCached(parameters));
       return { data, error: null };
     } catch (error) {
       return { data: [], error };
@@ -68,9 +86,7 @@ export const protectedFeatureAdaptationOptionsState = atomFamily((parameters: st
  * Fetch a list of layer IDs for the current protected feature query set.
  */
 export const protectedFeatureLayersQuery = atom(async (get) => {
-  const rcpParam = get(dataParamState({ group: 'adaptation', param: 'rcp' }));
-  const parameters = JSON.stringify({ rcp: rcpParam !== null ? String(rcpParam) : '2.6' });
-  const features = await get(protectedFeatureAdaptationOptionsQuery(parameters));
+  const features = await get(protectedFeatureAdaptationOptionsQuery(undefined));
   return new Set(features?.map((feature) => feature.layer));
 });
 
@@ -95,13 +111,10 @@ export const protectedFeatureLayersState = atom((get) => {
 });
 
 /**
- * A list of adaptation options, by feature ID and layer, for the RCP
- * set by the adaptations sidebar control state.
+ * Adaptation options for the selected model scenario and protector.
  */
 export const protectedFeatureAdaptationsState = atom((get) => {
-  const rcpParam = get(dataParamState({ group: 'adaptation', param: 'rcp' }));
-  const parameters = JSON.stringify({ rcp: rcpParam !== null ? String(rcpParam) : '2.6' });
-  const { data } = get(protectedFeatureAdaptationOptionsState(parameters));
+  const { data } = get(protectedFeatureAdaptationOptionsState(undefined));
   return data;
 });
 

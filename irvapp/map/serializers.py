@@ -3,6 +3,7 @@ from django.db.models import Prefetch
 from rest_framework import serializers
 
 from .permissions import user_has_dataset_access
+from .model_parameters import canonical_parameter_key
 from .models import (
     AdaptationCostBenefit,
     DamagesExpected,
@@ -172,9 +173,33 @@ class AttributeLookupRequestSerializer(serializers.Serializer):
 
 
 class ExpectedDamagesDimensionsSerializer(serializers.Serializer):
-    hazard = serializers.CharField()
+    hazard = serializers.CharField(required=False)
     parameters = serializers.DictField(child=serializers.JSONField())
     protection_standard = serializers.IntegerField()
+    hazard_parameters = serializers.DictField(
+        child=serializers.DictField(child=serializers.JSONField()),
+        required=False,
+        allow_empty=False,
+    )
+
+    def validate(self, attrs):
+        selections = attrs.get("hazard_parameters")
+        if selections is None:
+            if "hazard" not in attrs:
+                raise serializers.ValidationError({"hazard": "Specify a hazard or an explicit hazard_parameters selection."})
+            return attrs
+        if attrs.get("hazard") not in (None, "all") or "all" in selections:
+            raise serializers.ValidationError({"hazard_parameters": "Specify individual hazards without a single-hazard filter."})
+        combined = attrs["parameters"]
+        names = set()
+        for parameters in selections.values():
+            names.update(parameters)
+            if any(name not in combined or canonical_parameter_key(value) != canonical_parameter_key(combined[name])
+                   for name, value in parameters.items()):
+                raise serializers.ValidationError({"hazard_parameters": "Each hazard's parameters must match the combined selection."})
+        if names != set(combined):
+            raise serializers.ValidationError({"hazard_parameters": "Every selected parameter must be used by a hazard."})
+        return attrs
 
 
 class AdaptationDimensionsSerializer(serializers.Serializer):

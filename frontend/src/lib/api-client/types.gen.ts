@@ -196,6 +196,16 @@ export type MarkdownBlock = {
     markdown: string;
 };
 
+export type ModelScenario = {
+    hazard: string;
+    parameters: {
+        [key: string]: unknown;
+    };
+    protection_standard?: number;
+    adaptation_name?: string;
+    adaptation_protection_level?: number;
+};
+
 export type NetworkLayerStyle = {
     id: string;
     type: string;
@@ -695,9 +705,6 @@ export type MapAdaptationCostBenefitsListResponse = MapAdaptationCostBenefitsLis
 export type MapAdaptationCostBenefitsRetrieveData = {
     body?: never;
     path: {
-        /**
-         * A unique integer value identifying this adaptation cost benefit.
-         */
         id: number;
     };
     query?: never;
@@ -809,9 +816,6 @@ export type MapDamagesExpectedListResponse = MapDamagesExpectedListResponses[key
 export type MapDamagesExpectedRetrieveData = {
     body?: never;
     path: {
-        /**
-         * A unique integer value identifying this damages expected.
-         */
         id: number;
     };
     query?: never;
@@ -849,9 +853,6 @@ export type MapDamagesRpListResponse = MapDamagesRpListResponses[keyof MapDamage
 export type MapDamagesRpRetrieveData = {
     body?: never;
     path: {
-        /**
-         * A unique integer value identifying this damages rp.
-         */
         id: number;
     };
     query?: never;
@@ -1067,6 +1068,28 @@ export type MapInfrastructureTreeRetrieveResponses = {
 };
 
 export type MapInfrastructureTreeRetrieveResponse = MapInfrastructureTreeRetrieveResponses[keyof MapInfrastructureTreeRetrieveResponses];
+
+export type MapModelScenariosListData = {
+    body?: never;
+    path: {
+        field_group: string;
+    };
+    query?: {
+        asset_type?: string;
+        hazard?: string;
+        layer?: Array<string>;
+        protector_id?: number;
+        sector?: string;
+        subsector?: string;
+    };
+    url: '/map/model-scenarios/{field_group}';
+};
+
+export type MapModelScenariosListResponses = {
+    200: Array<ModelScenario>;
+};
+
+export type MapModelScenariosListResponse = MapModelScenariosListResponses[keyof MapModelScenariosListResponses];
 
 export type MapNetworkLayerStylesListData = {
     body?: never;

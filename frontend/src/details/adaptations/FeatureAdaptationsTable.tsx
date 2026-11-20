@@ -1,6 +1,6 @@
 import ZoomIn from '@mui/icons-material/ZoomIn';
 import ZoomOut from '@mui/icons-material/ZoomOut';
-import { IconButton, TableCell } from '@mui/material';
+import { IconButton, TableCell, Typography } from '@mui/material';
 import { Box } from '@mui/system';
 import { ExpandableRow } from 'lib/asset-list/ExpandableRow';
 import { SortedAssetTable } from 'lib/asset-list/SortedAssetTable';
@@ -49,6 +49,7 @@ export const FeatureAdaptationsTable = () => {
   );
 
   const colorFn = useMemo(() => colorMap(colorSpec), [colorSpec]);
+  if (!fieldSpec) return <Typography>No adaptation scenario selected.</Typography>;
   const { getDataLabel, getValueFormatted } = getAssetDataFormats(fieldSpec, hazardsMetadata);
 
   return (

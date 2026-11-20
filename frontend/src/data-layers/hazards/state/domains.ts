@@ -10,8 +10,9 @@ import {
 } from 'lib/controls/data-params';
 import { type DataParamGroupConfig, type ParamDomain } from 'lib/controls/data-params';
 import { hazardsMetadataState } from './metadata';
+import type { RasterParamGroupConfig } from '../raster-scenario';
 
-type HazardParamGroupConfig = DataParamGroupConfig<HazardParams>;
+type HazardParamGroupConfig = RasterParamGroupConfig<HazardParams>;
 export type HazardDomains = Record<string, HazardParamGroupConfig | null>;
 type RasterSourceDomainEntry = Record<string, string>;
 
@@ -194,10 +195,12 @@ const hazardParamGroup = atomFamily((type: string) => {
     }
     const paramDefaults = buildParamDefaults(type, paramDomains as Record<string, ParamDomain>) as DataParamGroupConfig<HazardParams>['paramDefaults'];
     const paramDependencies = get(rasterDependenciesByType(type));
+    const paramCombinations = normaliseDependencyEntries(getEntriesForType(get(rasterSourceData), type));
     return {
       paramDomains,
       paramDefaults,
       paramDependencies,
+      paramCombinations,
     } as HazardParamGroupConfig;
   });
 });

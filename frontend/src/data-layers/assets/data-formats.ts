@@ -4,10 +4,17 @@ import startCase from 'lodash/startCase';
 
 type HazardsMetadata = Record<string, { label: string }>;
 
-function getSourceLabel(eadSource: string, hazardsMetadata) {
+function getSourceLabel(fieldDimensions: FieldSpec['fieldDimensions'], hazardsMetadata: HazardsMetadata) {
+  const eadSource = String(fieldDimensions.hazard);
   if (eadSource === 'all') return 'All Hazards';
+  if (fieldDimensions.hazard == null) {
+    const selected = Object.keys(fieldDimensions.hazard_parameters ?? {});
+    return selected.length
+      ? selected.map((hazard) => hazardsMetadata[hazard]?.label ?? hazard).join(' + ')
+      : 'All Hazards';
+  }
 
-  return hazardsMetadata[eadSource].label;
+  return hazardsMetadata[eadSource]?.label ?? eadSource;
 }
 
 function getDamageTypeLabel(field: string) {
@@ -76,7 +83,7 @@ export function createAssetDataFormats(
         getDataLabel: (colorField) => {
           const variableLabel = getDamageTypeLabel(colorField.field);
           const sourceLabel = getSourceLabel(
-            String(colorField.fieldDimensions.hazard),
+            colorField.fieldDimensions,
             hazardsMetadata,
           );
 
@@ -93,12 +100,18 @@ export function createAssetDataFormats(
   };
 }
 
-export function getAssetDataFormats(fieldSpec: FieldSpec, hazardsMetadata: HazardsMetadata): FormatConfig {
+export function getAssetDataFormats(
+  fieldSpec: FieldSpec,
+  hazardsMetadata: HazardsMetadata,
+): FormatConfig {
   const dataFormats = createAssetDataFormats(hazardsMetadata);
   return dataFormats[fieldSpec.fieldGroup].default;
 }
 
-export function getAssetLegendDataFormats(fieldSpec: FieldSpec, hazardsMetadata: HazardsMetadata): FormatConfig {
+export function getAssetLegendDataFormats(
+  fieldSpec: FieldSpec,
+  hazardsMetadata: HazardsMetadata,
+): FormatConfig {
   const dataFormats = createAssetDataFormats(hazardsMetadata);
   return dataFormats[fieldSpec.fieldGroup].legend;
 }

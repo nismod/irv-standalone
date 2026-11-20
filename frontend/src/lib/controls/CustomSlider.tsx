@@ -47,9 +47,9 @@ export const CustomNumberSlider: FC<CustomSliderProps<number>> = ({
       value={integerValue}
       onChange={handleIntegerChange}
       min={0}
-      max={marks.length - 1}
+      max={Math.max(1, marks.length - 1)}
       step={1}
-      scale={(x) => marks[x]}
+      scale={(x) => marks[Math.min(x, marks.length - 1)]}
       valueLabelFormat={valueLabelFunction}
       getAriaValueText={valueLabelFunction}
       {...otherProps}

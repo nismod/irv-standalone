@@ -34,7 +34,8 @@ export const dataParamOptionsState = atomFamily(() => atom([] as ParamDomain), p
  */
 export const syncExternalConfigState = atom(
   (get) => get(dataParamConfigState),
-  (_get, set, newConfig: Record<string, DataParamGroupConfig>) => {
+  (get, set, newConfig: Record<string, DataParamGroupConfig>) => {
+    if (get(dataParamConfigState) === newConfig) return;
     set(dataParamConfigState, newConfig);
 
     Object.entries(newConfig).forEach(([group, groupConfig]) => {
@@ -43,13 +44,26 @@ export const syncExternalConfigState = atom(
         return;
       }
       const paramNames = Object.keys(groupConfig.paramDefaults);
-      const [defaultValues, options] = resolveParamDependencies(
-        groupConfig.paramDefaults,
+      // Another panel may have set these values before config loading finished.
+      // Keep valid selections when new groups or refreshed domains arrive.
+      const currentValues = Object.fromEntries(
+        paramNames.map((param) => {
+          const current = get(dataParamState({ group, param }));
+          return [
+            param,
+            groupConfig.paramDomains[param]?.includes(current)
+              ? current
+              : groupConfig.paramDefaults[param],
+          ];
+        }),
+      );
+      const [values, options] = resolveParamDependencies(
+        currentValues,
         groupConfig,
       );
 
       paramNames.forEach((param) => {
-        set(dataParamState({ group, param }), defaultValues[param]);
+        set(dataParamState({ group, param }), values[param]);
         set(dataParamOptionsState({ group, param }), options[param]);
       });
     });

@@ -153,6 +153,27 @@ docker compose -f docker-compose.dev.yml exec django python manage.py createsupe
 
 #### Populating the database
 
+Model scenarios used by the map and asset list are discovered from result rows at
+`GET /api/map/model-scenarios/{field_group}`, where `field_group` is
+`damages_expected` or `adaptation`. The endpoint accepts repeated `layer` filters,
+asset filters (`sector`, `subsector`, `asset_type`), and an optional `hazard`.
+Adaptation scenarios can also be scoped by `protector_id`. Each row contains a
+complete `parameters` object alongside fixed result dimensions such as protection
+standard or adaptation option. The controls preserve these combinations and value
+types. “All Hazards” combines the available parameters in the selected asset
+scope: for example, coastal SLR and river/surface GWL can be selected together.
+The damage hazard radio group selects one hazard or “All Hazards”. The scenario
+logic also supports subsets supplied through state, such as river and surface
+flooding without coastal flooding; controls, totals, and matching raster layers
+continue to follow those selections.
+Shared parameter values and protection standards must agree across hazards.
+Damage requests use the bulk attributes API, which sums exactly one selected
+scenario per accessible hazard. The optional `hazard_parameters` dimension maps
+each selected hazard to its parameter object for subsets or differing schemas; `parameters`
+contains the combined control values. Partial selections omit `hazard`; full
+selections use `hazard: "all"`. Full selections with a shared parameter object
+continue to work without this mapping.
+
 The first time that you run the Django app, the backend database will be empty.
 The next step runs `pg_restore` to load data to the database from a backup.
 This runs `pg_restore` on the host against the database running in
@@ -182,6 +203,20 @@ This should automatically open a browser tab. If not, open:
     firefox http://localhost:5173/
 
 See `./deploy` directory for details.
+
+#### Numeric scenario controls
+
+Scenario controls use selects by default. Set `numericControl="slider"` on
+`ModelParameterControls`, `DamageSourceControl`, or `FieldSpecControl` to render
+finite numeric options as sliders, including GWL, SLR, and protection standards.
+Sliders stop only at available catalogue values and preserve valid scenario
+combinations. Categorical values and numeric strings remain selects; controls
+with a single available value are disabled.
+The network-layer damage panel enables slider mode for its numeric parameters.
+It also shows a disabled return-period control at the maximum available for the
+matching hazard rasters. Hazards with different return periods have separate
+controls. This describes the displayed hazard maps; damage values remain
+expected annual estimates.
 
 
 ## Acknowledgements

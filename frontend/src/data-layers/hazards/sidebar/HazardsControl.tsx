@@ -146,7 +146,9 @@ function HazardParamControl({ group, param, disabled = false, hazard }) {
           }
         : {};
 
-    return <ReturnPeriodControl group={group} param="returnPeriod" disabled={disabled} {...otherProps} />;
+    return (
+      <ReturnPeriodControl group={group} param="returnPeriod" disabled={disabled} {...otherProps} />
+    );
   }
 
   if (param === 'epoch') {
@@ -199,11 +201,7 @@ function HazardToggleSection({ hazard, disabled }) {
   const permissionDenied = !catalogueEntry.has_access;
 
   return (
-    <ToggleSection
-      id={hazard}
-      label={catalogueEntry.label}
-      disabled={disabled || permissionDenied}
-    >
+    <ToggleSection id={hazard} label={catalogueEntry.label} disabled={disabled || permissionDenied}>
       {sliderParams.map((param) => (
         <InputSection key={param}>
           <HazardParamControl

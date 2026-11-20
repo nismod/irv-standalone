@@ -4,36 +4,8 @@ import { FieldSpec } from 'lib/data-map/view-layers';
 import { featureProperty } from 'lib/deck/props/data-source';
 import { Accessor, withTriggers } from 'lib/deck/props/getters';
 import { getFeatureId } from 'lib/deck/utils/get-feature-id';
-import { sumOrNone } from 'lib/helpers';
-import { MapGeoJSONFeature } from 'maplibre-gl';
 
 type ModelParameters = Record<string, string | number | boolean | null>;
-
-function getExpectedDamageKey(direct: boolean, hazard: string, parameters: ModelParameters) {
-  // Existing tiles put RCP before epoch. Append other parameters in a stable order.
-  const parameterOrder = (name: string) => (name === 'rcp' ? 0 : name === 'epoch' ? 1 : 2);
-  const parameterKey = Object.entries(parameters)
-    .sort(([a], [b]) => parameterOrder(a) - parameterOrder(b) || a.localeCompare(b))
-    .map(([name, value]) => `${name}_${String(value)}`)
-    .join('__');
-  return `${direct ? 'ead' : 'eael'}__${hazard}__${parameterKey}__conf_None`;
-}
-
-const hazardTypes = ['fluvial', 'surface', 'coastal', 'cyclone'];
-
-function totalExpectedDamagesProperty(
-  direct: boolean,
-  parameters: ModelParameters,
-) {
-  const hazardProperties = hazardTypes.map((ht) =>
-    featureProperty<number>(getExpectedDamageKey(direct, ht, parameters)),
-  );
-
-  return withTriggers(
-    (f: MapGeoJSONFeature) => sumOrNone(hazardProperties.map((p) => p(f))),
-    [direct, parameters],
-  );
-}
 
 /**
  * Decorate a data access function with update triggers.
@@ -53,23 +25,20 @@ function withLoaderTriggers(fn: Accessor<unknown>, dataLoader: DataLoader) {
  * @param fieldSpec field specification
  * @returns a data accessor for a given layer and field spec.
  */
-export function getAssetDataAccessor(layer: string, fieldSpec: FieldSpec) {
+export function getAssetDataAccessor(layer: string, fieldSpec: FieldSpec): Accessor<unknown> {
   if (fieldSpec == null) return null;
 
   const { fieldGroup, fieldDimensions, field } = fieldSpec;
 
   if (fieldGroup === 'damages_expected') {
-    const { hazard, parameters } = fieldDimensions as {
+    const { parameters } = fieldDimensions as {
       hazard: string;
       parameters: ModelParameters;
     };
+    if (!parameters) return () => null;
 
-    const isDirect = field.startsWith('ead_');
-
-    if (hazard === 'all') {
-      return totalExpectedDamagesProperty(isDirect, parameters);
-    }
-    return featureProperty(getExpectedDamageKey(isDirect, hazard, parameters));
+    const dataLoader = dataLoaderManager.getDataLoader(layer, fieldSpec);
+    return withLoaderTriggers((f) => dataLoader.getData(getFeatureId(f)), dataLoader);
   } else if (fieldGroup === 'damages_return_period') {
     // return return period damages dynamically loaded from API
     const dataLoader = dataLoaderManager.getDataLoader(layer, fieldSpec);

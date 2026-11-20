@@ -9,17 +9,11 @@ import { getHazardSelectionAggregate } from './data-selection';
 export const hazardVisibilityState = atom((get) => {
   if (get(showDamagesState)) {
     const selectedDamageSource = get(damageSourceState);
-    if (selectedDamageSource === 'all') {
-      return {};
-    } else {
-      const metadata = get(hazardsMetadataState);
-      if (!metadata[selectedDamageSource]?.has_access) {
-        return {};
-      }
-      return {
-        [selectedDamageSource]: true,
-      };
-    }
+    const metadata = get(hazardsMetadataState);
+    const hazards = get(hazardsMapOrderState).filter((hazard) =>
+      selectedDamageSource === 'all' || selectedDamageSource.includes(hazard),
+    );
+    return getHazardSelectionAggregate({ get }, hazards.filter((hazard) => metadata[hazard]?.has_access));
   } else {
     const hazardsMapOrder = get(hazardsMapOrderState);
     return getHazardSelectionAggregate({ get }, hazardsMapOrder);

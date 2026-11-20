@@ -3,7 +3,7 @@ from typing import cast
 
 from django.core.exceptions import FieldError
 from django.contrib.gis.db.models.functions import AsWKT, Envelope
-from django.db.models import ExpressionWrapper, F, FloatField, Sum, Value
+from django.db.models import ExpressionWrapper, F, FloatField, Q, Sum, Value
 from drf_spectacular.utils import (
     OpenApiParameter,
     OpenApiResponse,
@@ -17,6 +17,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from map.model_parameters import canonical_parameter_key
+from map.permissions import inaccessible_hazard_ids
 from map.serializers import (
     SortedFeatureSerializer,
     ProtectedFeatureSerializer,
@@ -37,6 +38,18 @@ def parameter_filter(model_type, parameters):
         "parameter_set__model_type": model_type,
         "parameter_set__canonical_key": canonical_parameter_key(parameters),
     }
+
+
+def expected_damage_filter(dimensions):
+    """Match exactly one selected scenario per hazard before summing results."""
+    selections = dimensions.get("hazard_parameters")
+    if selections is None:
+        scenarios = Q(**parameter_filter("damages_expected", dimensions["parameters"]))
+    else:
+        scenarios = Q(pk__in=[])
+        for hazard, parameters in selections.items():
+            scenarios |= Q(hazard=hazard, **parameter_filter("damages_expected", parameters))
+    return scenarios & Q(protection_standard=dimensions["protection_standard"])
 
 
 class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
@@ -202,19 +215,17 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
             )
 
         base_filters = self._layer_filters(request)
+        restricted_hazards = inaccessible_hazard_ids(request.user)
 
         try:
             if field_group == "damages_expected":
                 query = DamagesExpected.objects.filter(
+                    expected_damage_filter(dimensions),
                     **base_filters,
-                    **parameter_filter(
-                        "damages_expected", dimensions["parameters"]
-                    ),
-                    protection_standard=dimensions["protection_standard"],
-                ).annotate(
+                ).exclude(hazard__in=restricted_hazards).annotate(
                     bbox_wkt=AsWKT(Envelope("feature__geom")),
                 )
-                if dimensions["hazard"] != "all":
+                if dimensions.get("hazard") not in (None, "all"):
                     query = query.filter(hazard=dimensions["hazard"])
                     query = query.annotate(value=F(field))
                 else:
@@ -235,7 +246,7 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
                     adaptation_protection_level=dimensions[
                         "adaptation_protection_level"
                     ],
-                ).annotate(
+                ).exclude(hazard__in=restricted_hazards).annotate(
                     bbox_wkt=AsWKT(Envelope("feature__geom")),
                 )
 
@@ -266,7 +277,7 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if field_group == "damages_expected" and dimensions["hazard"] != "all":
+        if field_group == "damages_expected" and dimensions.get("hazard") not in (None, "all"):
             query = query.values(
                 "feature_id",
                 "feature__string_id",
@@ -337,7 +348,7 @@ class ProtectedFeaturesView(APIView):
             protector_feature_id=protector_id,
             hazard__isnull=False,
             **parameter_filter("adaptation", parameter_validation),
-        ).select_related("feature", "feature__layer", "parameter_set").prefetch_related(
+        ).exclude(hazard__in=inaccessible_hazard_ids(request.user)).select_related("feature", "feature__layer", "parameter_set").prefetch_related(
             "parameter_set__parameters"
         ).order_by("feature_id", "adaptation_name", "hazard")
 
@@ -492,17 +503,15 @@ class AttributeLookupView(FieldGroupQueryParsingMixin, APIView):
         ).values_list("id", flat=True)
 
         lookup = {}
+        restricted_hazards = inaccessible_hazard_ids(request.user)
 
         if field_group == "damages_expected":
             query = DamagesExpected.objects.filter(
+                expected_damage_filter(dimensions),
                 feature_id__in=base_feature_ids,
-                **parameter_filter(
-                    "damages_expected", dimensions["parameters"]
-                ),
-                protection_standard=dimensions["protection_standard"],
-            )
+            ).exclude(hazard__in=restricted_hazards)
 
-            if dimensions["hazard"] != "all":
+            if dimensions.get("hazard") not in (None, "all"):
                 query = query.filter(hazard=dimensions["hazard"])
                 try:
                     lookup = dict(query.values_list("feature_id", field))
@@ -537,7 +546,7 @@ class AttributeLookupView(FieldGroupQueryParsingMixin, APIView):
                 adaptation_protection_level=dimensions[
                     "adaptation_protection_level"
                 ],
-            )
+            ).exclude(hazard__in=restricted_hazards)
 
             if field == "cost_benefit_ratio":
                 eael_days = 1

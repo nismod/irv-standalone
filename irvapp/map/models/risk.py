@@ -119,6 +119,10 @@ class AdaptationCostBenefit(models.Model):
 
     class Meta:
         db_table = "adaptation_cost_benefit"
+        indexes = [models.Index(
+            fields=["parameter_set", "hazard", "adaptation_name", "adaptation_protection_level", "feature"],
+            name="adaptation_scenario_idx",
+        )]
 
 
 class DamagesExpected(models.Model):
@@ -149,6 +153,10 @@ class DamagesExpected(models.Model):
 
     class Meta:
         db_table = "damages_expected"
+        indexes = [models.Index(
+            fields=["parameter_set", "hazard", "protection_standard", "feature"],
+            name="damages_expected_scenario_idx",
+        )]
 
 
 class DamagesNpv(models.Model):

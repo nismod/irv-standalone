@@ -46,7 +46,7 @@ export const NetworksSection: FC = () => {
           <TransitionGroup>
             {style === 'damages' ? (
               <Collapse>
-                <DamageSourceControl />
+                <DamageSourceControl numericControl="slider" />
               </Collapse>
             ) : null}
             {style === 'adaptation' ? (
