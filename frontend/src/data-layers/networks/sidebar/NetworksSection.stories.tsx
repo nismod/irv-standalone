@@ -6,7 +6,7 @@ import { useSetAtom } from 'jotai';
 
 import { NetworksSection } from './NetworksSection';
 import rasterSourceDomains from 'mocks/raster_source_domains.json';
-import { type PaginatedDatasetList, type RasterTileSource } from 'lib/api-client';
+import { type PaginatedDatasetList, type PaginatedRasterLayerList, type RasterTileSource } from 'lib/api-client';
 import {
   sectionStyleOptionsState,
   sectionStyleValueState,
@@ -15,13 +15,14 @@ import {
 import { STORAGE_PREFIX } from 'lib/state/map-view/map-url';
 import { networkTreeExpandedState } from '../state/data-selection';
 
-const hazardsResponse: PaginatedDatasetList = {
+const hazardsResponse: PaginatedRasterLayerList = {
   count: 2,
   next: null,
   previous: null,
   results: [
     {
       id: 'fluvial',
+      dataset: 'fluvial',
       label: 'River Flooding',
       group: 'hazards',
       quantity: 'depth',
@@ -33,6 +34,7 @@ const hazardsResponse: PaginatedDatasetList = {
     },
     {
       id: 'coastal',
+      dataset: 'coastal',
       label: 'Coastal Flooding',
       group: 'hazards',
       quantity: 'depth',
@@ -56,9 +58,6 @@ const networksResponse: PaginatedDatasetList = {
       group: 'networks',
       quantity: 'features',
       unit: 'n/a',
-      tile_source: null,
-      stacking_order: 1,
-      display_order: 1,
       has_access: true,
     },
     {
@@ -67,9 +66,6 @@ const networksResponse: PaginatedDatasetList = {
       group: 'networks',
       quantity: 'features',
       unit: 'n/a',
-      tile_source: null,
-      stacking_order: 2,
-      display_order: 2,
       has_access: false,
     },
     {
@@ -78,9 +74,6 @@ const networksResponse: PaginatedDatasetList = {
       group: 'buildings',
       quantity: 'features',
       unit: 'n/a',
-      tile_source: null,
-      stacking_order: 3,
-      display_order: 3,
       has_access: false,
     },
   ],
@@ -281,6 +274,14 @@ const meta = {
         http.get('/api/map/infrastructure-tree', () => {
           return HttpResponse.json(mockInfrastructureTree);
         }),
+        http.get('/api/map/raster-layers', () => HttpResponse.json(hazardsResponse)),
+        http.get('/api/map/feature-layers', () => HttpResponse.json({
+          ...networksResponse,
+          results: networksResponse.results.map((dataset, index) => ({
+            layer_name: dataset.id, dataset: dataset.id, sector: '', subsector: '', asset_type: '',
+            stacking_order: index, display_order: index, has_access: dataset.has_access,
+          })),
+        })),
         http.get('/api/map/datasets', ({ request }) => {
           const url = new URL(request.url);
           if (url.searchParams.get('group') === 'networks') {

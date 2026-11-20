@@ -9,7 +9,7 @@ from django.test import SimpleTestCase, TestCase, override_settings
 from django.utils.cache import has_vary_header
 from rest_framework.test import APIClient
 
-from map.models import Dataset
+from map.models import Dataset, RasterLayer
 from raster import ingestion as ingest
 from raster.management.commands.ingest_rasters import Command
 
@@ -22,6 +22,14 @@ from .views import (
     _parse_keys,
     _source_options,
 )
+
+
+def create_raster_layer(dataset, source):
+    return RasterLayer.objects.create(
+        id=dataset.pk, dataset=dataset, tile_source=source, label=dataset.label,
+        quantity=dataset.quantity, unit=dataset.unit, license=dataset.license,
+        stacking_order=0, display_order=0,
+    )
 
 
 class DiscoverRastersTests(SimpleTestCase):
@@ -503,20 +511,16 @@ class RasterTileImageViewTests(TestCase):
             label="Land Cover",
             group="exposure",
             unit="class",
-            tile_source=land_cover_source,
-            stacking_order=1,
-            display_order=1,
         )
+        create_raster_layer(land_cover_dataset, land_cover_source)
         land_cover_dataset.access_groups.add(self.access_group)
         aqueduct_dataset = Dataset.objects.create(
             id="aqueduct",
             label="Aqueduct",
             group="hazards",
             unit="m",
-            tile_source=aqueduct_source,
-            stacking_order=2,
-            display_order=2,
         )
+        create_raster_layer(aqueduct_dataset, aqueduct_source)
         aqueduct_dataset.access_groups.add(self.access_group)
 
     def test_requires_authentication(self):
@@ -588,8 +592,7 @@ class RasterTileImageViewTests(TestCase):
         self,
         mock_get_singleband_image,
     ):
-        source = Dataset.objects.get(pk="land_cover").tile_source
-        dataset = source.datasets.get()
+        dataset = Dataset.objects.get(pk="land_cover")
         dataset.access_groups.clear()
         dataset.access_groups.add(Group.objects.create(name="restricted"))
         self.client.force_authenticate(user=self.user)
@@ -627,8 +630,6 @@ class RasterTileImageViewTests(TestCase):
             label="Vector only",
             group="networks",
             unit="n/a",
-            stacking_order=3,
-            display_order=3,
         )
         dataset.access_groups.add(self.access_group)
         self.client.force_authenticate(user=self.user)
@@ -661,10 +662,8 @@ class RasterTileSourceViewTests(TestCase):
             group="exposure",
             unit="class",
             license="CC-BY",
-            tile_source=self.source,
-            stacking_order=1,
-            display_order=1,
         )
+        create_raster_layer(self.dataset, self.source)
         self.dataset.access_groups.add(self.access_group)
 
     def test_sources_requires_authentication(self):
@@ -732,10 +731,8 @@ class RasterTileSourceViewTests(TestCase):
             label="Coastal",
             group="hazards",
             unit="m",
-            tile_source=source,
-            stacking_order=2,
-            display_order=2,
         )
+        create_raster_layer(dataset, source)
         dataset.access_groups.add(self.access_group)
         mock_source_options.return_value = []
 
@@ -789,8 +786,6 @@ class RasterTileSourceViewTests(TestCase):
             label="Vector only",
             group="networks",
             unit="n/a",
-            stacking_order=2,
-            display_order=2,
         )
         dataset.access_groups.add(self.access_group)
         self.client.force_authenticate(user=self.user)
@@ -821,16 +816,14 @@ class RasterTileSourceViewTests(TestCase):
             label="Land Cover Change",
             group="exposure",
             unit="class",
-            tile_source=self.source,
-            stacking_order=2,
-            display_order=2,
         )
+        create_raster_layer(second_dataset, self.source)
         second_dataset.access_groups.add(self.access_group)
         self.client.force_authenticate(user=self.user)
 
         response = self.client.get("/tiles/raster/sources")
 
-        self.assertEqual(self.source.datasets.count(), 2)
+        self.assertEqual(self.source.raster_layers.count(), 2)
         self.assertEqual(len(response.json()), 1)
 
     @patch("raster.views.sources._source_options")
@@ -843,10 +836,8 @@ class RasterTileSourceViewTests(TestCase):
             label="Restricted Land Cover",
             group="exposure",
             unit="class",
-            tile_source=self.source,
-            stacking_order=2,
-            display_order=2,
         )
+        create_raster_layer(restricted, self.source)
         restricted.access_groups.add(
             Group.objects.create(name="other-source-access")
         )

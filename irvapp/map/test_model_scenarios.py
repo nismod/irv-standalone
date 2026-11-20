@@ -18,10 +18,14 @@ class ModelScenarioTests(TestCase):
         self.client = APIClient()
         self.user = User.objects.create_user(username="scenarios")
         self.client.force_authenticate(self.user)
+        access_group = Group.objects.create(name="feature-access")
+        self.user.groups.add(access_group)
+        dataset = Dataset.objects.create(id="infrastructure", label="Infrastructure", group="infrastructure")
+        dataset.access_groups.add(access_group)
         self.features = []
         for name, sector in (("roads", "transport"), ("power", "energy")):
             layer = FeatureLayer.objects.create(
-                layer_name=name, sector=sector, subsector=name, asset_type="edge",
+                layer_name=name, sector=sector, subsector=name, asset_type="edge", dataset=dataset,
             )
             self.features.append(Feature.objects.create(
                 layer=layer, string_id=name, properties={}, geom=Point(0, 0, srid=4326),
@@ -108,7 +112,7 @@ class ModelScenarioTests(TestCase):
     def test_hazard_permissions_apply_to_discovery_map_values_and_sorted_totals(self):
         dataset = Dataset.objects.create(
             id="coastal", label="Coastal", group="hazards", quantity="depth", unit="m",
-            stacking_order=0, display_order=0,
+
         )
         parameters = {"gwl": 2}
         self.damage(self.features[0], parameters, hazard="fluvial", amount=10)
@@ -145,7 +149,7 @@ class ModelScenarioTests(TestCase):
     def test_adaptation_discovery_and_protected_features_exclude_restricted_hazards(self):
         Dataset.objects.create(
             id="coastal", label="Coastal", group="hazards", quantity="depth", unit="m",
-            stacking_order=0, display_order=0,
+
         )
         for hazard in ("coastal", "flood"):
             AdaptationCostBenefit.objects.create(
@@ -211,7 +215,7 @@ class ModelScenarioTests(TestCase):
         })
         Dataset.objects.create(
             id="coastal", label="Coastal", group="hazards", quantity="depth", unit="m",
-            stacking_order=0, display_order=0,
+
         )
         check(15)  # Explicit hazard selections must still respect permissions.
 

@@ -13,6 +13,8 @@ from .models import (
     Feature,
     NetworkLayerStyle,
     ModelParameter,
+    RasterLayer,
+    FeatureLayer,
 )
 
 
@@ -80,11 +82,6 @@ class DamagesNpvSerializer(serializers.ModelSerializer):
 
 class DatasetSerializer(serializers.ModelSerializer):
     has_access = serializers.SerializerMethodField()
-    color_range = serializers.ListField(
-        child=serializers.FloatField(),
-        allow_null=True,
-        required=False,
-    )
 
     @extend_schema_field(serializers.BooleanField())
     def get_has_access(self, dataset):
@@ -108,13 +105,42 @@ class DatasetSerializer(serializers.ModelSerializer):
             "quantity",
             "unit",
             "license",
-            "color_scheme",
-            "color_range",
-            "tile_source",
-            "stacking_order",
-            "display_order",
             "has_access",
         ]
+
+
+class FeatureLayerSerializer(serializers.ModelSerializer):
+    has_access = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.BooleanField())
+    def get_has_access(self, layer):
+        if layer.dataset_id is None:
+            return False
+        if not hasattr(self, "_user_group_ids"):
+            self._user_group_ids = set(self.context["request"].user.groups.values_list("pk", flat=True))
+        return user_has_dataset_access(self.context["request"].user, layer.dataset, self._user_group_ids)
+
+    class Meta:
+        model = FeatureLayer
+        fields = ["layer_name", "dataset", "sector", "subsector", "asset_type",
+                  "stacking_order", "display_order", "has_access"]
+
+
+class RasterLayerSerializer(serializers.ModelSerializer):
+    has_access = serializers.SerializerMethodField()
+    group = serializers.CharField(source="dataset.group", read_only=True)
+    color_range = serializers.ListField(child=serializers.FloatField(), allow_null=True, required=False)
+
+    @extend_schema_field(serializers.BooleanField())
+    def get_has_access(self, layer):
+        if not hasattr(self, "_user_group_ids"):
+            self._user_group_ids = set(self.context["request"].user.groups.values_list("pk", flat=True))
+        return user_has_dataset_access(self.context["request"].user, layer.dataset, self._user_group_ids)
+
+    class Meta:
+        model = RasterLayer
+        fields = ["id", "dataset", "label", "group", "quantity", "unit", "license",
+                  "color_scheme", "color_range", "tile_source", "stacking_order", "display_order", "has_access"]
 
 
 class FeatureSerializer(serializers.ModelSerializer):

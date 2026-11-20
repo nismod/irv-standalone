@@ -1,6 +1,6 @@
 import { atom } from 'jotai';
 import { unwrap } from 'jotai/utils';
-import { type Dataset, mapDatasetsList, rasterTileSource, rasterTileSourceDomains } from 'lib/api-client';
+import { type RasterLayer, mapRasterLayersList, rasterTileSource, rasterTileSourceDomains } from 'lib/api-client';
 
 const DEFAULT_HAZARD_COLOR_SCHEMES: Record<string, { scheme: string; range: [number, number] }> = {
   fluvial: { scheme: 'blues', range: [0, 10] },
@@ -11,7 +11,7 @@ const DEFAULT_HAZARD_COLOR_SCHEMES: Record<string, { scheme: string; range: [num
   storm: { scheme: 'viridis', range: [0, 250] },
 };
 
-export function getHazardColorSpec(dataset?: Dataset | null) {
+export function getHazardColorSpec(dataset?: RasterLayer | null) {
   const fallback = (dataset && DEFAULT_HAZARD_COLOR_SCHEMES[dataset.id]) ?? DEFAULT_HAZARD_COLOR_SCHEMES.pluvial;
   const range =
     dataset?.color_range != null &&
@@ -28,14 +28,12 @@ export function getHazardColorSpec(dataset?: Dataset | null) {
 
 async function fetchHazardsMetadata() {
   try {
-    const { data, error } = await mapDatasetsList({
+    const { data, error } = await mapRasterLayersList({
       baseUrl: '/api',
       credentials: 'include',
-      query: {
-        group: 'hazards',
-      },
+      query: { group: 'hazards' },
     });
-    if (error) {
+    if (error || !data) {
       console.error('Error fetching hazards metadata:', error);
       return [];
     }
@@ -47,8 +45,8 @@ async function fetchHazardsMetadata() {
 }
 
 const hazardsMetadataQuery = atom(async () => {
-  const metadata: Record<string, Dataset> = {};
-  const datasets: Dataset[] = await fetchHazardsMetadata();
+  const metadata: Record<string, RasterLayer> = {};
+  const datasets: RasterLayer[] = await fetchHazardsMetadata();
   datasets.forEach((dataset) => {
     metadata[dataset.id] = dataset;
   });

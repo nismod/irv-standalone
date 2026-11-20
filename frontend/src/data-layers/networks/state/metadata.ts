@@ -1,7 +1,7 @@
 import { atom } from 'jotai';
 import { unwrap } from 'jotai/utils';
 
-import { type Dataset, mapDatasetsList } from 'lib/api-client';
+import { type FeatureLayer, mapFeatureLayersList } from 'lib/api-client';
 import { colorCssToRgb, makeConfig } from 'lib/helpers';
 import { LegendShapeType } from 'lib/map-shapes/ShapeLegend';
 
@@ -15,7 +15,7 @@ export interface NetworkLayerMetadata {
 }
 
 export type NetworksMetadata = Record<string, NetworkLayerMetadata>;
-export type NetworkDatasetsMetadata = Record<string, Dataset>;
+export type NetworkFeatureLayersMetadata = Record<string, FeatureLayer>;
 
 interface NetworkLayerStyleResponse {
   id: string;
@@ -47,22 +47,21 @@ async function fetchNetworkLayerStyles(): Promise<NetworkLayerStyleResponse[]> {
   }
 }
 
-async function fetchNetworkDatasets(): Promise<Dataset[]> {
+async function fetchNetworkFeatureLayers(): Promise<FeatureLayer[]> {
   try {
-    const { data, error } = await mapDatasetsList({
-      baseUrl: '/api',
-      credentials: 'include',
-      query: {
-        group: 'infrastructure',
-      },
-    });
-    if (error) {
-      console.error('Error fetching network datasets metadata:', error);
-      return [];
+    const layers: FeatureLayer[] = [];
+    const limit = 100;
+    while (true) {
+      const { data, error } = await mapFeatureLayersList({
+        baseUrl: '/api', credentials: 'include', query: { limit, offset: layers.length },
+      });
+      if (error || !data) throw error ?? new Error('Missing feature layer metadata');
+      layers.push(...data.results);
+      if (!data.next) return layers;
+      if (data.results.length === 0) throw new Error('Empty feature layer page');
     }
-    return data.results;
   } catch (error) {
-    console.error('Error fetching network datasets metadata:', error);
+    console.error('Error fetching network feature layer metadata:', error);
     return [];
   }
 }
@@ -79,16 +78,16 @@ const networksMetadataQuery = atom(async () => {
 
 export const networksMetadataState = unwrap(networksMetadataQuery, (prev) => prev ?? {});
 
-const networkDatasetsMetadataQuery = atom(async () => {
-  const metadata: NetworkDatasetsMetadata = {};
-  const datasets = await fetchNetworkDatasets();
-  datasets.forEach((dataset) => {
-    metadata[dataset.id] = dataset;
+const networkFeatureLayersMetadataQuery = atom(async () => {
+  const metadata: NetworkFeatureLayersMetadata = {};
+  const layers = await fetchNetworkFeatureLayers();
+  layers.forEach((layer) => {
+    metadata[layer.layer_name] = layer;
   });
   return metadata;
 });
 
-export const networkDatasetsMetadataState = unwrap(
-  networkDatasetsMetadataQuery,
+export const networkFeatureLayersMetadataState = unwrap(
+  networkFeatureLayersMetadataQuery,
   (prev) => prev ?? {},
 );

@@ -49,17 +49,33 @@ def user_has_dataset_access(user, dataset, user_group_ids=None):
     return dataset.access_groups.filter(user=user).exists()
 
 
+def accessible_feature_layers(user):
+    from .models import Dataset, FeatureLayer
+
+    if not user.is_authenticated:
+        return FeatureLayer.objects.none()
+    return FeatureLayer.objects.filter(dataset__in=Dataset.objects.visible_to(user))
+
+
 class HasDatasetAccess(BasePermission):
     message = "You do not have permission to access this dataset."
 
     def has_object_permission(self, request, view, obj):
-        if hasattr(obj, "datasets"):
+        from raster.models import RasterTileSource
+        from .models import Dataset, FeatureLayer, RasterLayer
+
+        if isinstance(obj, RasterTileSource):
             self.message = (
                 "You do not have permission to access this raster source."
             )
             if not request.user.is_authenticated:
                 return False
-            return obj.datasets.visible_to(request.user).exists()
+            return obj.raster_layers.filter(
+                dataset__in=Dataset.objects.visible_to(request.user)
+            ).exists()
+
+        if isinstance(obj, (FeatureLayer, RasterLayer)):
+            obj = obj.dataset if obj.dataset_id else None
 
         user_group_ids = set(
             request.user.groups.values_list("pk", flat=True)
@@ -81,6 +97,12 @@ def inaccessible_hazard_ids(user):
         return set()
     from .models import Dataset
 
-    return set(Dataset.objects.filter(group__iexact="hazards").exclude(
+    from .models import RasterLayer
+
+    denied_layers = set(RasterLayer.objects.filter(dataset__group__iexact="hazards").exclude(
+        dataset__in=Dataset.objects.visible_to(user),
+    ).values_list("pk", flat=True))
+    denied_unlinked = set(Dataset.objects.filter(group__iexact="hazards", raster_layers__isnull=True).exclude(
         pk__in=Dataset.objects.visible_to(user),
     ).values_list("pk", flat=True))
+    return denied_layers | denied_unlinked

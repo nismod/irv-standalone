@@ -16,6 +16,7 @@ from map.models import (
     DamagesExpected,
     DamagesRp,
     Dataset,
+    RasterLayer,
     Feature,
     FeatureLayer,
     ModelParameter,
@@ -57,15 +58,16 @@ class SyntheticResultsTests(TestCase):
             source = RasterTileSource.objects.create(
                 keys=keys, database=hazard + ".sqlite"
             )
-            Dataset.objects.create(
+            dataset = Dataset.objects.create(
                 id=hazard,
                 label=hazard.title(),
                 group="hazards",
                 quantity="depth",
                 unit="m",
-                tile_source=source,
-                stacking_order=0,
-                display_order=0,
+            )
+            RasterLayer.objects.create(
+                id=hazard, dataset=dataset, tile_source=source, label=dataset.label,
+                quantity=dataset.quantity, unit=dataset.unit, stacking_order=0, display_order=0,
             )
 
     def setUp(self):
@@ -176,7 +178,7 @@ class SyntheticResultsTests(TestCase):
         )
 
     def test_normalises_legacy_values_and_deduplicates_raster_confidence_rows(self):
-        source = Dataset.objects.get(pk="fluvial").tile_source
+        source = RasterLayer.objects.get(pk="fluvial").tile_source
         source.keys = ["type", "rp", "rcp", "epoch", "confidence"]
         source.save(update_fields=["keys"])
         self.source_options.side_effect = lambda *args, **kwargs: [
@@ -498,6 +500,8 @@ class SyntheticResultsTests(TestCase):
     def test_seeded_results_work_with_discovery_lookup_sorting_and_protected_features(
         self,
     ):
+        dataset = Dataset.objects.create(id="infrastructure", label="Infrastructure", group="infrastructure")
+        FeatureLayer.objects.filter(pk__in=["roads", "power"]).update(dataset=dataset)
         self.seed()
         client = APIClient()
         client.force_authenticate(

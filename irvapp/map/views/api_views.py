@@ -17,7 +17,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from map.model_parameters import canonical_parameter_key
-from map.permissions import inaccessible_hazard_ids
+from map.permissions import accessible_feature_layers, inaccessible_hazard_ids
 from map.serializers import (
     SortedFeatureSerializer,
     ProtectedFeatureSerializer,
@@ -215,6 +215,7 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
             )
 
         base_filters = self._layer_filters(request)
+        base_filters["feature__layer__in"] = accessible_feature_layers(request.user)
         restricted_hazards = inaccessible_hazard_ids(request.user)
 
         try:
@@ -346,6 +347,7 @@ class ProtectedFeaturesView(APIView):
 
         query = AdaptationCostBenefit.objects.filter(
             protector_feature_id=protector_id,
+            feature__layer__in=accessible_feature_layers(request.user),
             hazard__isnull=False,
             **parameter_filter("adaptation", parameter_validation),
         ).exclude(hazard__in=inaccessible_hazard_ids(request.user)).select_related("feature", "feature__layer", "parameter_set").prefetch_related(
@@ -499,6 +501,7 @@ class AttributeLookupView(FieldGroupQueryParsingMixin, APIView):
 
         base_feature_ids = Feature.objects.filter(
             layer_id=layer,
+            layer__in=accessible_feature_layers(request.user),
             id__in=ids,
         ).values_list("id", flat=True)
 

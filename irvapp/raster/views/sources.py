@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from map.models import Dataset
+from map.models import RasterLayer
 from map.permissions import HasDatasetAccess
 
 from ..internal.helpers import handle_exception
@@ -77,13 +77,11 @@ class RasterTileSourceDomainsView(APIView):
     )
     def get(self, request, dataset_id):
         try:
-            dataset = Dataset.objects.select_related("tile_source").get(
+            layer = RasterLayer.objects.select_related("tile_source", "dataset").get(
                 pk=dataset_id
             )
-            self.check_object_permissions(request, dataset)
-            source = dataset.tile_source
-            if source is None:
-                raise RasterTileSource.DoesNotExist
+            self.check_object_permissions(request, layer)
+            source = layer.tile_source
             filters = (
                 {"type": dataset_id} if "type" in source.keys else None
             )
@@ -92,7 +90,7 @@ class RasterTileSourceDomainsView(APIView):
                 {"domains": domains}
             )
             return Response(serializer.data)
-        except (Dataset.DoesNotExist, RasterTileSource.DoesNotExist):
+        except RasterLayer.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         except PermissionDenied:
             raise

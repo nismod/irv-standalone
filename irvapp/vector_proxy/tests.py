@@ -51,8 +51,6 @@ class VectorTileProxyViewTests(TestCase):
                 group="vector",
                 quantity="features",
                 unit="n/a",
-                stacking_order=1,
-                display_order=1,
             )
             dataset.access_groups.add(self.access_group)
 
@@ -74,8 +72,6 @@ class VectorTileProxyViewTests(TestCase):
             group="vector",
             quantity="features",
             unit="n/a",
-            stacking_order=1,
-            display_order=1,
         ).access_groups.add(restricted_group)
 
         response = self.client.get(

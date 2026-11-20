@@ -3,7 +3,7 @@ import { createElement } from 'react';
 import { rasterTileLayer } from 'lib/deck/layers/raster-tile-layer';
 import { ViewLayer } from 'lib/data-map/view-layers';
 import { RasterTarget } from 'lib/data-map/types';
-import { type Dataset } from 'lib/api-client';
+import { type RasterLayer } from 'lib/api-client';
 
 import { HazardLegend } from './HazardLegend';
 import { HazardHoverDescription } from './HazardHoverDescription';
@@ -25,7 +25,7 @@ export function hazardViewLayer(
   hazardType: string,
   hazardParams: HazardParams,
   sourceMetadata: HazardSourceMetadata,
-  dataset?: Dataset,
+  dataset?: RasterLayer,
 ): ViewLayer {
   const magFilter = ['cyclone', 'storm'].includes(hazardType) ? 'nearest' : 'linear';
   const deckId = getHazardId(hazardType, hazardParams);

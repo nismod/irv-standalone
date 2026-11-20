@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 from django.conf import settings
 from django.http import HttpResponse
 from drf_spectacular.utils import OpenApiResponse, extend_schema
-from map.models import Dataset
+from map.models import Dataset, FeatureLayer
 from map.permissions import HasDatasetAccess
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
@@ -132,6 +132,13 @@ class VectorTileProxyView(APIView):
 
     def _check_vector_data_access(self, request, dataset_id):
         if dataset_id is None:
+            return
+
+        layer = FeatureLayer.objects.select_related("dataset").prefetch_related(
+            "dataset__access_groups"
+        ).filter(pk=dataset_id).first()
+        if layer is not None:
+            self.check_object_permissions(request, layer)
             return
 
         dataset = (

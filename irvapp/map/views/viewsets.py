@@ -16,6 +16,8 @@ from map.serializers import (
     DamagesRpSerializer,
     DatasetSerializer,
     NetworkLayerStyleSerializer,
+    RasterLayerSerializer,
+    FeatureLayerSerializer,
     with_model_parameters,
 )
 from map.models import (
@@ -26,8 +28,10 @@ from map.models import (
     DamagesNpv,
     Dataset,
     NetworkLayerStyle,
+    RasterLayer,
+    FeatureLayer,
 )
-from map.permissions import HasDatasetAccess
+from map.permissions import HasDatasetAccess, accessible_feature_layers, inaccessible_hazard_ids
 
 
 class FeatureViewset(viewsets.ReadOnlyModelViewSet):
@@ -36,13 +40,14 @@ class FeatureViewset(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        queryset = super().get_queryset().filter(layer__in=accessible_feature_layers(self.request.user))
         if self.action == "retrieve":
+            restricted = inaccessible_hazard_ids(self.request.user)
             return queryset.prefetch_related(
-                Prefetch("adaptationcostbenefit_set", queryset=with_model_parameters(AdaptationCostBenefit.objects.all())),
-                Prefetch("damagesexpected_set", queryset=with_model_parameters(DamagesExpected.objects.all())),
-                Prefetch("damagesrp_set", queryset=with_model_parameters(DamagesRp.objects.all())),
-                Prefetch("damagesnpv_set", queryset=with_model_parameters(DamagesNpv.objects.all())),
+                Prefetch("adaptationcostbenefit_set", queryset=with_model_parameters(AdaptationCostBenefit.objects.exclude(hazard__in=restricted))),
+                Prefetch("damagesexpected_set", queryset=with_model_parameters(DamagesExpected.objects.exclude(hazard__in=restricted))),
+                Prefetch("damagesrp_set", queryset=with_model_parameters(DamagesRp.objects.exclude(hazard__in=restricted))),
+                Prefetch("damagesnpv_set", queryset=with_model_parameters(DamagesNpv.objects.exclude(hazard__in=restricted))),
             )
         return queryset
 
@@ -59,7 +64,9 @@ class AdaptationCostBenefitViewset(viewsets.ReadOnlyModelViewSet):
     lookup_field = "id"
 
     def get_queryset(self):
-        return with_model_parameters(super().get_queryset())
+        return with_model_parameters(super().get_queryset().filter(
+            feature__layer__in=accessible_feature_layers(self.request.user)
+        ).exclude(hazard__in=inaccessible_hazard_ids(self.request.user)))
 
 
 class DamagesExpectedViewset(viewsets.ReadOnlyModelViewSet):
@@ -69,7 +76,9 @@ class DamagesExpectedViewset(viewsets.ReadOnlyModelViewSet):
     lookup_field = "id"
 
     def get_queryset(self):
-        return with_model_parameters(super().get_queryset())
+        return with_model_parameters(super().get_queryset().filter(
+            feature__layer__in=accessible_feature_layers(self.request.user)
+        ).exclude(hazard__in=inaccessible_hazard_ids(self.request.user)))
 
 
 class DamagesRpViewset(viewsets.ReadOnlyModelViewSet):
@@ -79,7 +88,9 @@ class DamagesRpViewset(viewsets.ReadOnlyModelViewSet):
     lookup_field = "id"
 
     def get_queryset(self):
-        return with_model_parameters(super().get_queryset())
+        return with_model_parameters(super().get_queryset().filter(
+            feature__layer__in=accessible_feature_layers(self.request.user)
+        ).exclude(hazard__in=inaccessible_hazard_ids(self.request.user)))
 
 
 class DatasetViewset(viewsets.ReadOnlyModelViewSet):
@@ -122,6 +133,30 @@ class DatasetViewset(viewsets.ReadOnlyModelViewSet):
         if group:
             queryset = queryset.filter(group__iexact=group)
         return queryset
+
+
+class FeatureLayerViewset(viewsets.ReadOnlyModelViewSet):
+    queryset = FeatureLayer.objects.all()
+    serializer_class = FeatureLayerSerializer
+    permission_classes = [IsAuthenticated, HasDatasetAccess]
+
+    def get_queryset(self):
+        return FeatureLayer.objects.select_related("dataset").prefetch_related("dataset__access_groups").order_by("layer_name")
+
+
+class RasterLayerViewset(viewsets.ReadOnlyModelViewSet):
+    queryset = RasterLayer.objects.all()
+    serializer_class = RasterLayerSerializer
+    permission_classes = [IsAuthenticated, HasDatasetAccess]
+
+    @extend_schema(parameters=[OpenApiParameter("group", str, OpenApiParameter.QUERY, required=False)])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    def get_queryset(self):
+        queryset = RasterLayer.objects.select_related("dataset").prefetch_related("dataset__access_groups")
+        group = self.request.query_params.get("group")
+        return queryset.filter(dataset__group__iexact=group) if group else queryset
 
 
 class NetworkLayerStyleViewset(viewsets.ReadOnlyModelViewSet):
