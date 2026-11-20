@@ -108,6 +108,8 @@ class DatasetSerializer(serializers.ModelSerializer):
 
 
 class FeatureLayerSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(source="pk", read_only=True)
+    layer_name = serializers.CharField(source="pk", read_only=True)
     has_access = serializers.SerializerMethodField()
 
     @extend_schema_field(serializers.BooleanField())
@@ -120,11 +122,12 @@ class FeatureLayerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FeatureLayer
-        fields = ["layer_name", "dataset", "sector", "subsector", "asset_type",
+        fields = ["id", "layer_name", "dataset", "sector", "subsector", "asset_type",
                   "stacking_order", "display_order", "has_access"]
 
 
 class RasterLayerSerializer(serializers.ModelSerializer):
+    id = serializers.CharField(source="pk", read_only=True)
     has_access = serializers.SerializerMethodField()
     group = serializers.CharField(source="dataset.group", read_only=True)
     color_range = serializers.ListField(child=serializers.FloatField(), allow_null=True, required=False)

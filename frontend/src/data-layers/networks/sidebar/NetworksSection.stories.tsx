@@ -272,7 +272,7 @@ const meta = {
         http.get('/api/map/feature-layers', () => HttpResponse.json({
           ...networksResponse,
           results: networksResponse.results.map((dataset, index) => ({
-            layer_name: dataset.id, dataset: dataset.id, sector: '', subsector: '', asset_type: '',
+            id: dataset.id, layer_name: dataset.id, dataset: dataset.id, sector: '', subsector: '', asset_type: '',
             stacking_order: index, display_order: index, has_access: dataset.has_access,
           })),
         })),

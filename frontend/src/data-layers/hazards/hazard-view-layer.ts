@@ -32,6 +32,7 @@ export function hazardViewLayer(
 
   return {
     id: hazardType,
+    stackingOrder: dataset?.stacking_order,
     group: 'hazards',
     spatialType: 'raster',
     interactionGroup: 'hazards',

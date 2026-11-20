@@ -26,7 +26,7 @@ export function getHazardColorSpec(dataset?: RasterLayer | null) {
   };
 }
 
-export async function fetchHazardsMetadata() {
+export async function fetchRasterLayersMetadata(group?: string) {
   try {
     const layers: RasterLayer[] = [];
     const limit = 100;
@@ -34,7 +34,7 @@ export async function fetchHazardsMetadata() {
       const { data, error } = await mapRasterLayersList({
         baseUrl: '/api',
         credentials: 'include',
-        query: { group: 'hazards', limit, offset: layers.length },
+        query: { ...(group ? { group } : {}), limit, offset: layers.length },
       });
       if (error || !data) throw error ?? new Error('Missing raster layer metadata');
       layers.push(...data.results);
@@ -46,6 +46,17 @@ export async function fetchHazardsMetadata() {
     return [];
   }
 }
+
+export function fetchHazardsMetadata() {
+  return fetchRasterLayersMetadata('hazards');
+}
+
+const rasterLayersMetadataQuery = atom(async () => {
+  const layers = await fetchRasterLayersMetadata();
+  return Object.fromEntries(layers.map((layer) => [layer.id, layer]));
+});
+
+export const rasterLayersMetadataState = unwrap(rasterLayersMetadataQuery, (prev) => prev ?? {});
 
 const hazardsMetadataQuery = atom(async () => {
   const metadata: Record<string, RasterLayer> = {};

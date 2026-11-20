@@ -142,7 +142,8 @@ export type FeatureDetail = {
 };
 
 export type FeatureLayer = {
-    layer_name: string;
+    readonly id: string;
+    readonly layer_name: string;
     dataset?: string | null;
     sector: string;
     subsector: string;
@@ -338,7 +339,7 @@ export type ProtectedFeature = {
 };
 
 export type RasterLayer = {
-    id: string;
+    readonly id: string;
     dataset: string;
     label: string;
     readonly group: string;
@@ -482,7 +483,6 @@ export type FeatureDetailWritable = {
 };
 
 export type FeatureLayerWritable = {
-    layer_name: string;
     dataset?: string | null;
     sector: string;
     subsector: string;
@@ -582,7 +582,6 @@ export type PaginatedRasterLayerListWritable = {
 };
 
 export type RasterLayerWritable = {
-    id: string;
     dataset: string;
     label: string;
     quantity: string;
@@ -1012,9 +1011,6 @@ export type MapFeatureLayersListResponse = MapFeatureLayersListResponses[keyof M
 export type MapFeatureLayersRetrieveData = {
     body?: never;
     path: {
-        /**
-         * A unique value identifying this feature layer.
-         */
         layer_name: string;
     };
     query?: never;
@@ -1264,9 +1260,6 @@ export type MapRasterLayersListResponse = MapRasterLayersListResponses[keyof Map
 export type MapRasterLayersRetrieveData = {
     body?: never;
     path: {
-        /**
-         * A unique value identifying this raster layer.
-         */
         id: string;
     };
     query?: never;

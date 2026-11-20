@@ -10,6 +10,7 @@ from .models import (
     Dataset,
     NetworkLayerStyle,
     RasterLayer,
+    LayerIdentity,
 )
 
 
@@ -35,8 +36,8 @@ class FeatureLayerAdmin(admin.ModelAdmin):
         "stacking_order",
         "display_order",
     ]
-    autocomplete_fields = ["dataset"]
-    search_fields = ["layer_name"]
+    autocomplete_fields = ["dataset", "identity"]
+    search_fields = ["identity__id"]
 
 
 @admin.register(Dataset)
@@ -54,8 +55,14 @@ class DatasetAdmin(admin.ModelAdmin):
 @admin.register(RasterLayer)
 class RasterLayerAdmin(admin.ModelAdmin):
     list_display = ["id", "label", "dataset", "tile_source"]
-    autocomplete_fields = ["dataset", "tile_source"]
-    search_fields = ["id", "label"]
+    autocomplete_fields = ["dataset", "tile_source", "identity"]
+    search_fields = ["identity__id", "label"]
+
+
+@admin.register(LayerIdentity)
+class LayerIdentityAdmin(admin.ModelAdmin):
+    list_display = ["id", "kind"]
+    search_fields = ["id"]
 
 
 @admin.register(NetworkLayerStyle)

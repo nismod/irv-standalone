@@ -261,7 +261,7 @@ class Command(BaseCommand):
         datasets = (
             RasterLayer.objects.filter(dataset__group__iexact="hazards")
             .select_related("tile_source")
-            .order_by("id")
+            .order_by("pk")
         )
         if config["hazard"]:
             datasets = datasets.filter(pk__in=config["hazard"])

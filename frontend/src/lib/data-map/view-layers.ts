@@ -55,6 +55,7 @@ export type ViewLayerDataFormatFunction = (fieldSpec: FieldSpec, metadata?: Laye
 
 export interface ViewLayer {
   id: string;
+  stackingOrder?: number;
   params?: unknown;
   styleParams?: StyleParams;
   group: string;

@@ -28,7 +28,7 @@ import {
   networkTreeCheckboxState,
   networkTreeConfigState,
 } from './data-selection';
-import { networksMetadataState } from './metadata';
+import { networkFeatureLayersMetadataState, networksMetadataState } from './metadata';
 import { type AdaptationOptionParams } from 'app/config/sidebar/NETWORK_DOMAINS';
 import { getInfrastructureViewLayers } from '../view-layers';
 import { getLeafNodeIdsForLayerIds, resolveAssetLayerIds } from '../layer-registry';
@@ -43,11 +43,13 @@ export const networksLayerState = atom<ViewLayer[]>((get) => {
   }
 
   const infrastructureViewLayers = get(infrastructureViewLayersState);
+  const layerMetadata = get(networkFeatureLayersMetadataState);
   return get(selectedNetworkLayerIdsState).flatMap((layerId) => {
     const baseLayer = infrastructureViewLayers[layerId];
     if (!baseLayer) return [];
     return {
       ...baseLayer,
+      stackingOrder: layerMetadata[layerId]?.stacking_order,
       styleParams: get(networkStyleParamsState(layerId)),
     };
   });

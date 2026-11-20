@@ -180,6 +180,19 @@ the signed-in user can access. Unlinked layers are excluded. Inaccessible
 feature and result detail URLs return 404, and aggregate lookups exclude their
 data.
 
+Feature and raster layers share a single ID namespace. Migration 0031 stops
+and reports any IDs already used by both types so they can be resolved before
+retrying. The database enforces uniqueness for later writes. Stacking order is
+shared across both types when drawing the map; equal values retain their
+existing relative order. Display order uses the same values while the current
+sidebar sections and feature-tree hierarchy remain separate.
+
+Each feature or raster layer has a one-to-one identity as its primary key.
+Normal Django saves create the identity when needed; direct database inserts
+must create a matching `layer_identities` row first. Deleting a layer leaves its
+identity available for review or explicit deletion. The existing ETL does not
+yet create identity records for new feature layers.
+
 #### Raster layers and datasets
 
 A dataset controls access for its raster layers through its access groups. Each
