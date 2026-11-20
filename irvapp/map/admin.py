@@ -78,5 +78,5 @@ class MapConfigAdmin(admin.ModelAdmin):
 
 @admin.register(InfrastructureNode)
 class InfrastructureNodeAdmin(TreeAdmin):
-    list_display = [*TreeAdmin.list_display, "node_name"]
+    list_display = [*TreeAdmin.list_display, "node_name", "feature_layer"]
     position_field = "position"  # Enables sibling ordering controls

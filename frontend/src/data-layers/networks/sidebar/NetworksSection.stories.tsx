@@ -134,12 +134,14 @@ const mockInfrastructureTree = {
           children: [
             {
               node_id: 'elec_edges_high',
+              feature_layer: 'elec_edges_high',
               node_name: 'High voltage',
               parent: 'power-lines',
               children: [],
             },
             {
               node_id: 'elec_edges_low',
+              feature_layer: 'elec_edges_low',
               node_name: 'Low voltage',
               parent: 'power-lines',
               children: [],
@@ -165,12 +167,14 @@ const mockInfrastructureTree = {
               children: [
                 {
                   node_id: 'road_edges_class_a',
+                  feature_layer: 'road_edges_class_a',
                   node_name: 'Class A',
                   parent: 'roads',
                   children: [],
                 },
                 {
                   node_id: 'road_edges_motorway',
+                  feature_layer: 'road_edges_motorway',
                   node_name: 'Toll',
                   parent: 'roads',
                   children: [],
@@ -188,6 +192,7 @@ const mockInfrastructureTree = {
       children: [
         {
           node_id: 'buildings_resort',
+          feature_layer: 'buildings_resort',
           node_name: 'Resort',
           parent: 'buildings',
           children: [],

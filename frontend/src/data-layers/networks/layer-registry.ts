@@ -11,12 +11,6 @@ export interface AssetLayerRegistryEntry extends Required<AssetLayerSelector> {
   layer_name: string;
 }
 
-interface InfrastructureNodeLike {
-  node_id: string;
-  layer_name?: string;
-  render_layer_id?: string;
-}
-
 export const assetLayerDefinitions = assetLayerRegistry as AssetLayerRegistryEntry[];
 
 export function resolveAssetLayerIds(selector: AssetLayerSelector) {
@@ -32,10 +26,6 @@ export function resolveAssetLayerIds(selector: AssetLayerSelector) {
 
 export function getAssetLayerDefinition(layerId: string) {
   return assetLayerDefinitions.find((definition) => definition.layer_name.trim() === layerId);
-}
-
-export function resolveInfrastructureNodeLayerId(node: InfrastructureNodeLike) {
-  return (node.render_layer_id ?? node.layer_name ?? node.node_id).trim();
 }
 
 export function getLeafNodeIdsForLayerIds<T extends { layerId?: string }>(

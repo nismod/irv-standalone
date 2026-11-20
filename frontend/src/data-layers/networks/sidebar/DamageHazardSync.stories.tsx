@@ -67,7 +67,7 @@ const handlers = [
       count: 1,
       next: null,
       previous: null,
-      results: [{ node_id: assetLayer, node_name: 'Class A roads', parent: null, children: [] }],
+      results: [{ node_id: assetLayer, feature_layer: assetLayer, node_name: 'Class A roads', parent: null, children: [] }],
     }),
   ),
   http.get('/api/map/network-layer-styles', () =>

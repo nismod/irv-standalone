@@ -1,4 +1,5 @@
 from django.contrib.gis.db import models
+from django.core.exceptions import ValidationError
 from tree_queries.models import OrderableTreeNode, TreeQuerySet
 
 
@@ -21,6 +22,10 @@ class MapConfig(models.Model):
 class InfrastructureNode(OrderableTreeNode):
     node_id = models.CharField(primary_key=True)
     node_name = models.CharField()
+    feature_layer = models.OneToOneField(
+        "FeatureLayer", on_delete=models.PROTECT, null=True, blank=True,
+        related_name="infrastructure_node",
+    )
     objects = TreeQuerySet.as_manager(with_tree_fields=True)
 
     class Meta(OrderableTreeNode.Meta):
@@ -28,6 +33,13 @@ class InfrastructureNode(OrderableTreeNode):
 
     def __str__(self):
         return self.node_id
+
+    def clean(self):
+        super().clean()
+        if self.feature_layer_id and self.pk and self.children.exists():
+            raise ValidationError({"feature_layer": "Only leaf nodes can have a feature layer."})
+        if self.parent_id and self.parent.feature_layer_id:
+            raise ValidationError({"parent": "A node with a feature layer cannot have children."})
 
 
 class FeatureLayer(models.Model):

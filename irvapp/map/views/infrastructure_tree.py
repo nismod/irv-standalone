@@ -17,7 +17,7 @@ class InfrastructureNodeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = InfrastructureNode
-        fields = ['node_id', 'node_name', 'parent', 'children']
+        fields = ['node_id', 'node_name', 'parent', 'feature_layer', 'children']
 
 
 class InfrastructureNodeViewSet(viewsets.ReadOnlyModelViewSet):

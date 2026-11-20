@@ -152,6 +152,7 @@ export type InfrastructureNode = {
     node_id: string;
     node_name: string;
     parent?: string | null;
+    feature_layer?: string | null;
     readonly children: Array<InfrastructureNode>;
 };
 
@@ -457,6 +458,7 @@ export type InfrastructureNodeWritable = {
     node_id: string;
     node_name: string;
     parent?: string | null;
+    feature_layer?: string | null;
 };
 
 export type LoginRequestWritable = {
