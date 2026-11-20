@@ -14,8 +14,10 @@ from .risk import (
     ModelParameter,
     ModelParameterSet,
 )
+from .synthetic import SyntheticDataRun
 
 __all__ = [
+    "SyntheticDataRun",
     "AdaptationCostBenefit",
     "DamagesExpected",
     "DamagesNpv",

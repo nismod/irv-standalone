@@ -190,6 +190,70 @@ PGDATABASE=jamaicadev \
 pg_restore -cC -j 8 -d jamaicadev ./archive/jamaicadev_2023-05-16.dump
 ```
 
+##### Synthetic development results
+
+Once feature geometries and hazard rasters have been imported, the optional
+`seed_synthetic_results` command creates **synthetic UI fixtures**, not risk
+estimates. It samples existing features and reads complete climate scenarios
+from each hazard's raster catalogue. Return period and confidence are excluded
+from the model parameters; return-period damage rows use only periods actually
+available for that scenario. No raster files or vector tiles are changed.
+
+Apply migrations, then preview a small run:
+
+```bash
+docker compose -f docker-compose.dev.yml exec django python manage.py migrate
+docker compose -f docker-compose.dev.yml exec django python manage.py seed_synthetic_results --layer road_edges_class_a --layer elec_edges_high --hazard fluvial --hazard pluvial --dry-run
+```
+
+Remove `--dry-run` to generate the results. By default the command samples up to
+25 positive-ID features per layer using `--seed 42`. Repeat `--layer` or
+`--hazard` to choose a scope, or omit them to use all feature layers and hazard
+rasters. `--limit-per-layer` changes the sample size. The seed determines both
+the sample and the values, independently of Python's process hash seed.
+
+For every feature in the selected layers, use `--all-features` instead of
+`--limit-per-layer`. This uses database-side generation and compact ownership
+intervals to handle full networks without keeping every result ID in memory.
+Each coverage mode is reproducible with the same seed and options.
+
+To discard **all existing damage and adaptation results** before generation,
+add `--replace`. This empties all four result tables and their synthetic run
+records, including results outside the selected layers/hazards. It preserves
+feature records and raster/dataset configuration. Preview with `--dry-run` first.
+Replacement and generation run in one transaction: a failure restores the old
+results. Large replacements hold locks on result tables until they commit.
+
+The command creates expected annual damage at protection standards 0 and 100,
+return-period damage, NPV fixtures (15 times annual values), and three visibly
+named synthetic adaptation options with positive costs. Larger samples include
+zero and missing values. The first sampled feature in each layer acts as a
+synthetic protector, including a self-protection result; the output lists its
+ID. Full-network runs use one default protector per 100 features to keep
+protected-feature responses manageable. Alternatively, repeat `--protector-id`
+to use specified existing features.
+Select a protector feature and switch to Protected Features to inspect its links.
+
+Runs are named (`--name development` by default). Repeating the same ordinary
+run is a no-op; `--replace` always regenerates. Without `--replace`, existing
+result keys are skipped, never overwritten. New result IDs (or their exact
+ownership intervals) are recorded transactionally in `synthetic_data_runs`, so
+cleanup removes only that run's rows and any parameter sets it created that are
+still unreferenced:
+
+```bash
+docker compose -f docker-compose.dev.yml exec django python manage.py seed_synthetic_results --name development --clear --dry-run
+docker compose -f docker-compose.dev.yml exec django python manage.py seed_synthetic_results --name development --clear
+```
+
+Writes and cleanup require `DEBUG=True`; dry runs are read-only. The command
+does not change dataset permissions. Different raster schemas (for example,
+river GWL versus coastal SLR) can have no shared “All Hazards” scenario; select
+an individual hazard in that case. Legacy RCP/year map values embedded in vector
+tiles are not replaced by this command, whereas bulk-API GWL/SLR values use the
+generated rows. Feature geometry, tile feature IDs, and the selected country
+must already agree for map values and asset-list locations to agree.
+
 ### Run the frontend app in development mode
 
 Start the app server (from the `frontend`  directory):
