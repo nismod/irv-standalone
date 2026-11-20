@@ -62,7 +62,7 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
     def _layer_filters(self, request):
         filters = {}
         query_fields = {
-            "layer": "feature__layer__layer_name",
+            "layer": "feature__layer_id",
             "sector": "feature__layer__sector",
             "subsector": "feature__layer__subsector",
             "asset_type": "feature__layer__asset_type",
@@ -78,7 +78,7 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
             {
                 "id": row["feature_id"],
                 "string_id": row["feature__string_id"],
-                "layer": row["feature__layer__layer_name"],
+                "layer": row["feature__layer_id"],
                 "bbox_wkt": row["bbox_wkt"],
                 "value": row["value"],
             }
@@ -233,7 +233,7 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
                     query = query.values(
                         "feature_id",
                         "feature__string_id",
-                        "feature__layer__layer_name",
+                        "feature__layer_id",
                         "bbox_wkt",
                     ).annotate(value=Sum(field))
             elif field_group == "adaptation":
@@ -282,7 +282,7 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
             query = query.values(
                 "feature_id",
                 "feature__string_id",
-                "feature__layer__layer_name",
+                "feature__layer_id",
                 "bbox_wkt",
                 "value",
             )
@@ -290,7 +290,7 @@ class SortedFeaturesView(FieldGroupQueryParsingMixin, APIView):
             query = query.values(
                 "feature_id",
                 "feature__string_id",
-                "feature__layer__layer_name",
+                "feature__layer_id",
                 "bbox_wkt",
                 "value",
             )

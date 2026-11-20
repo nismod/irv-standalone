@@ -10,6 +10,7 @@ from .models import (
     Dataset,
     NetworkLayerStyle,
     RasterLayer,
+    LayerIdentity,
 )
 
 
@@ -35,8 +36,8 @@ class FeatureLayerAdmin(admin.ModelAdmin):
         "stacking_order",
         "display_order",
     ]
-    autocomplete_fields = ["dataset"]
-    search_fields = ["layer_name"]
+    autocomplete_fields = ["dataset", "identity"]
+    search_fields = ["identity__id"]
 
 
 @admin.register(Dataset)
@@ -54,8 +55,37 @@ class DatasetAdmin(admin.ModelAdmin):
 @admin.register(RasterLayer)
 class RasterLayerAdmin(admin.ModelAdmin):
     list_display = ["id", "label", "dataset", "tile_source"]
-    autocomplete_fields = ["dataset", "tile_source"]
-    search_fields = ["id", "label"]
+    autocomplete_fields = ["dataset", "tile_source", "identity"]
+    search_fields = ["identity__id", "label"]
+
+
+class LayerIdentityForm(forms.ModelForm):
+    class Meta:
+        model = LayerIdentity
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        identity = self.instance
+        if identity.pk and (FeatureLayer.objects.filter(pk=identity.pk).exists() or
+                            RasterLayer.objects.filter(pk=identity.pk).exists()):
+            kind_field = self.fields.get("kind")
+            if kind_field is not None:
+                kind_field.disabled = True
+
+    def clean_kind(self):
+        kind = self.cleaned_data["kind"]
+        if (self.fields["kind"].disabled and "kind" in self.data and
+                self.data["kind"] != kind):
+            raise forms.ValidationError("Cannot change the type while a layer is attached.")
+        return kind
+
+
+@admin.register(LayerIdentity)
+class LayerIdentityAdmin(admin.ModelAdmin):
+    form = LayerIdentityForm
+    list_display = ["id", "kind"]
+    search_fields = ["id"]
 
 
 @admin.register(NetworkLayerStyle)

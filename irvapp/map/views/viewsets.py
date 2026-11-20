@@ -139,22 +139,32 @@ class FeatureLayerViewset(viewsets.ReadOnlyModelViewSet):
     queryset = FeatureLayer.objects.all()
     serializer_class = FeatureLayerSerializer
     permission_classes = [IsAuthenticated, HasDatasetAccess]
+    lookup_url_kwarg = "layer_name"
+
+    @extend_schema(parameters=[OpenApiParameter("layer_name", str, OpenApiParameter.PATH)])
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
     def get_queryset(self):
-        return FeatureLayer.objects.select_related("dataset").prefetch_related("dataset__access_groups").order_by("layer_name")
+        return FeatureLayer.objects.select_related("dataset").prefetch_related("dataset__access_groups").order_by("pk")
 
 
 class RasterLayerViewset(viewsets.ReadOnlyModelViewSet):
     queryset = RasterLayer.objects.all()
     serializer_class = RasterLayerSerializer
     permission_classes = [IsAuthenticated, HasDatasetAccess]
+    lookup_url_kwarg = "id"
+
+    @extend_schema(parameters=[OpenApiParameter("id", str, OpenApiParameter.PATH)])
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
     @extend_schema(parameters=[OpenApiParameter("group", str, OpenApiParameter.QUERY, required=False)])
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = RasterLayer.objects.select_related("dataset", "tile_source").prefetch_related("dataset__access_groups").order_by("id")
+        queryset = RasterLayer.objects.select_related("dataset", "tile_source").prefetch_related("dataset__access_groups").order_by("pk")
         group = self.request.query_params.get("group")
         return queryset.filter(dataset__group__iexact=group) if group else queryset
 

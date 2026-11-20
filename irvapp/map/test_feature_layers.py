@@ -31,6 +31,7 @@ class FeatureLayerTests(TestCase):
         response = self.client.get('/map/feature-layers')
         layers = {layer['layer_name']: layer for layer in response.json()['results']}
         self.assertTrue(layers['road_edges_motorway']['has_access'])
+        self.assertEqual(layers['road_edges_motorway']['id'], 'road_edges_motorway')
         self.assertTrue(layers['road_edges_class_a']['has_access'])
         self.assertFalse(layers['unlinked']['has_access'])
         self.assertEqual(layers['road_edges_motorway']['dataset'], 'roads')

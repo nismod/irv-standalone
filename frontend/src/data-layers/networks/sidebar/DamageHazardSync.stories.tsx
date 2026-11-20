@@ -63,7 +63,7 @@ const handlers = [
   datasetsHandler(),
   http.get('/api/map/feature-layers', () => HttpResponse.json({
     count: 1, next: null, previous: null,
-    results: [{ layer_name: assetLayer, dataset: assetLayer, sector: 'transport', subsector: 'road',
+    results: [{ id: assetLayer, layer_name: assetLayer, dataset: assetLayer, sector: 'transport', subsector: 'road',
       asset_type: 'CLASS A', stacking_order: 0, display_order: 0, has_access: true }],
   })),
   http.get('/api/map/infrastructure-tree', () =>

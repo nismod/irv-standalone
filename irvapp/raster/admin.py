@@ -6,7 +6,7 @@ from .models import RasterTileSource
 @admin.register(RasterTileSource)
 class RasterTileSourceAdmin(admin.ModelAdmin):
     list_display = ["id", "dataset_list", "keys", "database"]
-    search_fields = ["raster_layers__id", "raster_layers__label"]
+    search_fields = ["raster_layers__identity__id", "raster_layers__label"]
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related("raster_layers__dataset")

@@ -38,7 +38,7 @@ function handlers(hasAssetScenario: boolean) {
     ),
     http.get('/api/map/feature-layers', () => HttpResponse.json({
       count: 1, next: null, previous: null,
-      results: [{ layer_name: layerId, dataset: layerId, sector: '', subsector: '', asset_type: '',
+      results: [{ id: layerId, layer_name: layerId, dataset: layerId, sector: '', subsector: '', asset_type: '',
         stacking_order: 0, display_order: 0, has_access: true }],
     })),
     http.get('/api/map/datasets', ({ request }) => {
