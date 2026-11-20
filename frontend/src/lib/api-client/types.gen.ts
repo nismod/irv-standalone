@@ -116,8 +116,6 @@ export type Dataset = {
     id: string;
     label: string;
     group: string;
-    quantity: string;
-    unit: string;
     license?: string | null;
     readonly has_access: boolean;
 };
@@ -465,8 +463,6 @@ export type DatasetWritable = {
     id: string;
     label: string;
     group: string;
-    quantity: string;
-    unit: string;
     license?: string | null;
 };
 

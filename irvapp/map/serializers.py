@@ -102,8 +102,6 @@ class DatasetSerializer(serializers.ModelSerializer):
             "id",
             "label",
             "group",
-            "quantity",
-            "unit",
             "license",
             "has_access",
         ]

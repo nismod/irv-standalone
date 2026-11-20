@@ -50,8 +50,6 @@ function handlers(hasAssetScenario: boolean) {
               id: layerId,
               label: 'Coastal protection',
               group: 'networks',
-              quantity: 'features',
-              unit: 'n/a',
               tile_source: null,
               stacking_order: 1,
               display_order: 1,

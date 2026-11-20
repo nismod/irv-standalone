@@ -111,7 +111,7 @@ class ModelScenarioTests(TestCase):
 
     def test_hazard_permissions_apply_to_discovery_map_values_and_sorted_totals(self):
         dataset = Dataset.objects.create(
-            id="coastal", label="Coastal", group="hazards", quantity="depth", unit="m",
+            id="coastal", label="Coastal", group="hazards",
 
         )
         parameters = {"gwl": 2}
@@ -148,7 +148,7 @@ class ModelScenarioTests(TestCase):
 
     def test_adaptation_discovery_and_protected_features_exclude_restricted_hazards(self):
         Dataset.objects.create(
-            id="coastal", label="Coastal", group="hazards", quantity="depth", unit="m",
+            id="coastal", label="Coastal", group="hazards",
 
         )
         for hazard in ("coastal", "flood"):
@@ -214,7 +214,7 @@ class ModelScenarioTests(TestCase):
             "hazard_parameters": {"coastal": {"SLR": 20}, "fluvial": {"GWL": 2}},
         })
         Dataset.objects.create(
-            id="coastal", label="Coastal", group="hazards", quantity="depth", unit="m",
+            id="coastal", label="Coastal", group="hazards",
 
         )
         check(15)  # Explicit hazard selections must still respect permissions.

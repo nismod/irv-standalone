@@ -49,8 +49,6 @@ class VectorTileProxyViewTests(TestCase):
                 id=dataset_id,
                 label=dataset_id.replace("_", " ").title(),
                 group="vector",
-                quantity="features",
-                unit="n/a",
             )
             dataset.access_groups.add(self.access_group)
 
@@ -70,8 +68,6 @@ class VectorTileProxyViewTests(TestCase):
             id="restricted_roads",
             label="Restricted roads",
             group="vector",
-            quantity="features",
-            unit="n/a",
         ).access_groups.add(restricted_group)
 
         response = self.client.get(

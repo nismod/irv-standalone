@@ -62,12 +62,10 @@ class SyntheticResultsTests(TestCase):
                 id=hazard,
                 label=hazard.title(),
                 group="hazards",
-                quantity="depth",
-                unit="m",
             )
             RasterLayer.objects.create(
                 id=hazard, dataset=dataset, tile_source=source, label=dataset.label,
-                quantity=dataset.quantity, unit=dataset.unit, stacking_order=0, display_order=0,
+                quantity="depth", unit="m", stacking_order=0, display_order=0,
             )
 
     def setUp(self):

@@ -664,21 +664,17 @@ class DatasetRouteTests(TestCase):
                 id="flood_extent",
                 label="Flood extent",
                 group="hazards",
-                unit="n/a",
             ),
             Dataset.objects.create(
                 id="storm_track",
                 label="Storm track",
                 group="hazards",
-                quantity="wind speed",
-                unit="n/a",
                 license="CC-BY",
             ),
             Dataset.objects.create(
                 id="roads",
                 label="Road network",
                 group="networks",
-                unit="n/a",
             ),
         ]
         for dataset in datasets:
@@ -696,7 +692,8 @@ class DatasetRouteTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["license"], "CC-BY")
-        self.assertEqual(response.json()["quantity"], "wind speed")
+        self.assertNotIn("quantity", response.json())
+        self.assertNotIn("unit", response.json())
 
     def test_datasets_route_filters_by_group(self):
         response = self.client.get("/map/datasets", {"group": "hazards"})

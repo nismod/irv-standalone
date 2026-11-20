@@ -45,8 +45,6 @@ class DatasetAdmin(admin.ModelAdmin):
         "id",
         "label",
         "group",
-        "quantity",
-        "unit",
         "license",
     ]
     filter_horizontal = ["access_groups"]

@@ -19,7 +19,7 @@ class RasterLayerAccessTests(TestCase):
         self.client.force_authenticate(self.user)
         self.source = RasterTileSource.objects.create(keys=["region"], database="test.sqlite")
         self.dataset = Dataset.objects.create(
-            id="floods", label="Floods", group="hazards", quantity="", unit="",
+            id="floods", label="Floods", group="hazards",
 
         )
         self.dataset.access_groups.add(self.group)
@@ -29,7 +29,7 @@ class RasterLayerAccessTests(TestCase):
                 quantity="depth", unit="m", stacking_order=0, display_order=0,
             )
         restricted = Dataset.objects.create(
-            id="restricted", label="Restricted", group="hazards", quantity="", unit="",
+            id="restricted", label="Restricted", group="hazards",
 
         )
         RasterLayer.objects.create(
@@ -54,6 +54,34 @@ class RasterLayerAccessTests(TestCase):
 
 
 class RasterLayerMigrationTests(TransactionTestCase):
+    def test_quantity_and_unit_remain_on_raster_layers(self):
+        before = [('map', '0029_remove_dataset_display_order_and_more'),
+                  ('raster', '0010_rastertilesource_path_template')]
+        after = [('map', '0030_remove_dataset_quantity_unit'),
+                 ('raster', '0010_rastertilesource_path_template')]
+        executor = MigrationExecutor(connection)
+        executor.migrate(before)
+        apps = executor.loader.project_state(before).apps
+        Dataset = apps.get_model('map', 'Dataset')
+        Layer = apps.get_model('map', 'RasterLayer')
+        Source = apps.get_model('raster', 'RasterTileSource')
+        source = Source.objects.create(keys=['type'])
+        dataset = Dataset.objects.create(id='rain', label='Rain', group='hazards', quantity='old', unit='old')
+        Layer.objects.create(id='rain', dataset=dataset, tile_source=source, label='Rain', quantity='depth', unit='m', stacking_order=0, display_order=0)
+        try:
+            executor = MigrationExecutor(connection)
+            executor.migrate(after)
+            apps = executor.loader.project_state(after).apps
+            layer = apps.get_model('map', 'RasterLayer').objects.get(pk='rain')
+            self.assertEqual((layer.quantity, layer.unit), ('depth', 'm'))
+            executor = MigrationExecutor(connection)
+            executor.migrate(before)
+            restored = executor.loader.project_state(before).apps.get_model('map', 'Dataset').objects.get(pk='rain')
+            self.assertEqual((restored.quantity, restored.unit), ('depth', 'm'))
+        finally:
+            executor = MigrationExecutor(connection)
+            executor.migrate(executor.loader.graph.leaf_nodes())
+
     def test_existing_datasets_and_shared_source_are_preserved(self):
         executor = MigrationExecutor(connection)
         old_target = [('map', '0026_infrastructure_node_feature_layer'),

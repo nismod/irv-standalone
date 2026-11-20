@@ -99,8 +99,6 @@ class Dataset(models.Model):
     id = models.CharField(primary_key=True)
     label = models.CharField()
     group = models.CharField()
-    quantity = models.CharField()
-    unit = models.CharField()
     license = models.CharField(max_length=255, blank=True, null=True)
     access_groups = models.ManyToManyField(
         "auth.Group",

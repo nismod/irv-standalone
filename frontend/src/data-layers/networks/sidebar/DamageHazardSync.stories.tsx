@@ -50,8 +50,6 @@ const datasetsHandler = (availableHazards = hazards) =>
               id: assetLayer,
               label: 'Class A roads',
               group: 'networks',
-              quantity: 'features',
-              unit: 'n/a',
               tile_source: null,
               stacking_order: 0,
               display_order: 0,
