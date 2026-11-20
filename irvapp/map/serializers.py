@@ -2,7 +2,7 @@ from drf_spectacular.utils import extend_schema_field
 from django.db.models import Prefetch
 from rest_framework import serializers
 
-from .permissions import user_has_dataset_access
+from .permissions import inaccessible_raster_databases, raster_source_accessible, user_has_dataset_access
 from .model_parameters import canonical_parameter_key
 from .models import (
     AdaptationCostBenefit,
@@ -13,6 +13,8 @@ from .models import (
     Feature,
     NetworkLayerStyle,
     ModelParameter,
+    RasterLayer,
+    FeatureLayer,
 )
 
 
@@ -80,11 +82,6 @@ class DamagesNpvSerializer(serializers.ModelSerializer):
 
 class DatasetSerializer(serializers.ModelSerializer):
     has_access = serializers.SerializerMethodField()
-    color_range = serializers.ListField(
-        child=serializers.FloatField(),
-        allow_null=True,
-        required=False,
-    )
 
     @extend_schema_field(serializers.BooleanField())
     def get_has_access(self, dataset):
@@ -105,16 +102,48 @@ class DatasetSerializer(serializers.ModelSerializer):
             "id",
             "label",
             "group",
-            "quantity",
-            "unit",
             "license",
-            "color_scheme",
-            "color_range",
-            "tile_source",
-            "stacking_order",
-            "display_order",
             "has_access",
         ]
+
+
+class FeatureLayerSerializer(serializers.ModelSerializer):
+    has_access = serializers.SerializerMethodField()
+
+    @extend_schema_field(serializers.BooleanField())
+    def get_has_access(self, layer):
+        if layer.dataset_id is None:
+            return False
+        if not hasattr(self, "_user_group_ids"):
+            self._user_group_ids = set(self.context["request"].user.groups.values_list("pk", flat=True))
+        return user_has_dataset_access(self.context["request"].user, layer.dataset, self._user_group_ids)
+
+    class Meta:
+        model = FeatureLayer
+        fields = ["layer_name", "dataset", "sector", "subsector", "asset_type",
+                  "stacking_order", "display_order", "has_access"]
+
+
+class RasterLayerSerializer(serializers.ModelSerializer):
+    has_access = serializers.SerializerMethodField()
+    group = serializers.CharField(source="dataset.group", read_only=True)
+    color_range = serializers.ListField(child=serializers.FloatField(), allow_null=True, required=False)
+
+    @extend_schema_field(serializers.BooleanField())
+    def get_has_access(self, layer):
+        if not hasattr(self, "_user_group_ids"):
+            self._user_group_ids = set(self.context["request"].user.groups.values_list("pk", flat=True))
+        user = self.context["request"].user
+        if not user_has_dataset_access(user, layer.dataset, self._user_group_ids):
+            return False
+        if not hasattr(self, "_inaccessible_databases"):
+            self._inaccessible_databases = inaccessible_raster_databases(user) if not user.is_superuser else set()
+        return raster_source_accessible(user, layer.tile_source, self._inaccessible_databases)
+
+    class Meta:
+        model = RasterLayer
+        fields = ["id", "dataset", "label", "group", "quantity", "unit", "license",
+                  "color_scheme", "color_range", "tile_source", "stacking_order", "display_order", "has_access"]
 
 
 class FeatureSerializer(serializers.ModelSerializer):

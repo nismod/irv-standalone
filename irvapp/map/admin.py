@@ -9,6 +9,7 @@ from .models import (
     MapConfig,
     Dataset,
     NetworkLayerStyle,
+    RasterLayer,
 )
 
 
@@ -30,7 +31,12 @@ class FeatureLayerAdmin(admin.ModelAdmin):
         "sector",
         "subsector",
         "asset_type",
+        "dataset",
+        "stacking_order",
+        "display_order",
     ]
+    autocomplete_fields = ["dataset"]
+    search_fields = ["layer_name"]
 
 
 @admin.register(Dataset)
@@ -39,17 +45,16 @@ class DatasetAdmin(admin.ModelAdmin):
         "id",
         "label",
         "group",
-        "quantity",
-        "unit",
         "license",
-        "color_scheme",
-        "color_range",
-        "tile_source",
-        "stacking_order",
-        "display_order",
     ]
     filter_horizontal = ["access_groups"]
-    autocomplete_fields = ["tile_source"]
+    search_fields = ["id", "label"]
+
+
+@admin.register(RasterLayer)
+class RasterLayerAdmin(admin.ModelAdmin):
+    list_display = ["id", "label", "dataset", "tile_source"]
+    autocomplete_fields = ["dataset", "tile_source"]
     search_fields = ["id", "label"]
 
 

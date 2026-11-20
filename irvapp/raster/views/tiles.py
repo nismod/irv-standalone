@@ -16,12 +16,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from terracotta.exceptions import DatasetNotFoundError
 
-from map.models import Dataset
+from map.models import RasterLayer
 from map.permissions import HasDatasetAccess
 
 from ..internal.colormaps import CATEGORICAL_COLOR_MAPS
 from ..internal.helpers import handle_exception
-from ..models import RasterTileSource
 from .shared import (
     MissingExplicitColourMapException,
     _get_singleband_image,
@@ -111,15 +110,13 @@ class RasterTileImageView(APIView):
 
         try:
             parsed_keys = _parse_keys(keys)
-            dataset = (
-                Dataset.objects.select_related("tile_source")
-                .prefetch_related("access_groups")
+            layer = (
+                RasterLayer.objects.select_related("tile_source", "dataset")
+                .prefetch_related("dataset__access_groups")
                 .get(pk=dataset_id)
             )
-            self.check_object_permissions(request, dataset)
-            source = dataset.tile_source
-            if source is None:
-                raise RasterTileSource.DoesNotExist
+            self.check_object_permissions(request, layer)
+            source = layer.tile_source
             source_db = source.database
             logger.debug("source DB for tile path: %s", source_db)
 
@@ -188,7 +185,7 @@ class RasterTileImageView(APIView):
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        except (Dataset.DoesNotExist, RasterTileSource.DoesNotExist):
+        except RasterLayer.DoesNotExist:
             return Response(
                 {
                     "detail": "Not found."

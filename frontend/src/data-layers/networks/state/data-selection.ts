@@ -12,8 +12,8 @@ import { STORAGE_PREFIX, atomWithQueryParams, setUrlParam } from 'lib/state/map-
 
 import { type InfrastructureNode, mapInfrastructureTreeList } from 'lib/api-client';
 import { dfs } from 'lib/controls/checkbox-tree/tree-node';
-import { buildHierarchyFromNodes } from './infrastructure-hierarchy';
-import { networkDatasetsMetadataState } from './metadata';
+import { buildHierarchyFromNodes, orderHierarchyLayers } from './infrastructure-hierarchy';
+import { networkFeatureLayersMetadataState } from './metadata';
 
 async function fetchInfrastructureNodes(): Promise<InfrastructureNode[]> {
   try {
@@ -41,9 +41,13 @@ const networkTreeHierarchyQuery = atom(async () => {
   return buildHierarchyFromNodes(networkTreeNodes);
 });
 
-export const networkTreeHierarchyState = unwrap(
+const networkTreeHierarchyBaseState = unwrap(
   networkTreeHierarchyQuery,
   (prev) => prev ?? [],
+);
+
+export const networkTreeHierarchyState = atom((get) =>
+  orderHierarchyLayers(get(networkTreeHierarchyBaseState), get(networkFeatureLayersMetadataState)),
 );
 
 export const networkTreeConfigState = atom((get) => {
@@ -53,7 +57,7 @@ export const networkTreeConfigState = atom((get) => {
 
 export const disabledNetworkNodeIdsState = atom<Set<string>>((get) => {
   const networkTreeConfig = get(networkTreeConfigState);
-  const datasets = get(networkDatasetsMetadataState);
+  const layers = get(networkFeatureLayersMetadataState);
   const disabledNodeIds = new Set<string>();
 
   networkTreeConfig.roots.forEach((root) => {
@@ -61,7 +65,7 @@ export const disabledNetworkNodeIdsState = atom<Set<string>>((get) => {
       root,
       (node) => {
         if (!node.children) {
-          if (!node.layerId || datasets[node.layerId]?.has_access === false) {
+          if (!node.layerId || !layers[node.layerId]?.has_access) {
             disabledNodeIds.add(node.id);
           }
           return;
@@ -169,10 +173,12 @@ export const networkSelectionState = atom<string[]>((get) => {
 
 export const selectedNetworkLayerIdsState = atom<string[]>((get) => {
   const networkTreeConfig = get(networkTreeConfigState);
+  const layers = get(networkFeatureLayersMetadataState);
 
   return get(networkSelectionState)
     .map((nodeId) => networkTreeConfig.nodes[nodeId]?.layerId)
-    .filter((layerId): layerId is string => layerId !== undefined);
+    .filter((layerId): layerId is string => layerId !== undefined)
+    .sort((a, b) => (layers[a]?.stacking_order ?? 0) - (layers[b]?.stacking_order ?? 0));
 });
 
 export const networksStyleState = atom((get) => get(sectionStyleValueState('assets')));

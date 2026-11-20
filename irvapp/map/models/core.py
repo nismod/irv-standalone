@@ -44,9 +44,14 @@ class InfrastructureNode(OrderableTreeNode):
 
 class FeatureLayer(models.Model):
     layer_name = models.CharField(primary_key=True)
+    dataset = models.ForeignKey(
+        "Dataset", models.PROTECT, null=True, blank=True, related_name="feature_layers"
+    )
     sector = models.CharField()
     subsector = models.CharField()
     asset_type = models.CharField()
+    stacking_order = models.IntegerField(default=0, db_default=0)
+    display_order = models.IntegerField(default=0, db_default=0)
 
     class Meta:
         db_table = "feature_layers"
@@ -94,20 +99,7 @@ class Dataset(models.Model):
     id = models.CharField(primary_key=True)
     label = models.CharField()
     group = models.CharField()
-    quantity = models.CharField()
-    unit = models.CharField()
     license = models.CharField(max_length=255, blank=True, null=True)
-    color_scheme = models.CharField(max_length=255, blank=True, null=True)
-    color_range = models.JSONField(blank=True, null=True)
-    tile_source = models.ForeignKey(
-        "raster.RasterTileSource",
-        models.PROTECT,
-        blank=True,
-        null=True,
-        related_name="datasets",
-    )
-    stacking_order = models.IntegerField()
-    display_order = models.IntegerField()
     access_groups = models.ManyToManyField(
         "auth.Group",
         blank=True,
@@ -118,3 +110,22 @@ class Dataset(models.Model):
 
     class Meta:
         db_table = "datasets"
+
+
+class RasterLayer(models.Model):
+    id = models.CharField(primary_key=True)
+    dataset = models.ForeignKey(Dataset, models.PROTECT, related_name="raster_layers")
+    tile_source = models.ForeignKey(
+        "raster.RasterTileSource", models.PROTECT, related_name="raster_layers"
+    )
+    label = models.CharField()
+    quantity = models.CharField()
+    unit = models.CharField()
+    license = models.CharField(max_length=255, blank=True, null=True)
+    color_scheme = models.CharField(max_length=255, blank=True, null=True)
+    color_range = models.JSONField(blank=True, null=True)
+    stacking_order = models.IntegerField()
+    display_order = models.IntegerField()
+
+    class Meta:
+        db_table = "raster_layers"

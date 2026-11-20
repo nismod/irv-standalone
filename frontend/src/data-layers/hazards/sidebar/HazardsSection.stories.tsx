@@ -4,15 +4,16 @@ import { HttpResponse, http } from 'msw';
 
 import { HazardsSection } from './HazardsSection';
 import rasterSourceDomains from 'mocks/raster_source_domains.json';
-import { type PaginatedDatasetList, type RasterTileSource } from 'lib/api-client';
+import { type PaginatedRasterLayerList, type RasterTileSource } from 'lib/api-client';
 
-const hazardsResponse: PaginatedDatasetList = {
+const hazardsResponse: PaginatedRasterLayerList = {
   count: 5,
   next: null,
   previous: null,
   results: [
     {
       id: 'fluvial',
+      dataset: 'fluvial',
       label: 'River Flooding',
       group: 'hazards',
       quantity: 'depth',
@@ -24,6 +25,7 @@ const hazardsResponse: PaginatedDatasetList = {
     },
     {
       id: 'surface',
+      dataset: 'surface',
       label: 'Surface Flooding',
       group: 'hazards',
       quantity: 'depth',
@@ -35,6 +37,7 @@ const hazardsResponse: PaginatedDatasetList = {
     },
     {
       id: 'coastal',
+      dataset: 'coastal',
       label: 'Coastal Flooding',
       group: 'hazards',
       quantity: 'depth',
@@ -46,6 +49,7 @@ const hazardsResponse: PaginatedDatasetList = {
     },
     {
       id: 'cyclone',
+      dataset: 'cyclone',
       label: 'Tropical cyclone wind speed',
       group: 'hazards',
       quantity: 'wind speed',
@@ -57,6 +61,7 @@ const hazardsResponse: PaginatedDatasetList = {
     },
     {
       id: 'storm',
+      dataset: 'storm',
       label: 'Tropical cyclone return period',
       group: 'hazards',
       quantity: 'return period',
@@ -89,7 +94,7 @@ const meta = {
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/map/datasets', () => {
+        http.get('/api/map/raster-layers', () => {
           return HttpResponse.json(hazardsResponse);
         }),
         http.get('/api/tiles/raster/sources/:datasetId/domains', () => {

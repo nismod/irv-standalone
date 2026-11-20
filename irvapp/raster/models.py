@@ -11,7 +11,7 @@ class RasterTileSourceQuerySet(models.QuerySet):
             return self
 
         return self.filter(
-            datasets__access_groups__in=user.groups.all()
+            raster_layers__dataset__access_groups__in=user.groups.all()
         ).distinct()
 
 

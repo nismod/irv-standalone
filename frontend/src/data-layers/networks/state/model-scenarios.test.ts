@@ -22,7 +22,7 @@ import { HAZARD_SOURCE } from 'data-layers/hazards/source';
 import { hazardsMetadataState, hazardsMapOrderState } from 'data-layers/hazards/state/metadata';
 import { hazardDomainState } from 'data-layers/hazards/state/domains';
 import { hazardVisibilityState } from 'data-layers/hazards/state/hazard-visibility';
-import type { Dataset } from 'lib/api-client';
+import type { RasterLayer } from 'lib/api-client';
 
 vi.mock('./data-selection', async () => {
   const { atom } = await import('jotai');
@@ -99,8 +99,8 @@ describe('model scenario query flow', () => {
   it('activates each matching all-hazard raster using its own parameters', () => {
     const store = createStore();
     store.set(damageSourceState, 'all');
-    store.set(hazardsMetadataState as PrimitiveAtom<Record<string, Dataset>>, Object.fromEntries(
-      ['coastal', 'fluvial', 'pluvial', 'wind'].map((id) => [id, { id, has_access: true } as Dataset]),
+    store.set(hazardsMetadataState as PrimitiveAtom<Record<string, RasterLayer>>, Object.fromEntries(
+      ['coastal', 'fluvial', 'pluvial', 'wind'].map((id) => [id, { id, has_access: true } as RasterLayer]),
     ));
     store.set(hazardsMapOrderState as PrimitiveAtom<string[]>, ['coastal', 'fluvial', 'pluvial', 'wind']);
     const hazardDomains = {
@@ -133,10 +133,10 @@ describe('model scenario query flow', () => {
 
   it('limits shared-schema all-hazard rasters to the damage scope and accessible datasets', () => {
     const store = createStore();
-    store.set(hazardsMetadataState as PrimitiveAtom<Record<string, Dataset>>, {
-      fluvial: { id: 'fluvial', has_access: true } as Dataset,
-      coastal: { id: 'coastal', has_access: false } as Dataset,
-      wind: { id: 'wind', has_access: true } as Dataset,
+    store.set(hazardsMetadataState as PrimitiveAtom<Record<string, RasterLayer>>, {
+      fluvial: { id: 'fluvial', has_access: true } as RasterLayer,
+      coastal: { id: 'coastal', has_access: false } as RasterLayer,
+      wind: { id: 'wind', has_access: true } as RasterLayer,
     });
     store.set(hazardsMapOrderState as PrimitiveAtom<string[]>, ['fluvial', 'coastal', 'wind']);
     const config = { paramDefaults: { GWL: 2 }, paramDomains: { GWL: [2, 3] } };
@@ -208,8 +208,8 @@ describe('model scenario query flow', () => {
       ],
     } as never);
     const store = createStore();
-    store.set(hazardsMetadataState as PrimitiveAtom<Record<string, Dataset>>, {
-      coastal: { id: 'coastal', has_access: false } as Dataset,
+    store.set(hazardsMetadataState as PrimitiveAtom<Record<string, RasterLayer>>, {
+      coastal: { id: 'coastal', has_access: false } as RasterLayer,
     });
     store.set(damageSourceState, ['coastal']);
     subscriptions.push(store.sub(damagesFieldState, () => {}));
@@ -223,14 +223,14 @@ describe('model scenario query flow', () => {
       data: [{ hazard: 'coastal', parameters: { gwl: 2 }, protection_standard: 0 }],
     } as never);
     const store = createStore();
-    const metadata = hazardsMetadataState as PrimitiveAtom<Record<string, Dataset>>;
-    store.set(metadata, { coastal: { id: 'coastal', has_access: true } as Dataset });
+    const metadata = hazardsMetadataState as PrimitiveAtom<Record<string, RasterLayer>>;
+    store.set(metadata, { coastal: { id: 'coastal', has_access: true } as RasterLayer });
     store.set(damageSourceState, ['coastal']);
     subscriptions.push(store.sub(damagesFieldState, () => {}));
     await vi.waitFor(() =>
       expect(store.get(damagesFieldState)?.fieldDimensions.hazard).toBe('coastal'),
     );
-    store.set(metadata, { coastal: { id: 'coastal', has_access: false } as Dataset });
+    store.set(metadata, { coastal: { id: 'coastal', has_access: false } as RasterLayer });
     expect(store.get(damagesFieldState)).toBeNull();
     expect(catalogue).toHaveBeenCalledTimes(1);
   });
@@ -397,8 +397,8 @@ describe('model scenario query flow', () => {
       },
     } as never);
     const store = createStore();
-    store.set(hazardsMetadataState as PrimitiveAtom<Record<string, Dataset>>, {
-      heat: { id: 'heat', has_access: true } as Dataset,
+    store.set(hazardsMetadataState as PrimitiveAtom<Record<string, RasterLayer>>, {
+      heat: { id: 'heat', has_access: true } as RasterLayer,
     });
     subscriptions.push(store.sub(hazardDomainState, () => {}));
     await vi.waitFor(() =>

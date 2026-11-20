@@ -5,6 +5,7 @@ from .core import (
     InfrastructureNode,
     MapConfig,
     NetworkLayerStyle,
+    RasterLayer,
 )
 from .risk import (
     AdaptationCostBenefit,
@@ -25,6 +26,7 @@ __all__ = [
     "ModelParameter",
     "ModelParameterSet",
     "Dataset",
+    "RasterLayer",
     "Feature",
     "FeatureLayer",
     "InfrastructureNode",

@@ -15,7 +15,7 @@ from map.models import (
     DamagesExpected,
     DamagesNpv,
     DamagesRp,
-    Dataset,
+    RasterLayer,
     Feature,
     FeatureLayer,
     ModelParameter,
@@ -259,7 +259,7 @@ class Command(BaseCommand):
             return
 
         datasets = (
-            Dataset.objects.filter(group__iexact="hazards", tile_source__isnull=False)
+            RasterLayer.objects.filter(dataset__group__iexact="hazards")
             .select_related("tile_source")
             .order_by("id")
         )

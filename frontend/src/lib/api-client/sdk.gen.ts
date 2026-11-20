@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthLoginCreateData, AuthLoginCreateErrors, AuthLoginCreateResponses, AuthLogoutCreateData, AuthLogoutCreateErrors, AuthLogoutCreateResponses, AuthMeRetrieveData, AuthMeRetrieveResponses, AuthRegisterCreateData, AuthRegisterCreateErrors, AuthRegisterCreateResponses, ContentListData, ContentListResponses, ContentLogosListData, ContentLogosListResponses, ContentMetadataRetrieveData, ContentMetadataRetrieveResponses, MapAdaptationCostBenefitsListData, MapAdaptationCostBenefitsListResponses, MapAdaptationCostBenefitsRetrieveData, MapAdaptationCostBenefitsRetrieveResponses, MapAttributesCreateData, MapAttributesCreateResponses, MapConfigListData, MapConfigListResponses, MapConfigRetrieveData, MapConfigRetrieveResponses, MapDamagesExpectedListData, MapDamagesExpectedListResponses, MapDamagesExpectedRetrieveData, MapDamagesExpectedRetrieveResponses, MapDamagesRpListData, MapDamagesRpListResponses, MapDamagesRpRetrieveData, MapDamagesRpRetrieveResponses, MapDatasetsListData, MapDatasetsListResponses, MapDatasetsRetrieveData, MapDatasetsRetrieveErrors, MapDatasetsRetrieveResponses, MapFeaturesListData, MapFeaturesListResponses, MapFeaturesProtectedByListData, MapFeaturesProtectedByListResponses, MapFeaturesRetrieveData, MapFeaturesRetrieveResponses, MapFeaturesSortedByRetrieveData, MapFeaturesSortedByRetrieveResponses, MapInfrastructureTreeListData, MapInfrastructureTreeListResponses, MapInfrastructureTreeRetrieveData, MapInfrastructureTreeRetrieveResponses, MapModelScenariosListData, MapModelScenariosListResponses, MapNetworkLayerStylesListData, MapNetworkLayerStylesListResponses, MapNetworkLayerStylesRetrieveData, MapNetworkLayerStylesRetrieveResponses, PixelRetrieveData, PixelRetrieveResponses, RasterColormapData, RasterColormapErrors, RasterColormapResponses, RasterTileSourceData, RasterTileSourceDomainsData, RasterTileSourceDomainsErrors, RasterTileSourceDomainsResponses, RasterTileSourceErrors, RasterTileSourceResponses, RasterTileSourcesData, RasterTileSourcesResponses, TilesRasterPngRetrieveData, TilesRasterPngRetrieveErrors, TilesRasterPngRetrieveResponses, TilesVectorDataJsonRetrieveData, TilesVectorDataJsonRetrieveErrors, TilesVectorDataJsonRetrieveResponses, TilesVectorDataRetrieveData, TilesVectorDataRetrieveErrors, TilesVectorDataRetrieveResponses, TilesVectorRetrieve2Data, TilesVectorRetrieve2Errors, TilesVectorRetrieve2Responses, TilesVectorRetrieveData, TilesVectorRetrieveErrors, TilesVectorRetrieveResponses } from './types.gen';
+import type { AuthLoginCreateData, AuthLoginCreateErrors, AuthLoginCreateResponses, AuthLogoutCreateData, AuthLogoutCreateErrors, AuthLogoutCreateResponses, AuthMeRetrieveData, AuthMeRetrieveResponses, AuthRegisterCreateData, AuthRegisterCreateErrors, AuthRegisterCreateResponses, ContentListData, ContentListResponses, ContentLogosListData, ContentLogosListResponses, ContentMetadataRetrieveData, ContentMetadataRetrieveResponses, MapAdaptationCostBenefitsListData, MapAdaptationCostBenefitsListResponses, MapAdaptationCostBenefitsRetrieveData, MapAdaptationCostBenefitsRetrieveResponses, MapAttributesCreateData, MapAttributesCreateResponses, MapConfigListData, MapConfigListResponses, MapConfigRetrieveData, MapConfigRetrieveResponses, MapDamagesExpectedListData, MapDamagesExpectedListResponses, MapDamagesExpectedRetrieveData, MapDamagesExpectedRetrieveResponses, MapDamagesRpListData, MapDamagesRpListResponses, MapDamagesRpRetrieveData, MapDamagesRpRetrieveResponses, MapDatasetsListData, MapDatasetsListResponses, MapDatasetsRetrieveData, MapDatasetsRetrieveErrors, MapDatasetsRetrieveResponses, MapFeatureLayersListData, MapFeatureLayersListResponses, MapFeatureLayersRetrieveData, MapFeatureLayersRetrieveResponses, MapFeaturesListData, MapFeaturesListResponses, MapFeaturesProtectedByListData, MapFeaturesProtectedByListResponses, MapFeaturesRetrieveData, MapFeaturesRetrieveResponses, MapFeaturesSortedByRetrieveData, MapFeaturesSortedByRetrieveResponses, MapInfrastructureTreeListData, MapInfrastructureTreeListResponses, MapInfrastructureTreeRetrieveData, MapInfrastructureTreeRetrieveResponses, MapModelScenariosListData, MapModelScenariosListResponses, MapNetworkLayerStylesListData, MapNetworkLayerStylesListResponses, MapNetworkLayerStylesRetrieveData, MapNetworkLayerStylesRetrieveResponses, MapRasterLayersListData, MapRasterLayersListResponses, MapRasterLayersRetrieveData, MapRasterLayersRetrieveResponses, PixelRetrieveData, PixelRetrieveResponses, RasterColormapData, RasterColormapErrors, RasterColormapResponses, RasterTileSourceData, RasterTileSourceDomainsData, RasterTileSourceDomainsErrors, RasterTileSourceDomainsResponses, RasterTileSourceErrors, RasterTileSourceResponses, RasterTileSourcesData, RasterTileSourcesResponses, TilesRasterPngRetrieveData, TilesRasterPngRetrieveErrors, TilesRasterPngRetrieveResponses, TilesVectorDataJsonRetrieveData, TilesVectorDataJsonRetrieveErrors, TilesVectorDataJsonRetrieveResponses, TilesVectorDataRetrieveData, TilesVectorDataRetrieveErrors, TilesVectorDataRetrieveResponses, TilesVectorRetrieve2Data, TilesVectorRetrieve2Errors, TilesVectorRetrieve2Responses, TilesVectorRetrieveData, TilesVectorRetrieveErrors, TilesVectorRetrieveResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -213,6 +213,26 @@ export const mapDatasetsRetrieve = <ThrowOnError extends boolean = false>(option
     ...options
 });
 
+export const mapFeatureLayersList = <ThrowOnError extends boolean = false>(options?: Options<MapFeatureLayersListData, ThrowOnError>): RequestResult<MapFeatureLayersListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<MapFeatureLayersListResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }],
+    url: '/map/feature-layers',
+    ...options
+});
+
+export const mapFeatureLayersRetrieve = <ThrowOnError extends boolean = false>(options: Options<MapFeatureLayersRetrieveData, ThrowOnError>): RequestResult<MapFeatureLayersRetrieveResponses, unknown, ThrowOnError> => (options.client ?? client).get<MapFeatureLayersRetrieveResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }],
+    url: '/map/feature-layers/{layer_name}',
+    ...options
+});
+
 export const mapFeaturesList = <ThrowOnError extends boolean = false>(options?: Options<MapFeaturesListData, ThrowOnError>): RequestResult<MapFeaturesListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<MapFeaturesListResponses, unknown, ThrowOnError>({
     security: [{
             in: 'cookie',
@@ -309,6 +329,26 @@ export const mapNetworkLayerStylesRetrieve = <ThrowOnError extends boolean = fal
             type: 'apiKey'
         }],
     url: '/map/network-layer-styles/{layer_id}',
+    ...options
+});
+
+export const mapRasterLayersList = <ThrowOnError extends boolean = false>(options?: Options<MapRasterLayersListData, ThrowOnError>): RequestResult<MapRasterLayersListResponses, unknown, ThrowOnError> => (options?.client ?? client).get<MapRasterLayersListResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }],
+    url: '/map/raster-layers',
+    ...options
+});
+
+export const mapRasterLayersRetrieve = <ThrowOnError extends boolean = false>(options: Options<MapRasterLayersRetrieveData, ThrowOnError>): RequestResult<MapRasterLayersRetrieveResponses, unknown, ThrowOnError> => (options.client ?? client).get<MapRasterLayersRetrieveResponses, unknown, ThrowOnError>({
+    security: [{
+            in: 'cookie',
+            name: 'sessionid',
+            type: 'apiKey'
+        }],
+    url: '/map/raster-layers/{id}',
     ...options
 });
 

@@ -30,12 +30,13 @@ const scenarios = [
 const assetLayer = 'road_edges_class_a';
 
 const datasetsHandler = (availableHazards = hazards) =>
-  http.get('/api/map/datasets', ({ request }) => {
+  http.get(/\/api\/map\/(datasets|raster-layers)$/, ({ request }) => {
     const group = new URL(request.url).searchParams.get('group');
     const results =
       group === 'hazards'
         ? availableHazards.map((hazard, index) => ({
             ...hazard,
+            dataset: hazard.id,
             group: 'hazards',
             quantity: 'depth',
             unit: 'm',
@@ -49,8 +50,6 @@ const datasetsHandler = (availableHazards = hazards) =>
               id: assetLayer,
               label: 'Class A roads',
               group: 'networks',
-              quantity: 'features',
-              unit: 'n/a',
               tile_source: null,
               stacking_order: 0,
               display_order: 0,
@@ -62,6 +61,11 @@ const datasetsHandler = (availableHazards = hazards) =>
 
 const handlers = [
   datasetsHandler(),
+  http.get('/api/map/feature-layers', () => HttpResponse.json({
+    count: 1, next: null, previous: null,
+    results: [{ layer_name: assetLayer, dataset: assetLayer, sector: 'transport', subsector: 'road',
+      asset_type: 'CLASS A', stacking_order: 0, display_order: 0, has_access: true }],
+  })),
   http.get('/api/map/infrastructure-tree', () =>
     HttpResponse.json({
       count: 1,
@@ -413,7 +417,7 @@ export const SelectedHazards: Story = {
         ),
         ...AllHazardParameters.parameters.msw.handlers.filter(
           (handler) =>
-            !['/api/map/datasets', '/api/map/model-scenarios/damages_expected'].includes(
+            !['/api/map/datasets', '/api/map/raster-layers', '/api/map/model-scenarios/damages_expected'].includes(
               String(handler.info.path),
             ),
         ),

@@ -30,6 +30,15 @@ def make_parameter_set(model_type, **values):
     return ModelParameterSet.for_values(model_type, values)
 
 
+def grant_layer_access(user, layer):
+    dataset = Dataset.objects.create(id=layer.pk, label=layer.pk, group="infrastructure")
+    group = Group.objects.create(name=f"access-{layer.pk}")
+    dataset.access_groups.add(group)
+    user.groups.add(group)
+    layer.dataset = dataset
+    layer.save(update_fields=["dataset"])
+
+
 class ModelParameterKeyTests(SimpleTestCase):
     def test_numeric_values_match_after_browser_round_trip(self):
         self.assertEqual(
@@ -64,6 +73,7 @@ class AttributeLookupViewTests(TestCase):
             subsector="road",
             asset_type="edge",
         )
+        grant_layer_access(self.user, self.layer)
         self.feature_1 = Feature.objects.create(
             string_id="road-1",
             layer=self.layer,
@@ -509,6 +519,7 @@ class FeatureRouteTests(TestCase):
             subsector="road",
             asset_type="edge",
         )
+        grant_layer_access(self.user, self.layer)
         self.feature_1 = Feature.objects.create(
             string_id="road-1",
             layer=self.layer,
@@ -653,28 +664,17 @@ class DatasetRouteTests(TestCase):
                 id="flood_extent",
                 label="Flood extent",
                 group="hazards",
-                unit="n/a",
-                stacking_order=1,
-                display_order=1,
             ),
             Dataset.objects.create(
                 id="storm_track",
                 label="Storm track",
                 group="hazards",
-                quantity="wind speed",
-                unit="n/a",
                 license="CC-BY",
-                tile_source=self.tile_source,
-                stacking_order=2,
-                display_order=2,
             ),
             Dataset.objects.create(
                 id="roads",
                 label="Road network",
                 group="networks",
-                unit="n/a",
-                stacking_order=1,
-                display_order=1,
             ),
         ]
         for dataset in datasets:
@@ -692,11 +692,8 @@ class DatasetRouteTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["license"], "CC-BY")
-        self.assertEqual(response.json()["quantity"], "wind speed")
-        self.assertEqual(
-            response.json()["tile_source"],
-            self.tile_source.pk,
-        )
+        self.assertNotIn("quantity", response.json())
+        self.assertNotIn("unit", response.json())
 
     def test_datasets_route_filters_by_group(self):
         response = self.client.get("/map/datasets", {"group": "hazards"})

@@ -5,10 +5,10 @@ from rest_framework import serializers, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from map.permissions import inaccessible_hazard_ids
+from map.permissions import accessible_feature_layers, inaccessible_hazard_ids
 
 from map.models import (
-    AdaptationCostBenefit, DamagesExpected, Feature, FeatureLayer, ModelParameter, ModelParameterSet,
+    AdaptationCostBenefit, DamagesExpected, Feature, ModelParameter, ModelParameterSet,
 )
 
 
@@ -88,7 +88,8 @@ class ModelScenariosView(APIView):
             model_type=field_group,
         ).values_list("id", flat=True))
         results = model.objects.filter(parameter_set_id__in=parameter_set_ids)
-        scoped_results = results
+        permitted_layers = accessible_feature_layers(request.user)
+        scoped_results = results.filter(feature__layer__in=permitted_layers)
         layers = request.query_params.getlist("layer")
         layer_filters = {}
         if layers:
@@ -118,13 +119,9 @@ class ModelScenariosView(APIView):
         candidates = [row for row in candidates if row["hazard"] not in restricted]
         if hazard is not None and hazard != "all":
             candidates = [row for row in candidates if row["hazard"] == hazard]
-        has_scope = bool(layers) or protector_id is not None or any(
-            request.query_params.get(name) is not None
-            for name in ("sector", "subsector", "asset_type")
-        )
         if layer_filters:
             features = Feature.objects.filter(layer_id=OuterRef("pk"))
-            bounds = list(FeatureLayer.objects.filter(**layer_filters).annotate(
+            bounds = list(permitted_layers.filter(**layer_filters).annotate(
                 first_id=Subquery(features.order_by("id").values("id")[:1]),
                 last_id=Subquery(features.order_by("-id").values("id")[:1]),
             ).values("pk", "first_id", "last_id"))
@@ -141,7 +138,7 @@ class ModelScenariosView(APIView):
                 return checks[0].union(*checks[1:], all=True).exists()
         else:
             def available(row):
-                return not has_scope or scoped_results.filter(**row).exists()
+                return scoped_results.filter(**row).exists()
 
         rows = [row for row in candidates if available(row)]
         parameter_sets = ModelParameterSet.objects.filter(

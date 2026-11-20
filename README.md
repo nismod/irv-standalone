@@ -163,6 +163,44 @@ in admin after the relevant layers have been loaded. Unlinked leaves are
 disabled in the map. They remain allowed during this transition;
 model validation is applied by Django forms, not by direct database writes.
 
+#### Feature layers and datasets
+
+Feature layers belong to datasets and inherit their access groups. Set their
+stacking and display order on the feature layer in Django admin; display order
+orders linked siblings in the infrastructure tree. Migration 0029 links layers whose IDs match
+dataset IDs and copies their order values. It warns about unmatched layers,
+which remain unlinked and unavailable through the vector tile proxy until an
+administrator assigns a dataset. Layer IDs continue to identify vector tiles.
+After loading feature layers, run `python manage.py link_feature_layers` in the
+Django environment. It links unassigned layers whose IDs match dataset IDs and
+reports any remaining layers for manual assignment. Existing assignments are
+left intact.
+Feature and result APIs also restrict their responses to layers in datasets that
+the signed-in user can access. Unlinked layers are excluded. Inaccessible
+feature and result detail URLs return 404, and aggregate lookups exclude their
+data.
+
+#### Raster layers and datasets
+
+A dataset controls access for its raster layers through its access groups. Each
+raster layer belongs to one dataset and references one raster tile source;
+multiple layers can use the same source. Configure layer labels, units, colours,
+and display order on the raster layer in Django admin. Datasets continue to
+support non-raster data as well.
+
+Because raster keys are supplied by the caller, access to a shared raster
+database requires access to every dataset whose layers use that database. This
+applies to tile and domain requests and also to separate source records pointing
+to the same database. To provide different access rights, use separate raster
+databases; otherwise a user who lacks access to any one dataset on the shared
+database cannot use its raster layers.
+
+Migration 0027 creates a raster layer for each existing dataset with a tile
+source, preserving its ID and display settings. Review the resulting layers and
+move them into shared datasets as needed. Moving a layer changes its access to
+the permissions of its new dataset. Raster layer metadata is available at
+`/api/map/raster-layers`; raster tile and domain URLs use the layer ID.
+
 #### Model Scenarios
 
 Model scenarios used by the map and asset list are discovered from result rows at

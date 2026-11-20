@@ -6,13 +6,13 @@ from .models import RasterTileSource
 @admin.register(RasterTileSource)
 class RasterTileSourceAdmin(admin.ModelAdmin):
     list_display = ["id", "dataset_list", "keys", "database"]
-    search_fields = ["datasets__id", "datasets__label"]
+    search_fields = ["raster_layers__id", "raster_layers__label"]
 
     def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related("datasets")
+        return super().get_queryset(request).prefetch_related("raster_layers__dataset")
 
     @admin.display(description="Datasets")
     def dataset_list(self, source):
         return ", ".join(
-            dataset.label for dataset in source.datasets.all()
+            layer.dataset.label for layer in source.raster_layers.all()
         )
