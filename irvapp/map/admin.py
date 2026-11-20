@@ -69,7 +69,9 @@ class LayerIdentityForm(forms.ModelForm):
         identity = self.instance
         if identity.pk and (FeatureLayer.objects.filter(pk=identity.pk).exists() or
                             RasterLayer.objects.filter(pk=identity.pk).exists()):
-            self.fields["kind"].disabled = True
+            kind_field = self.fields.get("kind")
+            if kind_field is not None:
+                kind_field.disabled = True
 
     def clean_kind(self):
         kind = self.cleaned_data["kind"]

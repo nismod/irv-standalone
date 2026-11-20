@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Permission, User
 from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
@@ -16,6 +16,21 @@ class LayerIdentityAdminTests(TestCase):
         RasterLayer.objects.create(id="rain", dataset=dataset, tile_source=source,
             label="Rain", quantity="depth", unit="m", stacking_order=0, display_order=0)
         LayerIdentity.objects.create(id="unattached", kind="feature")
+
+    def test_view_only_staff_can_open_attached_identities(self):
+        viewer = User.objects.create_user(username="viewer", is_staff=True)
+        viewer.user_permissions.add(Permission.objects.get(
+            content_type__app_label="map", codename="view_layeridentity",
+        ))
+        self.client.force_login(viewer)
+
+        for identity_id in ("roads", "rain"):
+            with self.subTest(identity_id=identity_id):
+                url = reverse("admin:map_layeridentity_change", args=[identity_id])
+                response = self.client.get(url)
+                self.assertEqual(response.status_code, 200)
+                self.assertFalse(response.context["has_change_permission"])
+                self.assertNotIn("kind", response.context["adminform"].form.fields)
 
     def test_attached_kind_is_disabled_and_rejects_tampered_posts(self):
         for identity_id, original, attempted in (("roads", "feature", "raster"), ("rain", "raster", "feature")):
