@@ -59,8 +59,29 @@ class RasterLayerAdmin(admin.ModelAdmin):
     search_fields = ["identity__id", "label"]
 
 
+class LayerIdentityForm(forms.ModelForm):
+    class Meta:
+        model = LayerIdentity
+        fields = "__all__"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        identity = self.instance
+        if identity.pk and (FeatureLayer.objects.filter(pk=identity.pk).exists() or
+                            RasterLayer.objects.filter(pk=identity.pk).exists()):
+            self.fields["kind"].disabled = True
+
+    def clean_kind(self):
+        kind = self.cleaned_data["kind"]
+        if (self.fields["kind"].disabled and "kind" in self.data and
+                self.data["kind"] != kind):
+            raise forms.ValidationError("Cannot change the type while a layer is attached.")
+        return kind
+
+
 @admin.register(LayerIdentity)
 class LayerIdentityAdmin(admin.ModelAdmin):
+    form = LayerIdentityForm
     list_display = ["id", "kind"]
     search_fields = ["id"]
 

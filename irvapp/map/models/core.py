@@ -66,6 +66,18 @@ class LayerIdentity(models.Model):
     def __str__(self):
         return self.id
 
+    def clean(self):
+        super().clean()
+        if not self.pk:
+            return
+        alias = self._state.db or "default"
+        current_kind = type(self).objects.using(alias).filter(pk=self.pk).values_list("kind", flat=True).first()
+        if current_kind is None or current_kind == self.kind:
+            return
+        if (FeatureLayer.objects.using(alias).filter(pk=self.pk).exists() or
+                RasterLayer.objects.using(alias).filter(pk=self.pk).exists()):
+            raise ValidationError({"kind": "Cannot change the type while a layer is attached."})
+
 
 class IdentityLayer(models.Model):
     identity = models.OneToOneField(
