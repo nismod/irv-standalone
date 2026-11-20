@@ -31,12 +31,6 @@ data "aws_availability_zones" "available" {
   state = "available"
 }
 
-resource "aws_default_vpc" "standalone" {
-  tags = {
-    Name = "Default VPC"
-  }
-}
-
 resource "aws_vpc" "standalone" {
   cidr_block           = var.vpc_cidr_block
   enable_dns_hostnames = true

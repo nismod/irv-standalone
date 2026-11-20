@@ -13,6 +13,8 @@ import os
 
 from pathlib import Path
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,17 +22,24 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-# The default is only for development - always set DJANGO_SECRET_KEY in
-# production
-SECRET_KEY = os.environ.get(
-    'DJANGO_SECRET_KEY',
-    'django-insecure-%wwhy&y*xh)$k6jn_%xsz8qvctxy4fe^0b('
-    'edz6adg6259-@^8',
-)
+# SECURITY WARNING: don't run with debug turned on in production! (Default false here)
+DEBUG = os.environ.get('DJANGO_DEBUG', 'false').lower() in ('1', 'true', 'yes')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'true').lower() in ('1', 'true', 'yes')
+# Keep the development fallback out of production. Match Django's deployment
+# checks for key length, distinct characters and the insecure prefix.
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', '')
+if DEBUG:
+    SECRET_KEY = SECRET_KEY or 'django-insecure-development-only'
+elif (
+    len(SECRET_KEY) < 50
+    or len(set(SECRET_KEY)) < 5
+    or SECRET_KEY.startswith('django-insecure-')
+):
+    raise ImproperlyConfigured(
+        'Set DJANGO_SECRET_KEY to a unique random value of at least 50 '
+        'characters before starting with DJANGO_DEBUG=false. Consider using'
+        'django.core.management.utils.get_random_secret_key'
+    )
 
 ALLOWED_HOSTS = [
     host.strip()
@@ -39,6 +48,15 @@ ALLOWED_HOSTS = [
     ).split(',')
     if host.strip()
 ]
+
+# Production is reachable through nginx, which overwrites this header and
+# terminates TLS. Keep the backend port bound to localhost on the host.
+SECURE_PROXY_SSL_HEADER = (
+    ('HTTP_X_FORWARDED_PROTO', 'https') if not DEBUG else None
+)
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+# HTTP-to-HTTPS redirects are handled by nginx, including non-Django routes.
 
 
 # Application definition

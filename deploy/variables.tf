@@ -35,12 +35,9 @@ variable "ubuntu_ami_name_filter" {
 variable "deployer_public_key" {
   description = "SSH public key granted access to the instance"
   type        = string
-  default     = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGSG7VjfFHbwV9WEWPz1dUiiSrwz/f26IegBWW4kHbat opsis-irv-mauritius"
 }
 
-variable "deployer_public_key_name" {
-  default = "opsis-irv-mauritius"
-}
+variable "deployer_public_key_name" {}
 
 variable "root_volume_size_gb" {
   description = "Size of the application server root EBS volume in GB"
