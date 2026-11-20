@@ -7,8 +7,9 @@ from rest_framework.test import APIClient
 
 from map.models import (
     AdaptationCostBenefit, DamagesExpected, DamagesRp, Dataset, Feature,
-    FeatureLayer, ModelParameterSet,
+    FeatureLayer, ModelParameterSet, RasterLayer,
 )
+from raster.models import RasterTileSource
 
 
 class FeatureAPIAccessTests(TestCase):
@@ -98,3 +99,35 @@ class FeatureAPIAccessTests(TestCase):
     def test_anonymous_requests_are_rejected(self):
         self.client.force_authenticate(None)
         self.assertEqual(self.client.get('/map/features').status_code, 403)
+
+    def test_hazard_dataset_id_is_restricted_even_when_layer_id_differs(self):
+        dataset = Dataset.objects.create(id='coastal', label='Coastal', group='hazards')
+        group = Group.objects.create(name='coastal-access')
+        dataset.access_groups.add(group)
+        source = RasterTileSource.objects.create(keys=['type'])
+        RasterLayer.objects.create(id='coast-v2', dataset=dataset, tile_source=source,
+            label='Coast', quantity='depth', unit='m', stacking_order=0, display_order=0)
+        params = {'scenario': 'coastal-only'}
+        result = DamagesExpected.objects.create(
+            feature=self.features['allowed'], hazard='coastal', protection_standard=0, ead_mean=7,
+            parameter_set=ModelParameterSet.for_values('damages_expected', params),
+        )
+        adaptation = AdaptationCostBenefit.objects.create(
+            feature=self.features['allowed'], hazard='coastal', protector_feature_id=123,
+            adaptation_name='wall', adaptation_protection_level=1,
+            parameter_set=ModelParameterSet.for_values('adaptation', params),
+        )
+        dimensions = {'hazard': 'coastal', 'parameters': params, 'protection_standard': 0}
+        query = {'layer': 'allowed', 'field': 'ead_mean', 'dimensions': json.dumps(dimensions)}
+        self.assertEqual(self.client.get(f'/map/damages-expected/{result.id}').status_code, 404)
+        self.assertEqual(self.client.get(f'/map/adaptation-cost-benefits/{adaptation.id}').status_code, 404)
+        self.assertNotIn('coastal', [row['hazard'] for row in self.client.get('/map/model-scenarios/damages_expected').json()])
+        self.assertEqual(self.client.get('/map/model-scenarios/adaptation', {'protector_id': 123, 'hazard': 'coastal'}).json(), [])
+        self.assertEqual(self.client.get('/map/features/123/protected-by', {'parameters': json.dumps(params)}).json(), [])
+        self.assertEqual(self.client.get('/map/features/sorted-by/damages_expected', query).json()['items'], [])
+        response = self.client.post('/map/attributes/damages_expected', {'ids': [self.features['allowed'].id]},
+            format='json', QUERY_STRING='layer=allowed&field=ead_mean&dimensions=' + json.dumps(dimensions))
+        self.assertIsNone(response.json()[str(self.features['allowed'].id)])
+        self.user.groups.add(group)
+        self.assertEqual(self.client.get(f'/map/damages-expected/{result.id}').status_code, 200)
+        self.assertEqual(self.client.get(f'/map/adaptation-cost-benefits/{adaptation.id}').status_code, 200)

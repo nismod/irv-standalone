@@ -34,9 +34,10 @@ def restore_dataset_order(apps, schema_editor):
         orders.update(RasterLayer.objects.using(alias).filter(dataset_id=dataset.pk).values_list('stacking_order', 'display_order'))
         if len(orders) > 1:
             raise RuntimeError(f'Cannot reverse: layers in dataset {dataset.pk!r} have different orders.')
-        if orders:
-            stacking, display = orders.pop()
-            Dataset.objects.using(alias).filter(pk=dataset.pk).update(stacking_order=stacking, display_order=display)
+        if not orders:
+            raise RuntimeError(f'Cannot reverse: dataset {dataset.pk!r} has no layer from which to restore its order.')
+        stacking, display = orders.pop()
+        Dataset.objects.using(alias).filter(pk=dataset.pk).update(stacking_order=stacking, display_order=display)
 
 
 class Migration(migrations.Migration):

@@ -154,7 +154,7 @@ class RasterLayerViewset(viewsets.ReadOnlyModelViewSet):
         return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = RasterLayer.objects.select_related("dataset").prefetch_related("dataset__access_groups")
+        queryset = RasterLayer.objects.select_related("dataset", "tile_source").prefetch_related("dataset__access_groups").order_by("id")
         group = self.request.query_params.get("group")
         return queryset.filter(dataset__group__iexact=group) if group else queryset
 

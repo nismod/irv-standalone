@@ -26,18 +26,21 @@ export function getHazardColorSpec(dataset?: RasterLayer | null) {
   };
 }
 
-async function fetchHazardsMetadata() {
+export async function fetchHazardsMetadata() {
   try {
-    const { data, error } = await mapRasterLayersList({
-      baseUrl: '/api',
-      credentials: 'include',
-      query: { group: 'hazards' },
-    });
-    if (error || !data) {
-      console.error('Error fetching hazards metadata:', error);
-      return [];
+    const layers: RasterLayer[] = [];
+    const limit = 100;
+    while (true) {
+      const { data, error } = await mapRasterLayersList({
+        baseUrl: '/api',
+        credentials: 'include',
+        query: { group: 'hazards', limit, offset: layers.length },
+      });
+      if (error || !data) throw error ?? new Error('Missing raster layer metadata');
+      layers.push(...data.results);
+      if (!data.next) return layers;
+      if (!data.results.length) throw new Error('Empty raster layer page');
     }
-    return data.results;
   } catch (error) {
     console.error('Error fetching hazards metadata:', error);
     return [];

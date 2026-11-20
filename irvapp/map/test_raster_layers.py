@@ -30,10 +30,10 @@ class RasterLayerAccessTests(TestCase):
             )
         restricted = Dataset.objects.create(
             id="restricted", label="Restricted", group="hazards",
-
         )
+        restricted_source = RasterTileSource.objects.create(keys=["region"], database="private.sqlite")
         RasterLayer.objects.create(
-            id="private", dataset=restricted, tile_source=self.source, label="Private",
+            id="private", dataset=restricted, tile_source=restricted_source, label="Private",
             quantity="depth", unit="m", stacking_order=0, display_order=0,
         )
 
@@ -51,6 +51,36 @@ class RasterLayerAccessTests(TestCase):
         self.assertEqual(self.client.get('/tiles/raster/coastal/x/0/0/0.png').status_code, 200)
         self.assertEqual(self.client.get('/tiles/raster/private/x/0/0/0.png').status_code, 403)
         self.assertEqual(render.call_count, 2)
+
+    @patch("raster.views.sources._source_options")
+    @patch("raster.views.tiles._get_singleband_image", return_value=b"png")
+    def test_shared_database_requires_access_to_all_datasets(self, render, domains):
+        restricted = Dataset.objects.get(pk="restricted")
+        self.source.keys = ['type']
+        self.source.save(update_fields=['keys'])
+        other_group = Group.objects.create(name="other-access")
+        restricted.access_groups.add(other_group)
+        # Separate source records can still point at the same physical database.
+        alias = RasterTileSource.objects.create(keys=["type"], database="./test.sqlite")
+        RasterLayer.objects.filter(pk="private").update(tile_source=alias)
+        for path in ('/tiles/raster/river/coastal/0/0/0.png', '/tiles/raster/sources/river/domains'):
+            self.assertEqual(self.client.get(path).status_code, 403)
+        render.assert_not_called()
+        domains.assert_not_called()
+        self.assertFalse(next(row for row in self.client.get('/map/raster-layers').json()['results'] if row['id'] == 'river')['has_access'])
+        self.user.groups.add(other_group)
+        domains.return_value = []
+        self.assertEqual(self.client.get('/tiles/raster/river/coastal/0/0/0.png').status_code, 200)
+        self.assertEqual(self.client.get('/tiles/raster/sources/river/domains').status_code, 200)
+
+    @patch("raster.views.sources._source_options")
+    @patch("raster.views.tiles._get_singleband_image", return_value=b"png")
+    def test_source_without_type_key_also_fails_closed(self, render, domains):
+        RasterLayer.objects.filter(pk="private").update(tile_source=self.source)
+        self.assertEqual(self.client.get('/tiles/raster/river/secret/0/0/0.png').status_code, 403)
+        self.assertEqual(self.client.get('/tiles/raster/sources/river/domains').status_code, 403)
+        render.assert_not_called()
+        domains.assert_not_called()
 
 
 class RasterLayerMigrationTests(TransactionTestCase):

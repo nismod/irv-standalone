@@ -1,6 +1,8 @@
 from unittest.mock import patch
+from io import StringIO
 
 from django.contrib.auth.models import Group, User
+from django.core.management import call_command
 from django.db import connection
 from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase, TransactionTestCase
@@ -48,8 +50,44 @@ class FeatureLayerTests(TestCase):
         urlopen.assert_not_called()
         self.assertEqual(self.client.get('/tiles/vector/data/unlinked.json').status_code, 403)
 
+    def test_post_ingestion_link_command_handles_new_and_existing_layers(self):
+        Dataset.objects.create(id='unlinked', label='New', group='infrastructure')
+        Dataset.objects.create(id='late', label='Late', group='infrastructure')
+        layer = FeatureLayer.objects.create(layer_name='late', sector='', subsector='', asset_type='')
+        unmatched = FeatureLayer.objects.create(layer_name='missing', sector='', subsector='', asset_type='')
+        output = StringIO()
+        call_command('link_feature_layers', stdout=output)
+        layer.refresh_from_db()
+        unmatched.refresh_from_db()
+        self.assertEqual(layer.dataset_id, 'late')
+        self.assertEqual(FeatureLayer.objects.get(pk='unlinked').dataset_id, 'unlinked')
+        self.assertIsNone(unmatched.dataset_id)
+        self.assertIn('missing', output.getvalue())
+        self.assertEqual(FeatureLayer.objects.get(pk='road_edges_motorway').dataset_id, 'roads')
+        output = StringIO()
+        call_command('link_feature_layers', stdout=output)
+        self.assertIn('Linked 0', output.getvalue())
+
 
 class FeatureLayerMigrationTests(TransactionTestCase):
+    def test_rollback_rejects_dataset_without_recoverable_order(self):
+        before = [('map', '0028_remove_dataset_colours'), ('raster', '0010_rastertilesource_path_template')]
+        after = [('map', '0029_remove_dataset_display_order_and_more'), ('raster', '0010_rastertilesource_path_template')]
+        executor = MigrationExecutor(connection)
+        executor.migrate(before)
+        apps = executor.loader.project_state(before).apps
+        Dataset = apps.get_model('map', 'Dataset')
+        Dataset.objects.create(id='empty', label='Empty', group='infrastructure', stacking_order=7, display_order=4)
+        try:
+            executor = MigrationExecutor(connection)
+            executor.migrate(after)
+            executor = MigrationExecutor(connection)
+            with self.assertRaisesRegex(RuntimeError, 'no layer'):
+                executor.migrate(before)
+        finally:
+            executor = MigrationExecutor(connection)
+            executor.migrate(executor.loader.graph.leaf_nodes())
+
     def test_matching_layers_link_and_copy_order(self):
         before = [('map', '0028_remove_dataset_colours'), ('raster', '0010_rastertilesource_path_template')]
         after = [('map', '0029_remove_dataset_display_order_and_more'), ('raster', '0010_rastertilesource_path_template')]

@@ -1,4 +1,6 @@
 from rest_framework.permissions import BasePermission
+from os.path import realpath
+from posixpath import normpath
 
 
 def _prefetched_access_group_ids(dataset):
@@ -57,6 +59,31 @@ def accessible_feature_layers(user):
     return FeatureLayer.objects.filter(dataset__in=Dataset.objects.visible_to(user))
 
 
+def raster_database_key(database):
+    from raster.internal.helpers import TILEDB_URI
+
+    path = f"{TILEDB_URI}/{database}" if TILEDB_URI else database
+    return normpath(path) if "://" in path else realpath(path)
+
+
+def inaccessible_raster_databases(user):
+    from .models import Dataset, RasterLayer
+    return {raster_database_key(database) for database in RasterLayer.objects.exclude(
+        dataset__in=Dataset.objects.visible_to(user),
+    ).values_list("tile_source__database", flat=True).distinct()}
+
+
+def raster_source_accessible(user, source, inaccessible_databases=None):
+    """Fail closed if a shared raster database contains an inaccessible dataset."""
+    if not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    if inaccessible_databases is None:
+        inaccessible_databases = inaccessible_raster_databases(user)
+    return raster_database_key(source.database) not in inaccessible_databases
+
+
 class HasDatasetAccess(BasePermission):
     message = "You do not have permission to access this dataset."
 
@@ -75,6 +102,8 @@ class HasDatasetAccess(BasePermission):
             ).exists()
 
         if isinstance(obj, (FeatureLayer, RasterLayer)):
+            if isinstance(obj, RasterLayer) and not raster_source_accessible(request.user, obj.tile_source):
+                return False
             obj = obj.dataset if obj.dataset_id else None
 
         user_group_ids = set(
@@ -102,7 +131,7 @@ def inaccessible_hazard_ids(user):
     denied_layers = set(RasterLayer.objects.filter(dataset__group__iexact="hazards").exclude(
         dataset__in=Dataset.objects.visible_to(user),
     ).values_list("pk", flat=True))
-    denied_unlinked = set(Dataset.objects.filter(group__iexact="hazards", raster_layers__isnull=True).exclude(
+    denied_datasets = set(Dataset.objects.filter(group__iexact="hazards").exclude(
         pk__in=Dataset.objects.visible_to(user),
     ).values_list("pk", flat=True))
-    return denied_layers | denied_unlinked
+    return denied_layers | denied_datasets
