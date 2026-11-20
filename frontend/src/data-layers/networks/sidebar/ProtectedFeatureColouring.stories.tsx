@@ -71,7 +71,7 @@ function handlers(hasAssetScenario: boolean) {
         next: null,
         previous: null,
         results: [
-          { node_id: layerId, node_name: 'Coastal protection', parent: null, children: [] },
+          { node_id: layerId, feature_layer: layerId, node_name: 'Coastal protection', parent: null, children: [] },
         ],
       }),
     ),

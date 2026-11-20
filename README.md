@@ -151,7 +151,19 @@ If this is your first time running the Django app, you'll need to create an admi
 docker compose -f docker-compose.dev.yml exec django python manage.py createsuperuser
 ```
 
-#### Populating the database
+### Populating the database
+
+#### Infrastructure tree
+
+Infrastructure tree leaves can be linked to feature layers in Django admin.
+Each layer can be linked to at most one node, and nodes with children must not
+have a layer. Migration 0026 links leaves whose node IDs match existing layer
+names and warns about unmatched leaves. Review those warnings and set the links
+in admin after the relevant layers have been loaded. Unlinked leaves are
+disabled in the map. They remain allowed during this transition;
+model validation is applied by Django forms, not by direct database writes.
+
+#### Model Scenarios
 
 Model scenarios used by the map and asset list are discovered from result rows at
 `GET /api/map/model-scenarios/{field_group}`, where `field_group` is
