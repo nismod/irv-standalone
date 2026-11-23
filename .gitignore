@@ -1,7 +1,6 @@
 # data folders
 node_modules/
-tileserver/raster/data
-tileserver/vector/data
+tileserver/**/data*
 tileserver/stacks
 incoming_data/
 intermediate_data/
