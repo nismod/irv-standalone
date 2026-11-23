@@ -9,7 +9,7 @@ from .models import (
     InfrastructureNode,
     MapConfig,
     Dataset,
-    NetworkLayerStyle,
+    FeatureLayerStyle,
     RasterLayer,
     LayerIdentity,
 )
@@ -146,10 +146,11 @@ class LayerIdentityAdmin(admin.ModelAdmin):
     list_select_related = ("dataset",)
 
 
-@admin.register(NetworkLayerStyle)
-class NetworkLayerStyleAdmin(admin.ModelAdmin):
+@admin.register(FeatureLayerStyle)
+class FeatureLayerStyleAdmin(admin.ModelAdmin):
     list_display = [
         "layer_id",
+        "feature_layer",
         "label",
         "style_type",
         "color",
@@ -157,6 +158,8 @@ class NetworkLayerStyleAdmin(admin.ModelAdmin):
     ]
     list_filter = ["style_type"]
     search_fields = ["layer_id", "label"]
+    autocomplete_fields = ["feature_layer"]
+    list_select_related = ("feature_layer",)
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         if db_field.name == "color":

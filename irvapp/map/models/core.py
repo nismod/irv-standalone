@@ -139,16 +139,24 @@ class FeatureLayer(IdentityLayer, LayerOrdering):
         return self.pk
 
 
-class NetworkLayerStyle(models.Model):
+class FeatureLayerStyle(models.Model):
     layer_id = models.CharField(primary_key=True)
+    feature_layer = models.OneToOneField(
+        FeatureLayer, models.PROTECT, null=True, blank=True, related_name="style",
+        help_text="Link the feature layer with the same ID when it exists.",
+    )
     label = models.CharField()
     style_type = models.CharField()
     color = models.CharField(max_length=64)
     min_zoom = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        db_table = "network_layer_styles"
+        db_table = "feature_layer_styles"
         ordering = ["layer_id"]
+        constraints = [models.CheckConstraint(
+            condition=models.Q(feature_layer__isnull=True) | models.Q(feature_layer=models.F("layer_id")),
+            name="feature_layer_style_matching_id",
+        )]
 
 
 class Feature(models.Model):
