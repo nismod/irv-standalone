@@ -1,10 +1,13 @@
 import { MapViewState } from 'deck.gl';
-import { StyleSpecification } from 'maplibre-gl';
+import { setWorkerUrl, StyleSpecification } from 'maplibre-gl';
+import mapLibreWorkerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import { FC, ReactNode } from 'react';
 import { Map } from 'react-map-gl/maplibre';
 import { useAtom } from 'jotai';
 
 import { mapViewStateState, useSyncMapUrl } from 'lib/state/map-view/map-view-state';
+
+setWorkerUrl(mapLibreWorkerUrl);
 
 export interface BaseMapProps {
   children?: ReactNode;
