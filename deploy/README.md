@@ -81,11 +81,24 @@ The configuration is split across several files:
 - `state-bootstrap/` - separate one-off configuration that creates the state
   bucket
 
-All variables have working defaults. To override them, pass `-var` flags or
-copy `terraform.tfvars.example` to `terraform.tfvars` (git-ignored, as it may
-hold environment-specific or sensitive values) and edit. In particular,
-consider restricting SSH access to a trusted network range - strongly
-recommended:
+Most variables have working defaults. The SSH key pair values are required:
+provide your SSH public key and the EC2 key pair name when running Terraform.
+For example, from the `deploy` directory:
+
+```bash
+terraform apply \
+  -var="deployer_public_key=$(cat ~/.ssh/id_ed25519.pub)" \
+  -var="deployer_public_key_name=irv-standalone-deployer"
+```
+
+Use the matching `.pub` file for the private key you will use to connect, and
+choose an EC2 key pair name. Pass the same `-var` flags to `terraform plan` to
+preview the configuration without being prompted.
+
+Other values can be overridden with `-var` flags or by copying
+`terraform.tfvars.example` to `terraform.tfvars` (git-ignored, as it may hold
+environment-specific or sensitive values). In particular, consider
+restricting SSH access to a trusted network range - strongly recommended:
 
 ```conf
 # terraform.tfvars
@@ -140,11 +153,11 @@ The service requires two virtual machines with similar specifications:
 
 1. Application server
    - exposed to internal or public network to serve the app (ports 80 and 443)
-   - running Ubuntu 20.04
+   - running Ubuntu LTS
    - minimum resources of ~20GB disk, ~1GB RAM, 2 cores
 2. Database server
    - exposed to the application server
-   - running Ubuntu 20.04
+   - running Ubuntu LTS
    - minimum resources of ~80GB disk, ~1GB RAM, 2 cores
 
 ## VM provisioning
@@ -184,6 +197,10 @@ Notes:
   creates the DNS record. If DNS is not ready, leave `CERTBOT_EMAIL` unset and
   the script prints the `certbot` command to run later.
 - The script is idempotent: rerunning it is safe.
+- Existing Nginx site configuration is preserved on reruns, including TLS
+  settings added by Certbot. Changes to `site.conf.template` must be merged
+  into the installed site configuration manually, then checked with
+  `sudo nginx -t` before reloading Nginx.
 - docker group membership takes effect at next login, so log out and in (or
   `newgrp docker`) before running `docker compose` as your own user.
 
@@ -313,6 +330,12 @@ lives at `envs/prod/.backend.env` locally (`envs/stage/.backend.env` for
 staging) and must be uploaded to the server before starting/restarting the
 compose stack (see "Deployment" below).
 
+Provisioning restricts `/var/www/envs` to its owner and the `irv_admin` group:
+directories use mode `2770` and files use `640`. Deployment uploads preserve
+these restrictions with `rsync --chmod`; do not copy secret files with public
+read permissions. The user running Compose must own the files or belong to
+`irv_admin`.
+
 Expected contents, to be replaced with actual details:
 
 ```conf
@@ -325,11 +348,21 @@ PGPASSWORD=docker
 # Django settings
 # generate a secret key with e.g.:
 #   python3 -c "import secrets; print(secrets.token_urlsafe(50))"
+#   python3 -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 DJANGO_SECRET_KEY=change-me
 DJANGO_DEBUG=false
 DJANGO_ALLOWED_HOSTS=mauritius.infrastructureresilience.org
 CSRF_TRUSTED_ORIGINS=https://mauritius.infrastructureresilience.org
 ```
+
+With `DJANGO_DEBUG=false` (the default), Django refuses to start if
+`DJANGO_SECRET_KEY` is missing, shorter than 50 characters, has fewer than five
+distinct characters, or begins with `django-insecure-`. Replace `change-me`
+with a freshly generated secret using the command above.
+
+In development (`DJANGO_DEBUG=true`) settings support HTTP without secure
+cookies. Otherwise, Django trusts Nginx's `X-Forwarded-Proto` header to
+recognize HTTPS, and marks session and CSRF cookies as secure.
 
 Testing database connection:
 
@@ -357,25 +390,45 @@ GitHub package registry. For more information, see these [instructions for
 authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
 and use a token with `read:packages` scope to read from the GHCR.
 
-On remote, to first start the application:
+From the repository root, upload the production data, environment file and
+Compose configuration to the server (replace `mauritius` with your SSH host
+alias if needed):
 
 ```bash
-# on remote
-docker login ghcr.io  # use GitHub username for username, GitHub access token for password
-cd /var/www
-docker compose -f docker-compose.prod.yml up -d
+rsync -av tileserver/vector/ mauritius:/var/www/tileserver/vector/
+rsync -av tileserver/raster/ mauritius:/var/www/tileserver/raster/
+rsync -av tileserver/stacks/ mauritius:/var/www/tileserver/stacks/
+rsync -av etl/hazard_layers.csv mauritius:/var/www/etl/
+rsync -av docker-compose.prod.yml mauritius:/var/www/
+rsync -av --chmod=D2770,F640 envs/prod/ mauritius:/var/www/envs/prod/
 ```
 
-Run `deploy/deploy_stage.sh` to upload data and docker-compose config, pull the
-published images and (re)start the services.
+Log into GHCR on the server once, using a GitHub token with `read:packages`:
+
+```bash
+ssh mauritius 'docker login ghcr.io'
+```
+
+Then pull the published images, run migrations and collect Django static files
+before starting or updating the services:
+
+```bash
+ssh mauritius 'bash -se' <<'REMOTE'
+cd /var/www
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml run --rm --no-deps -T django python manage.py migrate --noinput
+docker compose -f docker-compose.prod.yml run --rm --no-deps -T django python manage.py collectstatic --noinput
+docker compose -f docker-compose.prod.yml up -d --no-build
+REMOTE
+```
+
+Consider backing up the database before running database migrations. On AWS,
+create an RDS snapshot.
 
 ### Manage staging/production
 
-
 The docker compose setup runs the frontend, the django backend and the vector
-tileserver. Frontend and backend are exposed on high-numbered ports bound to
-localhost; the vector tileserver is reached by the backend over the compose
-network.
+tileserver.
 
 [Nginx](https://nginx.org/en/) is used as a reverse-proxy to terminate incoming
 connections and pass them on to the containerised services.
@@ -388,11 +441,13 @@ for instructions on setting up or renewing SSL certificates.
 
 ### Publishing docker images
 
-For pushing to the GitHub container registry, you will need to follow these
-[instructions for authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) and use a token with `write:packages` scope.
+To push to the GitHub container registry, you will need to follow these
+[instructions for
+authentication](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry)
+and use a token with `write:packages` scope.
 
-Build and publish all images (versions as set in `docker-compose.prod.yml`;
-the backend image is built from `./irvapp`):
+Build and publish all images (versions as set in `docker-compose.prod.yml`; the
+backend image is built from `./irvapp`):
 
 ```bash
 # Build images locally
@@ -420,16 +475,32 @@ docker compose -f docker-compose.prod.yml build frontend
 docker push ghcr.io/nismod/irvapp-frontend:0.1
 ```
 
-Run `deploy.sh` to update the docker-compose config on the server, pull
-images and restart services.
-
-Alternatively, on the remote server, pull the image, then restart the
-specific service:
+To deploy the updated image in production, update its tag in
+`docker-compose.prod.yml`, then from the repository root upload the updated
+Compose file and apply it on the server:
 
 ```bash
-# Pull image
-docker pull ghcr.io/nismod/irvapp-frontend:0.1
+rsync -av docker-compose.prod.yml mauritius:/var/www/
 
-# Restart service
+ssh mauritius 'bash -se' <<'REMOTE'
+cd /var/www
+docker compose -f docker-compose.prod.yml pull frontend
 docker compose -f docker-compose.prod.yml up -d frontend
+REMOTE
+```
+
+For a `vector-tileserver` update, replace `frontend` with `vector-tileserver`.
+For a backend (`django`) update, also run migrations and static-file collection,
+as above:
+
+```bash
+rsync -av docker-compose.prod.yml mauritius:/var/www/
+
+ssh mauritius 'bash -se' <<'REMOTE'
+cd /var/www
+docker compose -f docker-compose.prod.yml pull django
+docker compose -f docker-compose.prod.yml run --rm --no-deps -T django python manage.py migrate --noinput
+docker compose -f docker-compose.prod.yml run --rm --no-deps -T django python manage.py collectstatic --noinput
+docker compose -f docker-compose.prod.yml up -d django
+REMOTE
 ```

@@ -36,12 +36,13 @@ services:
     image: ghcr.io/nismod/irvapp-backend:0.1
     build: ./irvapp
     environment:
+      - DJANGO_DEBUG=true
       - PGHOST=db
       - PGDATABASE=jamaicadev
       - PGUSER=docker
       - PGPASSWORD=docker
       - PIXEL_STACK_DATA_DIR=/data/pixel
-      - LAYER_METADATA_PATH=/data/pixel/hazard_layers.csv
+      - LAYER_METADATA_PATH=/data/hazard_layers.csv
       - TILEDB_URI=/data/raster
     ports:
       - 8000:8000
@@ -53,7 +54,7 @@ services:
       - django-media:/code/media
       - ./tileserver/stacks:/data/pixel:ro
       - ./tileserver/raster/data:/data/raster:ro
-      - ./etl/hazard_layers.csv:/data/pixel/hazard_layers.csv:ro
+      - ./etl/hazard_layers.csv:/data/hazard_layers.csv:ro
     command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
     labels:
       - "traefik.enable=true"

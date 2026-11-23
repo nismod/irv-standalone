@@ -93,8 +93,14 @@ sudo mkdir -p /var/www/tileserver/raster/data
 sudo mkdir -p /var/www/tileserver/vector/data
 sudo mkdir -p /var/www/tileserver/stacks
 sudo mkdir -p /var/www/etl
+sudo mkdir -p /var/www/envs/prod
 sudo chown -R :irv_admin /var/www/
-sudo chmod -R 775 /var/www/
+# Public data is readable by nginx; directories inherit the admin group.
+# Prune envs so secret files are never given public permissions on reruns.
+sudo find /var/www -path /var/www/envs -prune -o -type d -exec chmod 2775 {} +
+sudo find /var/www -path /var/www/envs -prune -o -type f -exec chmod 664 {} +
+sudo find /var/www/envs -type d -exec chmod 2770 {} +
+sudo find /var/www/envs -type f -exec chmod 640 {} +
 
 #
 # Set up nginx as a reverse proxy for the app services
@@ -103,10 +109,14 @@ sudo chmod -R 775 /var/www/
 #   sudo htpasswd -B /etc/nginx/.htpasswd username
 sudo touch /etc/nginx/.htpasswd
 
-# Install the site config. This bootstrap version serves plain HTTP; certbot
-# rewrites the installed copy below to add SSL termination and redirect.
-sed "s/DOMAIN_PLACEHOLDER/${SITE_DOMAIN}/g" "$NGINX_TEMPLATE" |
-  sudo tee "/etc/nginx/sites-available/${SITE_DOMAIN}" > /dev/null
+# Install the HTTP bootstrap only for a new site. Preserve existing configs,
+# including the SSL termination and redirect installed by certbot.
+if ! sudo test -e "/etc/nginx/sites-available/${SITE_DOMAIN}"; then
+  sed "s/DOMAIN_PLACEHOLDER/${SITE_DOMAIN}/g" "$NGINX_TEMPLATE" |
+    sudo tee "/etc/nginx/sites-available/${SITE_DOMAIN}" > /dev/null
+else
+  echo "Preserving existing nginx configuration for ${SITE_DOMAIN}."
+fi
 sudo ln -sf "/etc/nginx/sites-available/${SITE_DOMAIN}" "/etc/nginx/sites-enabled/${SITE_DOMAIN}"
 sudo rm -f /etc/nginx/sites-enabled/default
 
