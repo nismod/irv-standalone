@@ -41,7 +41,7 @@ async function fetchRasterSourceDomains(hazardIds: string[]) {
 
 const rasterSourceQuery = atom(async (get) => {
   const metadata = get(hazardsMetadataState);
-  const hazardIds = Object.keys(metadata);
+  const hazardIds = Object.values(metadata).filter((layer) => layer.has_access).map((layer) => layer.id);
   return fetchRasterSourceDomains(hazardIds);
 });
 

@@ -77,7 +77,7 @@ class RasterTileSourceDomainsView(APIView):
     )
     def get(self, request, dataset_id):
         try:
-            layer = RasterLayer.objects.select_related("tile_source", "dataset").get(
+            layer = RasterLayer.objects.select_related("tile_source", "identity__dataset").get(
                 pk=dataset_id
             )
             self.check_object_permissions(request, layer)

@@ -7,7 +7,7 @@ from rest_framework.test import APIClient
 
 from map.models import (
     AdaptationCostBenefit, DamagesExpected, DamagesRp, Dataset, Feature,
-    FeatureLayer, ModelParameterSet, RasterLayer,
+    FeatureLayer, LayerIdentity, ModelParameterSet, RasterLayer,
 )
 from raster.models import RasterTileSource
 
@@ -26,8 +26,9 @@ class FeatureAPIAccessTests(TestCase):
         self.adaptations = {}
         self.rp = {}
         for name, dataset in (("allowed", allowed), ("restricted", restricted), ("unlinked", None)):
+            LayerIdentity.objects.create(id=name, kind="feature", dataset=dataset)
             layer = FeatureLayer.objects.create(
-                layer_name=name, dataset=dataset, sector="transport", subsector="road", asset_type="edge",
+                layer_name=name, sector="transport", subsector="road", asset_type="edge",
             )
             feature = Feature.objects.create(
                 string_id=name, layer=layer, properties={"name": name}, geom=Point(0, 0, srid=4326),
@@ -105,7 +106,8 @@ class FeatureAPIAccessTests(TestCase):
         group = Group.objects.create(name='coastal-access')
         dataset.access_groups.add(group)
         source = RasterTileSource.objects.create(keys=['type'])
-        RasterLayer.objects.create(id='coast-v2', dataset=dataset, tile_source=source,
+        LayerIdentity.objects.create(id='coast-v2', kind='raster', dataset=dataset)
+        RasterLayer.objects.create(id='coast-v2', tile_source=source,
             label='Coast', quantity='depth', unit='m', stacking_order=0, display_order=0)
         params = {'scenario': 'coastal-only'}
         result = DamagesExpected.objects.create(

@@ -56,7 +56,7 @@ def accessible_feature_layers(user):
 
     if not user.is_authenticated:
         return FeatureLayer.objects.none()
-    return FeatureLayer.objects.filter(dataset__in=Dataset.objects.visible_to(user))
+    return FeatureLayer.objects.filter(identity__dataset__in=Dataset.objects.visible_to(user))
 
 
 def raster_database_key(database):
@@ -69,7 +69,7 @@ def raster_database_key(database):
 def inaccessible_raster_databases(user):
     from .models import Dataset, RasterLayer
     return {raster_database_key(database) for database in RasterLayer.objects.exclude(
-        dataset__in=Dataset.objects.visible_to(user),
+        identity__dataset__in=Dataset.objects.visible_to(user),
     ).values_list("tile_source__database", flat=True).distinct()}
 
 
@@ -77,8 +77,6 @@ def raster_source_accessible(user, source, inaccessible_databases=None):
     """Fail closed if a shared raster database contains an inaccessible dataset."""
     if not user.is_authenticated:
         return False
-    if user.is_superuser:
-        return True
     if inaccessible_databases is None:
         inaccessible_databases = inaccessible_raster_databases(user)
     return raster_database_key(source.database) not in inaccessible_databases
@@ -98,13 +96,13 @@ class HasDatasetAccess(BasePermission):
             if not request.user.is_authenticated:
                 return False
             return obj.raster_layers.filter(
-                dataset__in=Dataset.objects.visible_to(request.user)
+                identity__dataset__in=Dataset.objects.visible_to(request.user)
             ).exists()
 
         if isinstance(obj, (FeatureLayer, RasterLayer)):
             if isinstance(obj, RasterLayer) and not raster_source_accessible(request.user, obj.tile_source):
                 return False
-            obj = obj.dataset if obj.dataset_id else None
+            obj = obj.identity.dataset if obj.identity.dataset_id else None
 
         user_group_ids = set(
             request.user.groups.values_list("pk", flat=True)
@@ -122,16 +120,16 @@ def inaccessible_hazard_ids(user):
     Result hazards without a raster catalogue entry are left available: a
     damage model does not require a matching raster dataset.
     """
+    from .models import Dataset, RasterLayer
+
+    unassigned = set(RasterLayer.objects.filter(identity__dataset__isnull=True).values_list("pk", flat=True))
     if user.is_superuser:
-        return set()
-    from .models import Dataset
+        return unassigned
 
-    from .models import RasterLayer
-
-    denied_layers = set(RasterLayer.objects.filter(dataset__group__iexact="hazards").exclude(
-        dataset__in=Dataset.objects.visible_to(user),
+    denied_layers = set(RasterLayer.objects.filter(identity__dataset__group__iexact="hazards").exclude(
+        identity__dataset__in=Dataset.objects.visible_to(user),
     ).values_list("pk", flat=True))
     denied_datasets = set(Dataset.objects.filter(group__iexact="hazards").exclude(
         pk__in=Dataset.objects.visible_to(user),
     ).values_list("pk", flat=True))
-    return denied_layers | denied_datasets
+    return denied_layers | denied_datasets | unassigned

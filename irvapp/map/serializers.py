@@ -110,15 +110,16 @@ class DatasetSerializer(serializers.ModelSerializer):
 class FeatureLayerSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source="pk", read_only=True)
     layer_name = serializers.CharField(source="pk", read_only=True)
+    dataset = serializers.PrimaryKeyRelatedField(source="identity.dataset", read_only=True, allow_null=True)
     has_access = serializers.SerializerMethodField()
 
     @extend_schema_field(serializers.BooleanField())
     def get_has_access(self, layer):
-        if layer.dataset_id is None:
+        if layer.identity.dataset_id is None:
             return False
         if not hasattr(self, "_user_group_ids"):
             self._user_group_ids = set(self.context["request"].user.groups.values_list("pk", flat=True))
-        return user_has_dataset_access(self.context["request"].user, layer.dataset, self._user_group_ids)
+        return user_has_dataset_access(self.context["request"].user, layer.identity.dataset, self._user_group_ids)
 
     class Meta:
         model = FeatureLayer
@@ -129,7 +130,8 @@ class FeatureLayerSerializer(serializers.ModelSerializer):
 class RasterLayerSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source="pk", read_only=True)
     has_access = serializers.SerializerMethodField()
-    group = serializers.CharField(source="dataset.group", read_only=True)
+    dataset = serializers.PrimaryKeyRelatedField(source="identity.dataset", read_only=True, allow_null=True)
+    group = serializers.CharField(source="identity.dataset.group", read_only=True, allow_null=True)
     color_range = serializers.ListField(child=serializers.FloatField(), allow_null=True, required=False)
 
     @extend_schema_field(serializers.BooleanField())
@@ -137,10 +139,10 @@ class RasterLayerSerializer(serializers.ModelSerializer):
         if not hasattr(self, "_user_group_ids"):
             self._user_group_ids = set(self.context["request"].user.groups.values_list("pk", flat=True))
         user = self.context["request"].user
-        if not user_has_dataset_access(user, layer.dataset, self._user_group_ids):
+        if not user_has_dataset_access(user, layer.identity.dataset, self._user_group_ids):
             return False
         if not hasattr(self, "_inaccessible_databases"):
-            self._inaccessible_databases = inaccessible_raster_databases(user) if not user.is_superuser else set()
+            self._inaccessible_databases = inaccessible_raster_databases(user)
         return raster_source_accessible(user, layer.tile_source, self._inaccessible_databases)
 
     class Meta:

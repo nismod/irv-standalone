@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import (
@@ -146,7 +146,7 @@ class FeatureLayerViewset(viewsets.ReadOnlyModelViewSet):
         return super().retrieve(request, *args, **kwargs)
 
     def get_queryset(self):
-        return FeatureLayer.objects.select_related("dataset").prefetch_related("dataset__access_groups").order_by("pk")
+        return FeatureLayer.objects.select_related("identity__dataset").prefetch_related("identity__dataset__access_groups").order_by("pk")
 
 
 class RasterLayerViewset(viewsets.ReadOnlyModelViewSet):
@@ -159,14 +159,19 @@ class RasterLayerViewset(viewsets.ReadOnlyModelViewSet):
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
-    @extend_schema(parameters=[OpenApiParameter("group", str, OpenApiParameter.QUERY, required=False)])
+    @extend_schema(parameters=[OpenApiParameter(
+        "group", str, OpenApiParameter.QUERY, required=False,
+        description="Filter by dataset group; hazards also includes unassigned raster layers.",
+    )])
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = RasterLayer.objects.select_related("dataset", "tile_source").prefetch_related("dataset__access_groups").order_by("pk")
+        queryset = RasterLayer.objects.select_related("identity__dataset", "tile_source").prefetch_related("identity__dataset__access_groups").order_by("pk")
         group = self.request.query_params.get("group")
-        return queryset.filter(dataset__group__iexact=group) if group else queryset
+        if group and group.lower() == "hazards":
+            return queryset.filter(Q(identity__dataset__group__iexact=group) | Q(identity__dataset__isnull=True))
+        return queryset.filter(identity__dataset__group__iexact=group) if group else queryset
 
 
 class NetworkLayerStyleViewset(viewsets.ReadOnlyModelViewSet):

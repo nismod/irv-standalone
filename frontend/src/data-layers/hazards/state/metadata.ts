@@ -80,7 +80,7 @@ export const hazardSourceMetadataState = unwrap(
     const datasets = Object.values(metadata);
     const responses = await Promise.all(
       datasets.map(async (dataset) => {
-        if (dataset.tile_source == null) {
+        if (!dataset.has_access || dataset.tile_source == null) {
           return [dataset.id, { keys: null, fixedValues: {} }] as const;
         }
 

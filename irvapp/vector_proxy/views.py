@@ -134,8 +134,8 @@ class VectorTileProxyView(APIView):
         if dataset_id is None:
             return
 
-        layer = FeatureLayer.objects.select_related("dataset").prefetch_related(
-            "dataset__access_groups"
+        layer = FeatureLayer.objects.select_related("identity__dataset").prefetch_related(
+            "identity__dataset__access_groups"
         ).filter(pk=dataset_id).first()
         if layer is not None:
             self.check_object_permissions(request, layer)
