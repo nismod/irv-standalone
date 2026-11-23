@@ -39,7 +39,10 @@ export function hazardViewLayer(
     params: { hazardType, hazardParams },
     fn: ({ deckProps }) => {
       const { scheme, range } = getHazardColorSpec(dataset);
-      const data = HAZARD_SOURCE.getDataUrl({ hazardType, hazardParams, sourceMetadata }, { scheme, range });
+      const data = HAZARD_SOURCE.getDataUrl(
+        { hazardType, hazardParams, sourceMetadata },
+        { scheme, range },
+      );
       if (!data) {
         return [];
       }

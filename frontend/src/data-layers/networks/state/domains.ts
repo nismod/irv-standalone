@@ -7,7 +7,4 @@ async function fetchNetworkDomains() {
   return module.NETWORK_DOMAINS;
 }
 
-export const networkDomainState = unwrap(
-  atom(fetchNetworkDomains),
-  prev => prev || null,
-);
+export const networkDomainState = unwrap(atom(fetchNetworkDomains), (prev) => prev || null);

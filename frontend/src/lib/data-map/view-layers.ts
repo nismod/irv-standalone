@@ -51,7 +51,10 @@ export interface FormatConfig<D = unknown> {
 
 export type LayerMetadata = Record<string, { label: string }>;
 export type ViewLayerDataAccessFunction = (fieldSpec: FieldSpec) => Accessor<unknown>;
-export type ViewLayerDataFormatFunction = (fieldSpec: FieldSpec, metadata?: LayerMetadata) => FormatConfig;
+export type ViewLayerDataFormatFunction = (
+  fieldSpec: FieldSpec,
+  metadata?: LayerMetadata,
+) => FormatConfig;
 
 export interface ViewLayer {
   id: string;

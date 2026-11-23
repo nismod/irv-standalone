@@ -25,10 +25,7 @@ async function fetchNoticeContent(): Promise<NoticeContent> {
 }
 
 const noticeContentQuery = atom(fetchNoticeContent);
-export const noticeContentState = unwrap(
-  noticeContentQuery,
-  (prev) => prev ?? emptyNoticeContent,
-);
+export const noticeContentState = unwrap(noticeContentQuery, (prev) => prev ?? emptyNoticeContent);
 
 export interface NoticeContent {
   content: {

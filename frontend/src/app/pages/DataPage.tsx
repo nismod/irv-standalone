@@ -89,7 +89,11 @@ function parseMarkdownTableLine(line: string): string[] {
 function isMarkdownTableStart(lines: string[], index: number): boolean {
   const currentLine = lines[index]?.trim() ?? '';
   const nextLine = lines[index + 1]?.trim() ?? '';
-  return currentLine.startsWith('|') && currentLine.endsWith('|') && /^(\|\s*:?-+:?\s*)+\|$/.test(nextLine);
+  return (
+    currentLine.startsWith('|') &&
+    currentLine.endsWith('|') &&
+    /^(\|\s*:?-+:?\s*)+\|$/.test(nextLine)
+  );
 }
 
 function parseMarkdownContentBlocks(markdown: string): MarkdownContentBlock[] {

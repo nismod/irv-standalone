@@ -6,7 +6,11 @@ import { useSetAtom } from 'jotai';
 
 import { NetworksSection } from './NetworksSection';
 import rasterSourceDomains from 'mocks/raster_source_domains.json';
-import { type PaginatedDatasetList, type PaginatedRasterLayerList, type RasterTileSource } from 'lib/api-client';
+import {
+  type PaginatedDatasetList,
+  type PaginatedRasterLayerList,
+  type RasterTileSource,
+} from 'lib/api-client';
 import {
   sectionStyleOptionsState,
   sectionStyleValueState,
@@ -269,13 +273,22 @@ const meta = {
           return HttpResponse.json(mockInfrastructureTree);
         }),
         http.get('/api/map/raster-layers', () => HttpResponse.json(hazardsResponse)),
-        http.get('/api/map/feature-layers', () => HttpResponse.json({
-          ...networksResponse,
-          results: networksResponse.results.map((dataset, index) => ({
-            id: dataset.id, layer_name: dataset.id, dataset: dataset.id, sector: '', subsector: '', asset_type: '',
-            stacking_order: index, display_order: index, has_access: dataset.has_access,
-          })),
-        })),
+        http.get('/api/map/feature-layers', () =>
+          HttpResponse.json({
+            ...networksResponse,
+            results: networksResponse.results.map((dataset, index) => ({
+              id: dataset.id,
+              layer_name: dataset.id,
+              dataset: dataset.id,
+              sector: '',
+              subsector: '',
+              asset_type: '',
+              stacking_order: index,
+              display_order: index,
+              has_access: dataset.has_access,
+            })),
+          }),
+        ),
         http.get('/api/map/datasets', ({ request }) => {
           const url = new URL(request.url);
           if (url.searchParams.get('group') === 'networks') {

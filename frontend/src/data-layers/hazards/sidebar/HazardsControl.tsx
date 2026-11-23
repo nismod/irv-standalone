@@ -201,7 +201,12 @@ function HazardToggleSection({ hazard, disabled }) {
   const permissionDenied = !catalogueEntry.has_access;
 
   return (
-    <ToggleSection id={hazard} label={catalogueEntry.label} disabled={disabled || permissionDenied} forceCollapsed={permissionDenied}>
+    <ToggleSection
+      id={hazard}
+      label={catalogueEntry.label}
+      disabled={disabled || permissionDenied}
+      forceCollapsed={permissionDenied}
+    >
       {sliderParams.map((param) => (
         <InputSection key={param}>
           <HazardParamControl

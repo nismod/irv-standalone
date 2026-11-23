@@ -1,9 +1,5 @@
 import { Provider } from 'jotai';
-import {
-  Route,
-  BrowserRouter as Router,
-  Routes,
-} from 'react-router-dom';
+import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { Box, CssBaseline, StyledEngineProvider } from '@mui/material';
 import { ThemeProvider } from '@mui/material/styles';
 import { QueryClientProvider } from '@tanstack/react-query';

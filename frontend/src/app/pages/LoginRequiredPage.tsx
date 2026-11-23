@@ -1,12 +1,5 @@
 import { FormEvent, useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Button, Stack, TextField, Typography } from '@mui/material';
 
 import { useLoginMutation } from 'lib/auth/use-auth-session';
 
@@ -24,20 +17,13 @@ export const LoginRequiredPage = () => {
       await loginMutation.mutateAsync({ username, password });
       setPassword('');
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Unable to log in.';
+      const message = error instanceof Error ? error.message : 'Unable to log in.';
       setSubmitError(message);
     }
   };
 
   return (
-    <Box
-      alignItems="center"
-      display="flex"
-      height="100%"
-      justifyContent="center"
-      px={2}
-    >
+    <Box alignItems="center" display="flex" height="100%" justifyContent="center" px={2}>
       <Box
         component="form"
         maxWidth={420}
@@ -67,11 +53,7 @@ export const LoginRequiredPage = () => {
             type="password"
             value={password}
           />
-          <Button
-            disabled={loginMutation.isPending}
-            type="submit"
-            variant="contained"
-          >
+          <Button disabled={loginMutation.isPending} type="submit" variant="contained">
             {loginMutation.isPending ? 'Signing in...' : 'Sign in'}
           </Button>
         </Stack>

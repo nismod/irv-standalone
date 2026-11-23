@@ -9,5 +9,5 @@ export function orderLayersByStacking(
   const ordered = layers.filter((layer) => order(layer) !== undefined);
   ordered.sort((a, b) => order(a)! - order(b)!);
   let index = 0;
-  return layers.map((layer) => order(layer) === undefined ? layer : ordered[index++]);
+  return layers.map((layer) => (order(layer) === undefined ? layer : ordered[index++]));
 }

@@ -39,7 +39,9 @@ export function orderHierarchyLayers(
     ...(node.children ? { children: orderHierarchyLayers(node.children, orders) } : {}),
   }));
   const leaves = updated.filter((node) => node.layerId && !node.children);
-  leaves.sort((a, b) => (orders[a.layerId!]?.display_order ?? 0) - (orders[b.layerId!]?.display_order ?? 0));
+  leaves.sort(
+    (a, b) => (orders[a.layerId!]?.display_order ?? 0) - (orders[b.layerId!]?.display_order ?? 0),
+  );
   let index = 0;
   return updated.map((node) => (node.layerId && !node.children ? leaves[index++] : node));
 }

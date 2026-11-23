@@ -1,9 +1,5 @@
 import { createClient } from 'lib/api-client/client';
-import {
-  authLoginCreate,
-  authLogoutCreate,
-  authMeRetrieve,
-} from 'lib/api-client';
+import { authLoginCreate, authLogoutCreate, authMeRetrieve } from 'lib/api-client';
 import type { LoginErrorResponse, SessionState } from 'lib/api-client';
 
 export type AuthSession = SessionState;

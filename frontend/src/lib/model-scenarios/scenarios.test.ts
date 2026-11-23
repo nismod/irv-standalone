@@ -73,16 +73,33 @@ describe('model scenarios', () => {
       { hazard: 'pluvial', parameters: { GWL: 2 }, protection_standard: 0 },
     ];
     const all = scenariosForHazard(catalogue, 'all');
-    expect(all.map((row) => row.parameters)).toEqual([{ SLR: 0, GWL: 2 }, { SLR: 20, GWL: 2 }]);
+    expect(all.map((row) => row.parameters)).toEqual([
+      { SLR: 0, GWL: 2 },
+      { SLR: 20, GWL: 2 },
+    ]);
     const selected = selectResult(all, { SLR: 20, GWL: 2 });
     expect(scenarioDimensions(selected)).toEqual({
-      hazard: 'all', parameters: { SLR: 20, GWL: 2 }, protection_standard: 0,
+      hazard: 'all',
+      parameters: { SLR: 20, GWL: 2 },
+      protection_standard: 0,
       hazard_parameters: { coastal: { SLR: 20 }, fluvial: { GWL: 2 }, pluvial: { GWL: 2 } },
     });
-    expect(parameterOptions(all, all[0].parameters, 'SLR').map((option) => option.value)).toEqual([0, 20]);
-    expect(scenariosForHazard([...catalogue, {
-      hazard: 'wind', parameters: { GWL: '2' }, protection_standard: 0,
-    }], 'all')).toEqual([]);
+    expect(parameterOptions(all, all[0].parameters, 'SLR').map((option) => option.value)).toEqual([
+      0, 20,
+    ]);
+    expect(
+      scenariosForHazard(
+        [
+          ...catalogue,
+          {
+            hazard: 'wind',
+            parameters: { GWL: '2' },
+            protection_standard: 0,
+          },
+        ],
+        'all',
+      ),
+    ).toEqual([]);
     expect(scenariosForHazard([], 'all')).toEqual([]);
   });
 
@@ -121,17 +138,23 @@ describe('model scenarios', () => {
 
   it('scopes a shared-parameter total to the checked hazards only', () => {
     const catalogue: ModelScenario[] = ['coastal', 'fluvial', 'pluvial'].map((hazard) => ({
-      hazard, parameters: { GWL: 2 }, protection_standard: 0,
+      hazard,
+      parameters: { GWL: 2 },
+      protection_standard: 0,
     }));
-    expect(scenariosForHazards(catalogue, ['fluvial', 'pluvial'])).toEqual([{
-      parameters: { GWL: 2 }, protection_standard: 0,
-      hazard_parameters: { fluvial: { GWL: 2 }, pluvial: { GWL: 2 } },
-    }]);
+    expect(scenariosForHazards(catalogue, ['fluvial', 'pluvial'])).toEqual([
+      {
+        parameters: { GWL: 2 },
+        protection_standard: 0,
+        hazard_parameters: { fluvial: { GWL: 2 }, pluvial: { GWL: 2 } },
+      },
+    ]);
     expect(scenariosForHazards(catalogue, ['fluvial'])).toEqual([catalogue[1]]);
     expect(scenariosForHazards(catalogue, [])).toEqual([]);
     expect(scenariosForHazards(catalogue, ['fluvial', 'missing'])).toEqual([]);
     expect(scenariosForHazards(catalogue, 'all')).toEqual(scenariosForHazard(catalogue, 'all'));
-    expect(scenariosForHazards(catalogue, ['pluvial', 'coastal', 'fluvial']))
-      .toEqual(scenariosForHazard(catalogue, 'all'));
+    expect(scenariosForHazards(catalogue, ['pluvial', 'coastal', 'fluvial'])).toEqual(
+      scenariosForHazard(catalogue, 'all'),
+    );
   });
 });

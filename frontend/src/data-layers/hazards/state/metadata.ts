@@ -1,6 +1,11 @@
 import { atom } from 'jotai';
 import { unwrap } from 'jotai/utils';
-import { type RasterLayer, mapRasterLayersList, rasterTileSource, rasterTileSourceDomains } from 'lib/api-client';
+import {
+  type RasterLayer,
+  mapRasterLayersList,
+  rasterTileSource,
+  rasterTileSourceDomains,
+} from 'lib/api-client';
 
 const DEFAULT_HAZARD_COLOR_SCHEMES: Record<string, { scheme: string; range: [number, number] }> = {
   fluvial: { scheme: 'blues', range: [0, 10] },
@@ -12,7 +17,8 @@ const DEFAULT_HAZARD_COLOR_SCHEMES: Record<string, { scheme: string; range: [num
 };
 
 export function getHazardColorSpec(dataset?: RasterLayer | null) {
-  const fallback = (dataset && DEFAULT_HAZARD_COLOR_SCHEMES[dataset.id]) ?? DEFAULT_HAZARD_COLOR_SCHEMES.pluvial;
+  const fallback =
+    (dataset && DEFAULT_HAZARD_COLOR_SCHEMES[dataset.id]) ?? DEFAULT_HAZARD_COLOR_SCHEMES.pluvial;
   const range =
     dataset?.color_range != null &&
     dataset.color_range.length === 2 &&
@@ -84,18 +90,19 @@ export const hazardSourceMetadataState = unwrap(
           return [dataset.id, { keys: null, fixedValues: {} }] as const;
         }
 
-        const [{ data: sourceData, error: sourceError }, { data: domainData, error: domainError }] = await Promise.all([
-          rasterTileSource({
-            baseUrl: '/api',
-            path: { source_id: dataset.tile_source },
-            credentials: 'include',
-          }),
-          rasterTileSourceDomains({
-            baseUrl: '/api',
-            path: { dataset_id: dataset.id },
-            credentials: 'include',
-          }),
-        ]);
+        const [{ data: sourceData, error: sourceError }, { data: domainData, error: domainError }] =
+          await Promise.all([
+            rasterTileSource({
+              baseUrl: '/api',
+              path: { source_id: dataset.tile_source },
+              credentials: 'include',
+            }),
+            rasterTileSourceDomains({
+              baseUrl: '/api',
+              path: { dataset_id: dataset.id },
+              credentials: 'include',
+            }),
+          ]);
 
         if (sourceError) {
           console.error(`Error fetching raster source ${dataset.tile_source}:`, sourceError);
@@ -108,7 +115,9 @@ export const hazardSourceMetadataState = unwrap(
         const domains = domainData?.domains ?? [];
         const fixedValues = Object.fromEntries(
           (keys ?? []).map((key) => {
-            const values = Array.from(new Set(domains.map((entry) => entry[key]).filter((value) => value != null)));
+            const values = Array.from(
+              new Set(domains.map((entry) => entry[key]).filter((value) => value != null)),
+            );
             return [key, values.length === 1 ? values[0] : null];
           }),
         ) as Record<string, string | null>;

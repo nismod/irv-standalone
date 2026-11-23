@@ -4,10 +4,7 @@ import { atomFamily } from 'jotai-family';
 import { unwrap } from 'jotai/utils';
 
 import { rasterTileSourceDomains } from 'lib/api-client';
-import {
-  inferDependenciesFromData,
-  inferDomainsFromData,
-} from 'lib/controls/data-params';
+import { inferDependenciesFromData, inferDomainsFromData } from 'lib/controls/data-params';
 import { type DataParamGroupConfig, type ParamDomain } from 'lib/controls/data-params';
 import { hazardsMetadataState } from './metadata';
 import type { RasterParamGroupConfig } from '../raster-scenario';
@@ -41,14 +38,13 @@ async function fetchRasterSourceDomains(hazardIds: string[]) {
 
 const rasterSourceQuery = atom(async (get) => {
   const metadata = get(hazardsMetadataState);
-  const hazardIds = Object.values(metadata).filter((layer) => layer.has_access).map((layer) => layer.id);
+  const hazardIds = Object.values(metadata)
+    .filter((layer) => layer.has_access)
+    .map((layer) => layer.id);
   return fetchRasterSourceDomains(hazardIds);
 });
 
-const rasterSourceData = unwrap(
-  rasterSourceQuery,
-  (prev) => prev ?? {},
-);
+const rasterSourceData = unwrap(rasterSourceQuery, (prev) => prev ?? {});
 
 function getEntriesForType(data: Record<string, RasterSourceDomainEntry[]>, type: string) {
   const entries = data[type] ?? [];
@@ -65,15 +61,17 @@ function getEntriesForType(data: Record<string, RasterSourceDomainEntry[]>, type
 }
 
 function withDefinedDomains<T extends Record<string, ParamDomain | undefined>>(obj: T) {
-  return Object.fromEntries(
-    Object.entries(obj).filter(([, value]) => value != null),
-  ) as Partial<{ [K in keyof T]: Exclude<T[K], undefined> }>;
+  return Object.fromEntries(Object.entries(obj).filter(([, value]) => value != null)) as Partial<{
+    [K in keyof T]: Exclude<T[K], undefined>;
+  }>;
 }
 
-function withDefinedDefaults<T extends Record<string, HazardParams[keyof HazardParams] | undefined>>(obj: T) {
-  return Object.fromEntries(
-    Object.entries(obj).filter(([, value]) => value != null),
-  ) as Partial<{ [K in keyof T]: Exclude<T[K], undefined> }>;
+function withDefinedDefaults<
+  T extends Record<string, HazardParams[keyof HazardParams] | undefined>,
+>(obj: T) {
+  return Object.fromEntries(Object.entries(obj).filter(([, value]) => value != null)) as Partial<{
+    [K in keyof T]: Exclude<T[K], undefined>;
+  }>;
 }
 
 const PARAM_KEY_ALIASES: Record<string, string> = {
@@ -108,14 +106,13 @@ function buildParamDomains(entries: RasterSourceDomainEntry[]) {
         const paramKey = normaliseParamKey(key);
         const mappedValues = values.map((value) => normaliseParamValue(String(value)));
 
-        const uniqueValues = Array.from(new Set(mappedValues.map((value) => JSON.stringify(value)))).map(
-          (value) => JSON.parse(value),
-        );
+        const uniqueValues = Array.from(
+          new Set(mappedValues.map((value) => JSON.stringify(value))),
+        ).map((value) => JSON.parse(value));
 
-        const sortedValues =
-          uniqueValues.every((value) => typeof value === 'number')
-            ? [...uniqueValues].sort((a, b) => Number(a) - Number(b))
-            : uniqueValues;
+        const sortedValues = uniqueValues.every((value) => typeof value === 'number')
+          ? [...uniqueValues].sort((a, b) => Number(a) - Number(b))
+          : uniqueValues;
 
         return [paramKey, sortedValues];
       }),
@@ -137,9 +134,10 @@ function buildParamDefaults(type: string, paramDomains: Record<string, ParamDoma
           } as Record<string, string | number>
         )[key];
 
-        const value = preferredDefault != null && values.includes(preferredDefault)
-          ? preferredDefault
-          : values[0];
+        const value =
+          preferredDefault != null && values.includes(preferredDefault)
+            ? preferredDefault
+            : values[0];
 
         return [key, value];
       }),
@@ -161,7 +159,8 @@ const rasterDomainsByType = atomFamily((type: string) => {
   return atom((get) => {
     const data = get(rasterSourceData);
     const entriesOfType = getEntriesForType(data, type);
-    return buildParamDomains(entriesOfType) as DataParamGroupConfig<HazardParams>['paramDomains'] | null;
+    return buildParamDomains(entriesOfType) as
+      DataParamGroupConfig<HazardParams>['paramDomains'] | null;
   });
 });
 
@@ -175,7 +174,10 @@ const rasterDependenciesByType = atomFamily((type: string) => {
     }
 
     const dependencySpec = {} as Record<string, string[]>;
-    if (entriesOfType.some((entry) => 'rcp' in entry) && entriesOfType.some((entry) => 'epoch' in entry)) {
+    if (
+      entriesOfType.some((entry) => 'rcp' in entry) &&
+      entriesOfType.some((entry) => 'epoch' in entry)
+    ) {
       dependencySpec.rcp = ['epoch'];
     }
 
@@ -193,9 +195,14 @@ const hazardParamGroup = atomFamily((type: string) => {
     if (!paramDomains) {
       return null;
     }
-    const paramDefaults = buildParamDefaults(type, paramDomains as Record<string, ParamDomain>) as DataParamGroupConfig<HazardParams>['paramDefaults'];
+    const paramDefaults = buildParamDefaults(
+      type,
+      paramDomains as Record<string, ParamDomain>,
+    ) as DataParamGroupConfig<HazardParams>['paramDefaults'];
     const paramDependencies = get(rasterDependenciesByType(type));
-    const paramCombinations = normaliseDependencyEntries(getEntriesForType(get(rasterSourceData), type));
+    const paramCombinations = normaliseDependencyEntries(
+      getEntriesForType(get(rasterSourceData), type),
+    );
     return {
       paramDomains,
       paramDefaults,

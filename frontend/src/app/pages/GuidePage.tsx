@@ -37,12 +37,7 @@ const markdownComponents: Components = {
     return <ExtLink {...props} />;
   },
   h1: ({ children, ...props }) => (
-    <Typography
-      variant="h1"
-      gutterBottom
-      id={slugify(flattenChildren(children))}
-      {...props}
-    >
+    <Typography variant="h1" gutterBottom id={slugify(flattenChildren(children))} {...props}>
       {children}
     </Typography>
   ),
@@ -68,7 +63,9 @@ const markdownComponents: Components = {
       {children}
     </Typography>
   ),
-  img: ({ ...props }) => <img {...props} width={720} style={{ maxWidth: '100%', height: 'auto' }} />,
+  img: ({ ...props }) => (
+    <img {...props} width={720} style={{ maxWidth: '100%', height: 'auto' }} />
+  ),
 };
 
 export const GuidePage = () => {

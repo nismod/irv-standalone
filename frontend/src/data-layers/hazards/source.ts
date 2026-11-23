@@ -27,9 +27,7 @@ function getRasterSourceValue(
 
   const paramKey = API_KEY_ALIASES[key] ?? key;
   const value =
-    paramKey === 'hazardType'
-      ? hazardType
-      : hazardParams[paramKey as keyof HazardParams];
+    paramKey === 'hazardType' ? hazardType : hazardParams[paramKey as keyof HazardParams];
 
   if (key === 'rcp' && value != null) {
     return String(value).replace('.', 'x');
@@ -44,7 +42,11 @@ export const HAZARD_SOURCE = {
       hazardType,
       hazardParams = {},
       sourceMetadata,
-    }: { hazardType: string; hazardParams?: Partial<HazardParams>; sourceMetadata: HazardSourceMetadata },
+    }: {
+      hazardType: string;
+      hazardParams?: Partial<HazardParams>;
+      sourceMetadata: HazardSourceMetadata;
+    },
     { scheme, range }: { scheme: string; range: [number, number] },
   ) {
     const sourceValues = sourceMetadata.keys.map((key) =>

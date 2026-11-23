@@ -38,33 +38,45 @@ export function scenariosForHazard(rows: ModelScenario[], hazard: string): Model
   for (const [name, candidates] of hazards) {
     if (combinations === null) {
       combinations = candidates.map((row) => ({
-        ...row, hazard: 'all', hazard_parameters: { [name]: row.parameters },
+        ...row,
+        hazard: 'all',
+        hazard_parameters: { [name]: row.parameters },
       }));
       continue;
     }
     const joined = new Map<string, ModelScenario>();
     for (const combination of combinations) {
       for (const row of candidates) {
-        if (valueKey(combination.protection_standard) !== valueKey(row.protection_standard)) continue;
-        if (Object.entries(row.parameters).some(([key, value]) =>
-          Object.hasOwn(combination.parameters, key) &&
-          valueKey(combination.parameters[key]) !== valueKey(value),
-        )) continue;
+        if (valueKey(combination.protection_standard) !== valueKey(row.protection_standard))
+          continue;
+        if (
+          Object.entries(row.parameters).some(
+            ([key, value]) =>
+              Object.hasOwn(combination.parameters, key) &&
+              valueKey(combination.parameters[key]) !== valueKey(value),
+          )
+        )
+          continue;
         const next = {
           ...combination,
           parameters: { ...combination.parameters, ...row.parameters },
           hazard_parameters: { ...combination.hazard_parameters, [name]: row.parameters },
         };
-        joined.set(stringify([next.parameters, next.protection_standard, next.hazard_parameters]), next);
+        joined.set(
+          stringify([next.parameters, next.protection_standard, next.hazard_parameters]),
+          next,
+        );
       }
     }
     combinations = [...joined.values()];
   }
   return (combinations ?? []).map((row) => {
     // Identical schemas retain the existing all-hazard API request format.
-    if (Object.values(row.hazard_parameters).every((parameters) =>
-      parameterKey(parameters) === parameterKey(row.parameters),
-    )) {
+    if (
+      Object.values(row.hazard_parameters).every(
+        (parameters) => parameterKey(parameters) === parameterKey(row.parameters),
+      )
+    ) {
       const shared = { ...row };
       delete shared.hazard_parameters;
       return shared;

@@ -2,7 +2,12 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { ExpectedDamageChart } from './ExpectedDamageChart';
 import { expectedDamageDimensions, parameterField, parameterNames } from './chart-parameters';
 import { parameterLabel } from './parameter-labels';
-import { expectedDamageRows, gwlSlrParameters, rcpYearParameters, singleParameters } from './damage-story-fixtures';
+import {
+  expectedDamageRows,
+  gwlSlrParameters,
+  rcpYearParameters,
+  singleParameters,
+} from './damage-story-fixtures';
 
 function chartArgs(scenarios: Record<string, unknown>[]) {
   const table = expectedDamageRows(scenarios);
@@ -48,11 +53,13 @@ export const EconomicLosses: Story = {
 export const MissingBounds: Story = {
   args: {
     ...chartArgs(singleParameters),
-    data: { table: expectedDamageRows(singleParameters).map((row, index) => ({
-      ...row,
-      ead_amin: index === 1 ? null : row.ead_amin,
-      ead_amax: index === 2 ? null : row.ead_amax,
-    })) },
+    data: {
+      table: expectedDamageRows(singleParameters).map((row, index) => ({
+        ...row,
+        ead_amin: index === 1 ? null : row.ead_amin,
+        ead_amax: index === 2 ? null : row.ead_amax,
+      })),
+    },
   },
 };
 export const MeansOnly: Story = {

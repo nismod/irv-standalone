@@ -7,7 +7,4 @@ async function fetchRiskDomains() {
   return module.RISK_DOMAINS;
 }
 
-export const riskDomainState = unwrap(
-  atom(fetchRiskDomains),
-  prev => prev || null,
-);
+export const riskDomainState = unwrap(atom(fetchRiskDomains), (prev) => prev || null);

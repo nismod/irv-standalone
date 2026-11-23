@@ -41,10 +41,7 @@ const networkTreeHierarchyQuery = atom(async () => {
   return buildHierarchyFromNodes(networkTreeNodes);
 });
 
-const networkTreeHierarchyBaseState = unwrap(
-  networkTreeHierarchyQuery,
-  (prev) => prev ?? [],
-);
+const networkTreeHierarchyBaseState = unwrap(networkTreeHierarchyQuery, (prev) => prev ?? []);
 
 export const networkTreeHierarchyState = atom((get) =>
   orderHierarchyLayers(get(networkTreeHierarchyBaseState), get(networkFeatureLayersMetadataState)),
@@ -88,7 +85,7 @@ export const disabledNetworkNodeIdsState = atom<Set<string>>((get) => {
 
 const networkTreeUrlState = atom((get) => {
   const networkTreeConfig = get(networkTreeConfigState);
-  return mapValues(networkTreeConfig.nodes, node => node.url);
+  return mapValues(networkTreeConfig.nodes, (node) => node.url);
 });
 const networkTreeIdState = atom((get) => {
   const networkTreeURLs = get(networkTreeUrlState);
@@ -103,7 +100,7 @@ const defaultNetworkTreeState = atom<CheckboxTreeState>((get) => {
   };
 });
 
-const _networkTreeBase = atom(null as CheckboxTreeState | null); 
+const _networkTreeBase = atom(null as CheckboxTreeState | null);
 
 export const networkTreeCheckboxState = atom(
   (get) => {
@@ -136,7 +133,11 @@ export const networkTreeCheckboxState = atom(
     const params = new URLSearchParams(window.location.search);
     const raw = params.get('netTree') ?? sessionStorage.getItem(STORAGE_PREFIX + 'netTree');
     if (!raw) {
-      return recalculateCheckboxStates(defaultNetworkTree, get(networkTreeConfigState), disabledNodeIds);
+      return recalculateCheckboxStates(
+        defaultNetworkTree,
+        get(networkTreeConfigState),
+        disabledNodeIds,
+      );
     }
     return parseTreeFromString(raw);
   },
@@ -156,7 +157,7 @@ export const networkTreeCheckboxState = atom(
     const str = checked.join('.');
     sessionStorage.setItem(STORAGE_PREFIX + 'netTree', str);
     set(atomWithQueryParams, setUrlParam('netTree', str));
-  }
+  },
 );
 
 export const networkSelectionState = atom<string[]>((get) => {

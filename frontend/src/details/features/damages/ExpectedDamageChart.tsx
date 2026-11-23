@@ -26,17 +26,27 @@ export const makeExpectedDamageSpec = (
     name: 'table',
   },
   layer: [
-    ...(field_min && field_max ? [{
-      transform: [{ filter: { and: [
-        { field: field_min, valid: true },
-        { field: field_max, valid: true },
-      ] } }],
-      mark: { type: 'errorbar', ticks: true, opacity: 0.5 },
-      encoding: {
-        y: { field: field_min, type: 'quantitative', title: field_title },
-        y2: { field: field_max },
-      },
-    }] : []),
+    ...(field_min && field_max
+      ? [
+          {
+            transform: [
+              {
+                filter: {
+                  and: [
+                    { field: field_min, valid: true },
+                    { field: field_max, valid: true },
+                  ],
+                },
+              },
+            ],
+            mark: { type: 'errorbar', ticks: true, opacity: 0.5 },
+            encoding: {
+              y: { field: field_min, type: 'quantitative', title: field_title },
+              y2: { field: field_max },
+            },
+          },
+        ]
+      : []),
     {
       mark: { type: 'line', point: { filled: true }, tooltip: true },
       encoding: seriesEncoding(seriesField, seriesTitle),
@@ -68,11 +78,30 @@ export const makeExpectedDamageSpec = (
     // the tooltip encoding needs to replicate the field definitions in order to customise their ordering
     tooltip: [
       { field: field, type: 'quantitative', format: ',.3r', title: field_title },
-      ...(field_min ? [{ field: field_min, type: 'quantitative', format: ',.3r', title: `${field_title} (amin)` }] : []),
-      ...(field_max ? [{ field: field_max, type: 'quantitative', format: ',.3r', title: `${field_title} (amax)` }] : []),
+      ...(field_min
+        ? [
+            {
+              field: field_min,
+              type: 'quantitative',
+              format: ',.3r',
+              title: `${field_title} (amin)`,
+            },
+          ]
+        : []),
+      ...(field_max
+        ? [
+            {
+              field: field_max,
+              type: 'quantitative',
+              format: ',.3r',
+              title: `${field_title} (amax)`,
+            },
+          ]
+        : []),
       ...tooltipFields.map((field) => ({
         field,
-        title: field === xField ? xTitle : field === seriesField ? seriesTitle : parameterLabel(field),
+        title:
+          field === xField ? xTitle : field === seriesField ? seriesTitle : parameterLabel(field),
       })),
     ],
   },
@@ -109,7 +138,19 @@ export const ExpectedDamageChart = ({
         field_min,
         field_max,
       ),
-    [field, field_min, field_max, field_title, width, height, xField, xTitle, tooltipFields, seriesField, seriesTitle],
+    [
+      field,
+      field_min,
+      field_max,
+      field_title,
+      width,
+      height,
+      xField,
+      xTitle,
+      tooltipFields,
+      seriesField,
+      seriesTitle,
+    ],
   ) as VisualizationSpec;
   const embed = useVegaEmbed({
     ref,
