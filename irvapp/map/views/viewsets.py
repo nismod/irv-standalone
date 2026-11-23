@@ -27,7 +27,7 @@ from map.models import (
     DamagesRp,
     DamagesNpv,
     Dataset,
-    NetworkLayerStyle,
+    FeatureLayerStyle,
     RasterLayer,
     FeatureLayer,
 )
@@ -175,6 +175,6 @@ class RasterLayerViewset(viewsets.ReadOnlyModelViewSet):
 
 
 class NetworkLayerStyleViewset(viewsets.ReadOnlyModelViewSet):
-    queryset = NetworkLayerStyle.objects.all()
+    queryset = FeatureLayerStyle.objects.all()
     serializer_class = NetworkLayerStyleSerializer
     permission_classes = [IsAuthenticated]

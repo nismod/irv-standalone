@@ -4,7 +4,7 @@ from .core import (
     FeatureLayer,
     InfrastructureNode,
     MapConfig,
-    NetworkLayerStyle,
+    FeatureLayerStyle,
     RasterLayer,
     LayerIdentity,
 )
@@ -33,5 +33,5 @@ __all__ = [
     "FeatureLayer",
     "InfrastructureNode",
     "MapConfig",
-    "NetworkLayerStyle",
+    "FeatureLayerStyle",
 ]

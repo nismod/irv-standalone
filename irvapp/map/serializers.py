@@ -11,7 +11,7 @@ from .models import (
     DamagesRp,
     Dataset,
     Feature,
-    NetworkLayerStyle,
+    FeatureLayerStyle,
     ModelParameter,
     RasterLayer,
     FeatureLayer,
@@ -167,7 +167,7 @@ class NetworkLayerStyleSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = NetworkLayerStyle
+        model = FeatureLayerStyle
         fields = ["id", "type", "label", "color", "minZoom"]
 
 

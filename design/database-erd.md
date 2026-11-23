@@ -9,6 +9,7 @@ erDiagram
     DATASET o|--o{ LAYER_IDENTITY : dataset
     RASTER_TILE_SOURCE ||--o{ RASTER_LAYER : tile_source
     FEATURE_LAYER ||--o{ FEATURE : layer
+    FEATURE_LAYER o|--o| FEATURE_LAYER_STYLE : feature_layer
     INFRASTRUCTURE_NODE o|--o| FEATURE_LAYER : feature_layer
     INFRASTRUCTURE_NODE o|--o{ INFRASTRUCTURE_NODE : parent
     DATASET }o--o{ AUTH_GROUP : access_groups
@@ -139,8 +140,9 @@ erDiagram
         string config_value
         string config_type
     }
-    NETWORK_LAYER_STYLE {
+    FEATURE_LAYER_STYLE {
         string layer_id PK
+        string feature_layer_id
         string label
         string style_type
         string color
@@ -171,4 +173,4 @@ erDiagram
     }
 ```
 
-Notes: layer identities are shared IDs with one-to-one subtype rows; `identity_kind` is constrained to the corresponding subtype. Result tables use composite primary keys (shown with `PK` on each constituent) and also have unique sequence-backed `id` values. `ModelParameterSet` has a unique constraint on `(model_type, canonical_key)`; `ModelParameter` on `(parameter_set_id, name)`; `MarkdownBlock` on `(page_id, slot)`. `NetworkLayerStyle.layer_id` is a plain string, not a declared foreign key. `SyntheticDataRun` stores IDs in JSON, not relational foreign keys.
+Notes: layer identities are shared IDs with one-to-one subtype rows; `identity_kind` is constrained to the corresponding subtype. Feature layer styles retain their original ID until a matching feature layer is available; linked IDs must match. Result tables use composite primary keys (shown with `PK` on each constituent) and also have unique sequence-backed `id` values. `ModelParameterSet` has a unique constraint on `(model_type, canonical_key)`; `ModelParameter` on `(parameter_set_id, name)`; `MarkdownBlock` on `(page_id, slot)`. `SyntheticDataRun` stores IDs in JSON, not relational foreign keys.
