@@ -336,12 +336,12 @@ export const Exposure: Story = {
         'Infrastructure layers are currently following the Adaptation Options selection',
       ),
     ).toBeFalsy();
-    expect(await canvas.findByRole('checkbox', { name: 'Class A' })).toBeEnabled();
+    const classACheckbox = await canvas.findByRole('checkbox', { name: 'Class A' });
+    await waitFor(() => expect(classACheckbox).toBeEnabled());
     expect(await canvas.findByRole('checkbox', { name: 'Toll' })).toBeDisabled();
     expect(await canvas.findByRole('checkbox', { name: 'Buildings' })).toBeDisabled();
     expect(await canvas.findByRole('checkbox', { name: 'Resort' })).toBeDisabled();
 
-    const classACheckbox = await canvas.findByRole('checkbox', { name: 'Class A' });
     expect(classACheckbox).not.toBeChecked();
 
     await userEvent.click(classACheckbox);
@@ -364,7 +364,9 @@ export const Risk: Story = {
         'Infrastructure layers are currently following the Adaptation Options selection',
       ),
     ).toBeFalsy();
-    await userEvent.click(await canvas.findByRole('checkbox', { name: 'Class A' }));
+    const classACheckbox = await canvas.findByRole('checkbox', { name: 'Class A' });
+    await waitFor(() => expect(classACheckbox).toBeEnabled());
+    await userEvent.click(classACheckbox);
     expect(await canvas.findByRole('radio', { name: 'River Flooding' })).toBeEnabled();
     expect(canvas.queryByRole('radio', { name: 'Coastal Flooding' })).not.toBeInTheDocument();
   },
