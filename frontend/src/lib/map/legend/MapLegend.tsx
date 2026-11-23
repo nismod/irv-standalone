@@ -13,7 +13,9 @@ interface MapLegendProps {
 export const MapLegend: FC<MapLegendProps> = ({ currentHazard }) => {
   const viewLayers = useAtomValue(viewLayersFlatState);
   const damageHazard = Array.isArray(currentHazard)
-    ? currentHazard.length === 1 ? currentHazard[0] : 'all'
+    ? currentHazard.length === 1
+      ? currentHazard[0]
+      : 'all'
     : currentHazard;
 
   const rasterViewLayers = [];

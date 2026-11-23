@@ -25,13 +25,10 @@ export const PixelParameterReturnPeriodChart = ({
   }, [records]);
   const selectorField =
     parameterFields.length > 1
-      ? parameterFields.find(
-          (field) =>
-            field === 'epoch' && unique(records.map((record) => record[field])).length > 1,
+      ? (parameterFields.find(
+          (field) => field === 'epoch' && unique(records.map((record) => record[field])).length > 1,
         ) ??
-        parameterFields.find(
-          (field) => unique(records.map((record) => record[field])).length > 1,
-        )
+        parameterFields.find((field) => unique(records.map((record) => record[field])).length > 1))
       : undefined;
   const selectorValues = useMemo(
     () => (selectorField ? unique(records.map((record) => record[selectorField])).sort() : []),
@@ -122,7 +119,9 @@ export const PixelParameterReturnPeriodChart = ({
         height={height}
         renderer="svg"
         tooltipFields={parameterFields}
-        seriesField={parameterFields.find((field) => field !== selectorField) ?? parameterFields[0] ?? 'rp'}
+        seriesField={
+          parameterFields.find((field) => field !== selectorField) ?? parameterFields[0] ?? 'rp'
+        }
       />
     </>
   );

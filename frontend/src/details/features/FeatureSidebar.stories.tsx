@@ -63,16 +63,20 @@ function sidebarParameters(currency: string) {
   return {
     msw: {
       handlers: [
-        http.get('/api/map/config', () => HttpResponse.json({
-          count: 1,
-          next: null,
-          previous: null,
-          results: [{
-            config_name: 'currency',
-            config_value: currency,
-            config_type: 'string',
-          }],
-        })),
+        http.get('/api/map/config', () =>
+          HttpResponse.json({
+            count: 1,
+            next: null,
+            previous: null,
+            results: [
+              {
+                config_name: 'currency',
+                config_value: currency,
+                config_type: 'string',
+              },
+            ],
+          }),
+        ),
         http.get('/api/map/features/1000036526', () => {
           return HttpResponse.json({
             ...mockFeatureDetails,
@@ -127,13 +131,17 @@ export const MauritianRupees: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.findByText('EAD (Rs)', { selector: 'abbr' })).resolves.toBeVisible();
-    await expect(canvas.findByRole('columnheader', { name: /EAEL.*\(Rs\/day\)/ }))
-      .resolves.toBeVisible();
-    await expect(canvas.findByRole('columnheader', { name: 'Damages (Rs)' }))
-      .resolves.toBeVisible();
-    await expect(canvas.findByRole('columnheader', { name: 'Loss (Rs/day)' }))
-      .resolves.toBeVisible();
-    await expect(canvas.findAllByRole('columnheader', { name: 'Avoided Risk (Rs)' }))
-      .resolves.not.toHaveLength(0);
+    await expect(
+      canvas.findByRole('columnheader', { name: /EAEL.*\(Rs\/day\)/ }),
+    ).resolves.toBeVisible();
+    await expect(
+      canvas.findByRole('columnheader', { name: 'Damages (Rs)' }),
+    ).resolves.toBeVisible();
+    await expect(
+      canvas.findByRole('columnheader', { name: 'Loss (Rs/day)' }),
+    ).resolves.toBeVisible();
+    await expect(
+      canvas.findAllByRole('columnheader', { name: 'Avoided Risk (Rs)' }),
+    ).resolves.not.toHaveLength(0);
   },
 };

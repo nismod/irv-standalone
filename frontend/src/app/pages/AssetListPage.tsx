@@ -59,12 +59,15 @@ export const AssetListPage = () => {
     : null;
 
   const currency = useAtomValue(mapViewConfig).app.currency;
-  const fieldSpec: FieldSpec | null = selectedFieldSpec ? {
-    ...selectedFieldSpec,
-    unit: selectedFieldSpec.field === 'cost_benefit_ratio'
-      ? undefined
-      : `${currency}${['eael_mean', 'avoided_eael_mean'].includes(selectedFieldSpec.field) ? '/day' : ''}`,
-  } : null;
+  const fieldSpec: FieldSpec | null = selectedFieldSpec
+    ? {
+        ...selectedFieldSpec,
+        unit:
+          selectedFieldSpec.field === 'cost_benefit_ratio'
+            ? undefined
+            : `${currency}${['eael_mean', 'avoided_eael_mean'].includes(selectedFieldSpec.field) ? '/day' : ''}`,
+      }
+    : null;
 
   const [selectedFeature, setSelectedFeature] = useState<ListFeature>(null);
 

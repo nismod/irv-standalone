@@ -43,10 +43,7 @@ export const InvalidCredentials: Story = {
     msw: {
       handlers: [
         http.post('/api/auth/login', () =>
-          HttpResponse.json(
-            { detail: 'Invalid username or password.' },
-            { status: 401 },
-          ),
+          HttpResponse.json({ detail: 'Invalid username or password.' }, { status: 401 }),
         ),
       ],
     },

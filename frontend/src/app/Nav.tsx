@@ -25,10 +25,7 @@ import { mapLatUrlState, mapLonUrlState, mapZoomUrlState } from 'lib/state/map-v
 import { globalStyleVariables } from 'app/theme';
 import { useAtomValue } from 'jotai';
 import { mapViewConfig } from 'lib/state/map-view/map-view-config';
-import {
-  useAuthSessionQuery,
-  useLogoutMutation,
-} from 'lib/auth/use-auth-session';
+import { useAuthSessionQuery, useLogoutMutation } from 'lib/auth/use-auth-session';
 
 const Link = styled(MuiLink)({
   color: 'inherit',
@@ -135,8 +132,7 @@ const UserSessionControls: FC<{ onLogout?: () => void }> = ({ onLogout }) => {
   }
 
   const displayName =
-    [data.user.first_name, data.user.last_name].filter(Boolean).join(' ') ||
-    data.user.username;
+    [data.user.first_name, data.user.last_name].filter(Boolean).join(' ') || data.user.username;
 
   return (
     <Box alignItems="center" display="flex" gap={1}>
@@ -235,7 +231,7 @@ export interface NavItemConfig {
  */
 export const Nav: FC<{ height: number; navItems: NavItemConfig[] }> = ({ height, navItems }) => {
   const isMobile = useIsMobile();
-  const mapConfig  = useAtomValue(mapViewConfig);
+  const mapConfig = useAtomValue(mapViewConfig);
   const appName = mapConfig.app.name;
 
   return (

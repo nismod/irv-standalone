@@ -33,7 +33,8 @@ export const damageScenarioState = atom((get) => {
   const available = catalog?.rows.filter((row) => metadata[row.hazard]?.has_access !== false) ?? [];
   const hazards = [...new Set(available.map((row) => row.hazard))];
   const requested = get(damageSourceState);
-  const selectedHazards = requested === 'all' ? hazards : hazards.filter((hazard) => requested.includes(hazard));
+  const selectedHazards =
+    requested === 'all' ? hazards : hazards.filter((hazard) => requested.includes(hazard));
   const rows = scenariosForHazards(available, requested === 'all' ? 'all' : selectedHazards);
   const result = selectResult(rows, get(modelParametersState('damages_expected')), {
     protection_standard: get(damageProtectionStandardState),

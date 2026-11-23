@@ -1218,7 +1218,7 @@ export type MapNetworkLayerStylesRetrieveData = {
     body?: never;
     path: {
         /**
-         * A unique value identifying this network layer style.
+         * A unique value identifying this feature layer style.
          */
         layer_id: string;
     };
@@ -1236,6 +1236,9 @@ export type MapRasterLayersListData = {
     body?: never;
     path?: never;
     query?: {
+        /**
+         * Filter by dataset group; hazards also includes unassigned raster layers.
+         */
         group?: string;
         /**
          * Number of results to return per page.

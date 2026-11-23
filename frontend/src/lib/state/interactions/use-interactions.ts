@@ -76,8 +76,7 @@ function processRasterTarget(info: PickingInfo<unknown>): RasterTarget | null {
 
 function processVectorTarget(info: PickingInfo<unknown>): VectorTarget | null {
   const object = info.object as
-    | ({ id?: unknown; properties?: { id?: unknown } } & Record<string, unknown>)
-    | null;
+    ({ id?: unknown; properties?: { id?: unknown } } & Record<string, unknown>) | null;
   if (!object) return null;
 
   const feature = {

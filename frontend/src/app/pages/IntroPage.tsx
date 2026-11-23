@@ -87,11 +87,7 @@ export const IntroPage = () => {
             }}
           >
             <TextBox sx={{ mt: -2, pt: 8 }}>
-              <Markdown
-                components={markdownComponents}
-              >
-                {pageContent.summary.markdown}
-              </Markdown>
+              <Markdown components={markdownComponents}>{pageContent.summary.markdown}</Markdown>
             </TextBox>
           </Grid>
           <Grid size={12}>

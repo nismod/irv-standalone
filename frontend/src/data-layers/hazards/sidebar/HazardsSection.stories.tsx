@@ -140,25 +140,31 @@ const accessedHazardDomains: string[] = [];
 
 export const RestrictedAndUnassigned: Story = {
   args: { view: 'exposure' },
-  beforeEach: () => { accessedHazardDomains.length = 0; },
+  beforeEach: () => {
+    accessedHazardDomains.length = 0;
+  },
   parameters: {
     msw: {
       handlers: [
-        http.get('/api/map/raster-layers', () => HttpResponse.json({
-          count: 3,
-          next: null,
-          previous: null,
-          results: [
-            hazardsResponse.results[0],
-            { ...hazardsResponse.results[1], has_access: false },
-            { ...hazardsResponse.results[2], dataset: null, group: null, has_access: false },
-          ],
-        })),
+        http.get('/api/map/raster-layers', () =>
+          HttpResponse.json({
+            count: 3,
+            next: null,
+            previous: null,
+            results: [
+              hazardsResponse.results[0],
+              { ...hazardsResponse.results[1], has_access: false },
+              { ...hazardsResponse.results[2], dataset: null, group: null, has_access: false },
+            ],
+          }),
+        ),
         http.get('/api/tiles/raster/sources/:datasetId/domains', ({ params }) => {
           accessedHazardDomains.push(String(params.datasetId));
           return HttpResponse.json(rasterSourceDomains);
         }),
-        http.get('/api/tiles/raster/sources/:sourceId', () => HttpResponse.json(rasterSourceResponse)),
+        http.get('/api/tiles/raster/sources/:sourceId', () =>
+          HttpResponse.json(rasterSourceResponse),
+        ),
       ],
     },
   },
@@ -171,7 +177,10 @@ export const RestrictedAndUnassigned: Story = {
     for (const label of [restricted, unassigned]) {
       const accordion = label.closest('.MuiAccordion-root');
       expect(accordion).toHaveClass('Mui-disabled');
-      expect(accordion?.querySelector('.MuiAccordionSummary-root')).toHaveAttribute('aria-expanded', 'false');
+      expect(accordion?.querySelector('.MuiAccordionSummary-root')).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
     }
     await waitFor(() => expect(accessedHazardDomains).toContain('fluvial'));
     expect(accessedHazardDomains).not.toContain('surface');

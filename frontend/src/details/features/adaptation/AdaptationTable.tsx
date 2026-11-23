@@ -20,7 +20,9 @@ export const AdaptationTable = ({ options }) => {
           <TableRow>
             <TableCell sx={padding}>Hazard</TableCell>
             {parameterNames.map((name) => (
-              <TableCell sx={padding} key={name}>{name}</TableCell>
+              <TableCell sx={padding} key={name}>
+                {name}
+              </TableCell>
             ))}
             <TableCell sx={padding}>Protection Standard</TableCell>
             <TableCell sx={padding} align="right">
@@ -36,10 +38,14 @@ export const AdaptationTable = ({ options }) => {
         </TableHead>
         <TableBody>
           {options.map((d) => (
-            <TableRow key={`${d.hazard}-${JSON.stringify(d.parameters)}-${d.adaptation_protection_level}`}>
+            <TableRow
+              key={`${d.hazard}-${JSON.stringify(d.parameters)}-${d.adaptation_protection_level}`}
+            >
               <TableCell sx={{ pl: 0, pr: padding.px, py: padding.py }}>{d.hazard}</TableCell>
               {parameterNames.map((name) => (
-                <TableCell sx={padding} key={name}>{String(d.parameters[name] ?? '')}</TableCell>
+                <TableCell sx={padding} key={name}>
+                  {String(d.parameters[name] ?? '')}
+                </TableCell>
               ))}
               <TableCell sx={padding}>{d.adaptation_protection_level}</TableCell>
               <TableCell sx={padding} align="right">

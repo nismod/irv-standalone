@@ -57,10 +57,7 @@ export const syncExternalConfigState = atom(
           ];
         }),
       );
-      const [values, options] = resolveParamDependencies(
-        currentValues,
-        groupConfig,
-      );
+      const [values, options] = resolveParamDependencies(currentValues, groupConfig);
 
       paramNames.forEach((param) => {
         set(dataParamState({ group, param }), values[param]);

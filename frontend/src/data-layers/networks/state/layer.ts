@@ -151,9 +151,10 @@ export const adaptationFieldSpecState = atom<FieldSpec | null>((get) => {
 
   return {
     fieldGroup: 'adaptation',
-    unit: field === 'cost_benefit_ratio'
-      ? undefined
-      : `${get(mapViewConfig).app.currency}${field === 'avoided_eael_mean' ? '/day' : ''}`,
+    unit:
+      field === 'cost_benefit_ratio'
+        ? undefined
+        : `${get(mapViewConfig).app.currency}${field === 'avoided_eael_mean' ? '/day' : ''}`,
     fieldDimensions: {
       ...scenarioDimensions(result),
       // Protector results are supplied by the protected-features query. Keep

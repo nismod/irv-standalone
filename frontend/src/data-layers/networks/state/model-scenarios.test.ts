@@ -56,7 +56,13 @@ vi.mock('lib/state/map-view/map-url', async () => {
 });
 vi.mock('lib/state/map-view/map-view-config', async () => {
   const { atom } = await import('jotai');
-  return { mapViewConfig: atom({ app: { name: 'Test', currency: 'MUR' }, initialViewState: { latitude: 0, longitude: 0, zoom: 0 }, viewLimits: {} }) };
+  return {
+    mapViewConfig: atom({
+      app: { name: 'Test', currency: 'MUR' },
+      initialViewState: { latitude: 0, longitude: 0, zoom: 0 },
+      viewLimits: {},
+    }),
+  };
 });
 
 const subscriptions: (() => void)[] = [];
@@ -67,11 +73,22 @@ afterEach(() => {
 
 describe('model scenario query flow', () => {
   it('keeps configured currency and daily units with discovered damage and adaptation scenarios', async () => {
-    vi.spyOn(api, 'mapModelScenariosList').mockImplementation(async ({ path }) => ({
-      data: path.field_group === 'damages_expected'
-        ? [{ hazard: 'fluvial', parameters: { GWL: 2 }, protection_standard: 0 }]
-        : [{ hazard: 'fluvial', parameters: { GWL: 2 }, adaptation_name: 'Wall', adaptation_protection_level: 50 }],
-    }) as never);
+    vi.spyOn(api, 'mapModelScenariosList').mockImplementation(
+      async ({ path }) =>
+        ({
+          data:
+            path.field_group === 'damages_expected'
+              ? [{ hazard: 'fluvial', parameters: { GWL: 2 }, protection_standard: 0 }]
+              : [
+                  {
+                    hazard: 'fluvial',
+                    parameters: { GWL: 2 },
+                    adaptation_name: 'Wall',
+                    adaptation_protection_level: 50,
+                  },
+                ],
+        }) as never,
+    );
     const store = createStore();
     store.set(dataParamState({ group: 'adaptation', param: 'sector' }), 'power');
     subscriptions.push(store.sub(damagesFieldState, () => {}));
@@ -86,7 +103,8 @@ describe('model scenario query flow', () => {
     expect(store.get(adaptationFieldSpecState).unit).toBe('MUR/day');
     const config = store.get(mapViewConfig);
     store.set(mapViewConfig as PrimitiveAtom<typeof config>, {
-      ...config, app: { ...config.app, currency: 'USD' },
+      ...config,
+      app: { ...config.app, currency: 'USD' },
     });
     expect(store.get(damagesFieldState).unit).toBe('USD/day');
     expect(store.get(adaptationFieldSpecState).unit).toBe('USD/day');
@@ -99,13 +117,30 @@ describe('model scenario query flow', () => {
   it('activates each matching all-hazard raster using its own parameters', () => {
     const store = createStore();
     store.set(damageSourceState, 'all');
-    store.set(hazardsMetadataState as PrimitiveAtom<Record<string, RasterLayer>>, Object.fromEntries(
-      ['coastal', 'fluvial', 'pluvial', 'wind'].map((id) => [id, { id, has_access: true } as RasterLayer]),
-    ));
-    store.set(hazardsMapOrderState as PrimitiveAtom<string[]>, ['coastal', 'fluvial', 'pluvial', 'wind']);
+    store.set(
+      hazardsMetadataState as PrimitiveAtom<Record<string, RasterLayer>>,
+      Object.fromEntries(
+        ['coastal', 'fluvial', 'pluvial', 'wind'].map((id) => [
+          id,
+          { id, has_access: true } as RasterLayer,
+        ]),
+      ),
+    );
+    store.set(hazardsMapOrderState as PrimitiveAtom<string[]>, [
+      'coastal',
+      'fluvial',
+      'pluvial',
+      'wind',
+    ]);
     const hazardDomains = {
-      coastal: { paramDefaults: { SLR: 0, RP: 100 }, paramDomains: { SLR: [0, 20], RP: [100, 500] } },
-      fluvial: { paramDefaults: { GWL: 2, RP: 100 }, paramDomains: { GWL: [2, 3], RP: [100, 500] } },
+      coastal: {
+        paramDefaults: { SLR: 0, RP: 100 },
+        paramDomains: { SLR: [0, 20], RP: [100, 500] },
+      },
+      fluvial: {
+        paramDefaults: { GWL: 2, RP: 100 },
+        paramDomains: { GWL: [2, 3], RP: [100, 500] },
+      },
       pluvial: { paramDefaults: { GWL: 2, RP: 100 }, paramDomains: { GWL: [2], RP: [100] } },
       wind: { paramDefaults: { GWL: 2 }, paramDomains: { GWL: [2, 3] } },
     };
@@ -113,17 +148,24 @@ describe('model scenario query flow', () => {
     const ops = { get: store.get, set: store.set };
     damageSourceStateEffect(ops, {
       scenario: {
-        hazard: 'all', parameters: { SLR: 20, GWL: 3 },
+        hazard: 'all',
+        parameters: { SLR: 20, GWL: 3 },
         hazard_parameters: { coastal: { SLR: 20 }, fluvial: { GWL: 3 }, pluvial: { GWL: 3 } },
       },
       hazardDomains,
     });
-    expect(store.get(hazardVisibilityState)).toEqual({ coastal: true, fluvial: true, pluvial: false, wind: false });
+    expect(store.get(hazardVisibilityState)).toEqual({
+      coastal: true,
+      fluvial: true,
+      pluvial: false,
+      wind: false,
+    });
     expect(store.get(dataParamState({ group: 'coastal', param: 'SLR' }))).toBe(20);
     expect(store.get(dataParamState({ group: 'fluvial', param: 'GWL' }))).toBe(3);
 
     damageSourceStateEffect(ops, {
-      scenario: { hazard: 'coastal', parameters: { SLR: 0 } }, hazardDomains,
+      scenario: { hazard: 'coastal', parameters: { SLR: 0 } },
+      hazardDomains,
     });
     expect(store.get(hazardSelectionState('coastal'))).toBe(true);
     expect(store.get(hazardSelectionState('fluvial'))).toBe(false);
@@ -140,11 +182,14 @@ describe('model scenario query flow', () => {
     });
     store.set(hazardsMapOrderState as PrimitiveAtom<string[]>, ['fluvial', 'coastal', 'wind']);
     const config = { paramDefaults: { GWL: 2 }, paramDomains: { GWL: [2, 3] } };
-    damageSourceStateEffect({ get: store.get, set: store.set }, {
-      scenario: { hazard: 'all', parameters: { GWL: 3 } },
-      hazards: ['fluvial', 'coastal'],
-      hazardDomains: { fluvial: config, coastal: config, wind: config },
-    });
+    damageSourceStateEffect(
+      { get: store.get, set: store.set },
+      {
+        scenario: { hazard: 'all', parameters: { GWL: 3 } },
+        hazards: ['fluvial', 'coastal'],
+        hazardDomains: { fluvial: config, coastal: config, wind: config },
+      },
+    );
     expect(store.get(hazardVisibilityState)).toEqual({ fluvial: true, wind: false });
     expect(store.get(dataParamState({ group: 'fluvial', param: 'GWL' }))).toBe(3);
   });
@@ -152,10 +197,18 @@ describe('model scenario query flow', () => {
   it('uses the combined all-hazard controls to request exact per-hazard scenarios', async () => {
     vi.spyOn(api, 'mapModelScenariosList').mockResolvedValue({
       data: [
-        ...[0, 20].map((SLR) => ({ hazard: 'coastal', parameters: { SLR }, protection_standard: 0 })),
-        ...['fluvial', 'pluvial'].flatMap((hazard) => [2, 3].map((GWL) => ({
-          hazard, parameters: { GWL }, protection_standard: 0,
-        }))),
+        ...[0, 20].map((SLR) => ({
+          hazard: 'coastal',
+          parameters: { SLR },
+          protection_standard: 0,
+        })),
+        ...['fluvial', 'pluvial'].flatMap((hazard) =>
+          [2, 3].map((GWL) => ({
+            hazard,
+            parameters: { GWL },
+            protection_standard: 0,
+          })),
+        ),
       ],
     } as never);
     const store = createStore();
@@ -181,14 +234,17 @@ describe('model scenario query flow', () => {
     expect(label()).toBe('Economic Losses (All Hazards)');
     store.set(damageTypeState, 'direct');
     expect(store.get(damagesFieldState).fieldDimensions).toEqual({
-      hazard: 'all', parameters: { SLR: 20, GWL: 3 }, protection_standard: 0,
+      hazard: 'all',
+      parameters: { SLR: 20, GWL: 3 },
+      protection_standard: 0,
       hazard_parameters: { coastal: { SLR: 20 }, fluvial: { GWL: 3 }, pluvial: { GWL: 3 } },
     });
     store.set(damageSourceState, ['fluvial', 'pluvial']);
     expect(label()).toBe('Direct Damages (River flooding + Surface flooding)');
     expect(store.get(damageScenarioState).selectedHazards).toEqual(['fluvial', 'pluvial']);
     expect(store.get(damagesFieldState).fieldDimensions).toEqual({
-      parameters: { GWL: 3 }, protection_standard: 0,
+      parameters: { GWL: 3 },
+      protection_standard: 0,
       hazard_parameters: { fluvial: { GWL: 3 }, pluvial: { GWL: 3 } },
     });
     store.set(damageSourceState, []);
@@ -196,7 +252,9 @@ describe('model scenario query flow', () => {
     store.set(damageSourceState, ['coastal']);
     expect(label()).toBe('Direct Damages (Coastal flooding)');
     expect(store.get(damagesFieldState).fieldDimensions).toEqual({
-      hazard: 'coastal', parameters: { SLR: 20 }, protection_standard: 0,
+      hazard: 'coastal',
+      parameters: { SLR: 20 },
+      protection_standard: 0,
     });
   });
 
@@ -358,10 +416,13 @@ describe('model scenario query flow', () => {
         paramDomains: { gwl: [2, 3], returnPeriod: [100, 500] },
       },
     };
-    damageSourceStateEffect({ get: store.get, set: store.set }, {
-      scenario: { hazard: 'fluvial', parameters: { gwl: 3 } },
-      hazardDomains,
-    });
+    damageSourceStateEffect(
+      { get: store.get, set: store.set },
+      {
+        scenario: { hazard: 'fluvial', parameters: { gwl: 3 } },
+        hazardDomains,
+      },
+    );
     expect(store.get(dataParamState({ group: 'fluvial', param: 'returnPeriod' }))).toBe(500);
 
     // The combined sidebar config can arrive after damage/raster discovery.

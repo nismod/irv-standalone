@@ -22,15 +22,11 @@ import {
   parameterTitle,
 } from './chart-parameters';
 
-
 type ModelParameters = Record<string, unknown>;
 
 function csvCell(value: unknown) {
-  const text = value == null
-    ? ''
-    : typeof value === 'object'
-      ? JSON.stringify(value)
-      : String(value);
+  const text =
+    value == null ? '' : typeof value === 'object' ? JSON.stringify(value) : String(value);
   return `"${text.replaceAll('"', '""')}"`;
 }
 
@@ -105,14 +101,16 @@ function prepareRPDamages(rpDamages: DamagesRp[]) {
 
 function useOrderedDamages(damages: ExpectedDamageCell[]) {
   return useMemo(
-    () => [...damages].sort((a, b) => a.hazard.localeCompare(b.hazard) || a.key.localeCompare(b.key)),
+    () =>
+      [...damages].sort((a, b) => a.hazard.localeCompare(b.hazard) || a.key.localeCompare(b.key)),
     [damages],
   );
 }
 
 function useOrderedRPDamages(damages: RPDamageCell[]) {
   return useMemo(
-    () => [...damages].sort((a, b) => a.hazard.localeCompare(b.hazard) || a.key.localeCompare(b.key)),
+    () =>
+      [...damages].sort((a, b) => a.hazard.localeCompare(b.hazard) || a.key.localeCompare(b.key)),
     [damages],
   );
 }
@@ -120,20 +118,64 @@ function useOrderedRPDamages(damages: RPDamageCell[]) {
 function makeDamagesCsv(damages: ExpectedDamageCell[]) {
   const parameterNames = unique(damages.flatMap((damage) => Object.keys(damage.parameters)));
   return csv([
-    ['hazard', ...parameterNames, 'ead_mean', 'ead_amin', 'ead_amax', 'eael_mean', 'eael_amin', 'eael_amax'],
-    ...damages.map((d) => [d.hazard, ...parameterNames.map((name) => d.parameters[name]), d.ead_mean, d.ead_amin, d.ead_amax, d.eael_mean, d.eael_amin, d.eael_amax]),
+    [
+      'hazard',
+      ...parameterNames,
+      'ead_mean',
+      'ead_amin',
+      'ead_amax',
+      'eael_mean',
+      'eael_amin',
+      'eael_amax',
+    ],
+    ...damages.map((d) => [
+      d.hazard,
+      ...parameterNames.map((name) => d.parameters[name]),
+      d.ead_mean,
+      d.ead_amin,
+      d.ead_amax,
+      d.eael_mean,
+      d.eael_amin,
+      d.eael_amax,
+    ]),
   ]);
 }
 
 function makeRPDamagesCsv(damages: RPDamageCell[]) {
   const parameterNames = unique(damages.flatMap((damage) => Object.keys(damage.parameters)));
   return csv([
-    ['hazard', ...parameterNames, 'rp', 'damage_mean', 'damage_amin', 'damage_amax', 'loss_mean', 'loss_amin', 'loss_amax'],
-    ...damages.map((d) => [d.hazard, ...parameterNames.map((name) => d.parameters[name]), d.rp, d.damage_mean, d.damage_amin, d.damage_amax, d.loss_mean, d.loss_amin, d.loss_amax]),
+    [
+      'hazard',
+      ...parameterNames,
+      'rp',
+      'damage_mean',
+      'damage_amin',
+      'damage_amax',
+      'loss_mean',
+      'loss_amin',
+      'loss_amax',
+    ],
+    ...damages.map((d) => [
+      d.hazard,
+      ...parameterNames.map((name) => d.parameters[name]),
+      d.rp,
+      d.damage_mean,
+      d.damage_amin,
+      d.damage_amax,
+      d.loss_mean,
+      d.loss_amin,
+      d.loss_amax,
+    ]),
   ]);
 }
 
-function ParameterSelector({ id, names, options, value, onChange }: {
+function ParameterSelector({
+  id,
+  names,
+  options,
+  value,
+  onChange,
+}: {
   id: string;
   names: string[];
   options: { key: string; label: string }[];
@@ -144,13 +186,11 @@ function ParameterSelector({ id, names, options, value, onChange }: {
   return (
     <FormControl fullWidth sx={{ my: 2 }} disabled={options.length === 1}>
       <InputLabel id={id}>{parameterTitle(names)}</InputLabel>
-      <Select
-        labelId={id}
-        value={value ?? ''}
-        onChange={(event) => onChange(event.target.value)}
-      >
+      <Select labelId={id} value={value ?? ''} onChange={(event) => onChange(event.target.value)}>
         {options.map((option) => (
-          <MenuItem key={option.key} value={option.key}>{option.label}</MenuItem>
+          <MenuItem key={option.key} value={option.key}>
+            {option.label}
+          </MenuItem>
         ))}
       </Select>
     </FormControl>
@@ -161,7 +201,9 @@ export const DamagesSection = ({ fd }) => {
   const currency = useAtomValue(mapViewConfig).app.currency;
   const currencySymbol = getCurrencySymbol(currency);
   const damagesData = useOrderedDamages(prepareExpectedDamages(fd?.damages_expected ?? []));
-  const returnPeriodDamagesData = useOrderedRPDamages(prepareRPDamages(fd?.damages_return_period ?? []));
+  const returnPeriodDamagesData = useOrderedRPDamages(
+    prepareRPDamages(fd?.damages_return_period ?? []),
+  );
 
   const hazards = useMemo(
     () => unique([...damagesData, ...returnPeriodDamagesData].map((d) => d.hazard)),
@@ -178,7 +220,9 @@ export const DamagesSection = ({ fd }) => {
   );
   const expectedDimensions = expectedDamageDimensions(hazardExpectedData);
   const expectedOptions = parameterOptions(hazardExpectedData, expectedDimensions.selectors);
-  const [expectedSelection, setExpectedSelection] = useSelect(expectedOptions.map((option) => option.key));
+  const [expectedSelection, setExpectedSelection] = useSelect(
+    expectedOptions.map((option) => option.key),
+  );
   const selectedData = hazardExpectedData.filter(
     (row) => parameterSelectionKey(row, expectedDimensions.selectors) === expectedSelection,
   );
@@ -253,8 +297,12 @@ export const DamagesSection = ({ fd }) => {
                 field_title={`EAD (${currencySymbol})`}
                 xField={expectedDimensions.x ? parameterField(expectedDimensions.x) : 'hazard'}
                 xTitle={expectedDimensions.x ? parameterLabel(expectedDimensions.x) : null}
-                seriesField={expectedDimensions.series ? parameterField(expectedDimensions.series) : undefined}
-                seriesTitle={expectedDimensions.series ? parameterLabel(expectedDimensions.series) : null}
+                seriesField={
+                  expectedDimensions.series ? parameterField(expectedDimensions.series) : undefined
+                }
+                seriesTitle={
+                  expectedDimensions.series ? parameterLabel(expectedDimensions.series) : null
+                }
                 tooltipFields={expectedTooltipFields}
                 actions={false}
                 width={280} // this is currently picked to fit the chart to the sidebar width
@@ -277,8 +325,14 @@ export const DamagesSection = ({ fd }) => {
                   field_title={`EAEL (${currencySymbol}/day)`}
                   xField={expectedDimensions.x ? parameterField(expectedDimensions.x) : 'hazard'}
                   xTitle={expectedDimensions.x ? parameterLabel(expectedDimensions.x) : null}
-                  seriesField={expectedDimensions.series ? parameterField(expectedDimensions.series) : undefined}
-                  seriesTitle={expectedDimensions.series ? parameterLabel(expectedDimensions.series) : null}
+                  seriesField={
+                    expectedDimensions.series
+                      ? parameterField(expectedDimensions.series)
+                      : undefined
+                  }
+                  seriesTitle={
+                    expectedDimensions.series ? parameterLabel(expectedDimensions.series) : null
+                  }
                   tooltipFields={expectedTooltipFields}
                   actions={false}
                   width={280} // this is currently picked to fit the chart to the sidebar width

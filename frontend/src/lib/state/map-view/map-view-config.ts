@@ -22,8 +22,7 @@ interface MapViewConfig {
 }
 
 type MapViewConfigNumberKey =
-  | keyof MapViewConfig['initialViewState']
-  | keyof MapViewConfig['viewLimits'];
+  keyof MapViewConfig['initialViewState'] | keyof MapViewConfig['viewLimits'];
 type MapViewConfigStringKey = 'appName' | 'currency';
 
 const mapViewConfigNumberKeys = new Set<string>([

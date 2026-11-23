@@ -53,7 +53,9 @@ async function fetchNetworkFeatureLayers(): Promise<FeatureLayer[]> {
     const limit = 100;
     while (true) {
       const { data, error } = await mapFeatureLayersList({
-        baseUrl: '/api', credentials: 'include', query: { limit, offset: layers.length },
+        baseUrl: '/api',
+        credentials: 'include',
+        query: { limit, offset: layers.length },
       });
       if (error || !data) throw error ?? new Error('Missing feature layer metadata');
       layers.push(...data.results);

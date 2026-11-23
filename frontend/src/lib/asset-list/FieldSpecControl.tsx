@@ -1,7 +1,10 @@
 import { Stack } from '@mui/material';
 import { ParamDropdown } from 'lib/controls/ParamDropdown';
 import { ModelParameterControls } from 'lib/model-scenarios/ModelParameterControls';
-import { ModelParameterControl, type NumericControl } from 'lib/model-scenarios/ModelParameterControl';
+import {
+  ModelParameterControl,
+  type NumericControl,
+} from 'lib/model-scenarios/ModelParameterControl';
 import {
   ModelParameters,
   ModelScenario,

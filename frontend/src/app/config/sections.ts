@@ -17,7 +17,7 @@ async function loadLayerStylesConfig(layerName: string, get: Getter) {
     return {};
   }
 
-  const module = await loadModule() as StylesModule;
+  const module = (await loadModule()) as StylesModule;
   const stylesConfig = await get(module.stylesConfig);
   return stylesConfig;
 }
@@ -49,7 +49,4 @@ async function buildSectionsConfig(get: Getter) {
 
 const sectionsConfigQuery = atom(async (get) => buildSectionsConfig(get));
 
-export const sectionsConfigState = unwrap(
-  sectionsConfigQuery,
-  (prev) => prev ?? {},
-);
+export const sectionsConfigState = unwrap(sectionsConfigQuery, (prev) => prev ?? {});

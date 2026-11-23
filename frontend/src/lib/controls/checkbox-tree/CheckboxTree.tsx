@@ -59,7 +59,8 @@ export function recalculateCheckboxStates<T>(
         if (nodeChildren) {
           const enabledChildren = nodeChildren.filter((child) => !disabledNodeIds.has(child.id));
           const checked =
-            enabledChildren.length > 0 && enabledChildren.every((child) => nextState.checked[child.id]);
+            enabledChildren.length > 0 &&
+            enabledChildren.every((child) => nextState.checked[child.id]);
           const indeterminate =
             !checked &&
             enabledChildren.some(

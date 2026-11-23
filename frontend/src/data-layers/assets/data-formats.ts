@@ -4,7 +4,10 @@ import startCase from 'lodash/startCase';
 
 type HazardsMetadata = Record<string, { label: string }>;
 
-function getSourceLabel(fieldDimensions: FieldSpec['fieldDimensions'], hazardsMetadata: HazardsMetadata) {
+function getSourceLabel(
+  fieldDimensions: FieldSpec['fieldDimensions'],
+  hazardsMetadata: HazardsMetadata,
+) {
   const eadSource = String(fieldDimensions.hazard);
   if (eadSource === 'all') return 'All Hazards';
   if (fieldDimensions.hazard == null) {
@@ -82,10 +85,7 @@ export function createAssetDataFormats(
       default: {
         getDataLabel: (colorField) => {
           const variableLabel = getDamageTypeLabel(colorField.field);
-          const sourceLabel = getSourceLabel(
-            colorField.fieldDimensions,
-            hazardsMetadata,
-          );
+          const sourceLabel = getSourceLabel(colorField.fieldDimensions, hazardsMetadata);
 
           return `${variableLabel} (${sourceLabel})`;
         },

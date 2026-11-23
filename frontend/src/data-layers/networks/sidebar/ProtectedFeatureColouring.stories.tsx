@@ -36,11 +36,26 @@ function handlers(hasAssetScenario: boolean) {
     http.get('/api/map/raster-layers', () =>
       HttpResponse.json({ count: 0, next: null, previous: null, results: [] }),
     ),
-    http.get('/api/map/feature-layers', () => HttpResponse.json({
-      count: 1, next: null, previous: null,
-      results: [{ id: layerId, layer_name: layerId, dataset: layerId, sector: '', subsector: '', asset_type: '',
-        stacking_order: 0, display_order: 0, has_access: true }],
-    })),
+    http.get('/api/map/feature-layers', () =>
+      HttpResponse.json({
+        count: 1,
+        next: null,
+        previous: null,
+        results: [
+          {
+            id: layerId,
+            layer_name: layerId,
+            dataset: layerId,
+            sector: '',
+            subsector: '',
+            asset_type: '',
+            stacking_order: 0,
+            display_order: 0,
+            has_access: true,
+          },
+        ],
+      }),
+    ),
     http.get('/api/map/datasets', ({ request }) => {
       const isHazards = new URL(request.url).searchParams.get('group') === 'hazards';
       const results = isHazards
@@ -77,7 +92,13 @@ function handlers(hasAssetScenario: boolean) {
         next: null,
         previous: null,
         results: [
-          { node_id: layerId, feature_layer: layerId, node_name: 'Coastal protection', parent: null, children: [] },
+          {
+            node_id: layerId,
+            feature_layer: layerId,
+            node_name: 'Coastal protection',
+            parent: null,
+            children: [],
+          },
         ],
       }),
     ),
@@ -188,13 +209,16 @@ async function expectProtectedMapValue(canvasElement: HTMLElement, assetScenario
   const canvas = within(canvasElement);
   // Sidebar configuration and scenario catalogues can finish loading after
   // the controls mount, especially during parallel browser tests.
-  await waitFor(() => {
-    expect(canvas.getByRole('checkbox', { name: 'Coastal protection' })).toBeChecked();
-    expect(canvas.getByTestId('asset-scenario-count')).toHaveTextContent(
-      String(assetScenarioCount),
-    );
-    expect(canvas.getByTestId('protected-result-count')).toHaveTextContent('1');
-  }, { timeout: 10000 });
+  await waitFor(
+    () => {
+      expect(canvas.getByRole('checkbox', { name: 'Coastal protection' })).toBeChecked();
+      expect(canvas.getByTestId('asset-scenario-count')).toHaveTextContent(
+        String(assetScenarioCount),
+      );
+      expect(canvas.getByTestId('protected-result-count')).toHaveTextContent('1');
+    },
+    { timeout: 10000 },
+  );
   await waitFor(() =>
     expect(canvas.getByTestId('protected-map-value')).toHaveTextContent(String(avoidedDamages)),
   );

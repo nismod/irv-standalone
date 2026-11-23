@@ -17,7 +17,4 @@ async function fetchViewSectionsConfig() {
 
 const viewSectionsQuery = atom(fetchViewSectionsConfig);
 
-export const viewSectionsState = unwrap(
-  viewSectionsQuery,
-  (prev) => prev ?? {},
-);
+export const viewSectionsState = unwrap(viewSectionsQuery, (prev) => prev ?? {});

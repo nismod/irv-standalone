@@ -45,7 +45,9 @@ function useSyncProtectedFeatureLayers() {
 
   const setCheckboxState = useSetAtom(networkTreeCheckboxState);
 
-  const showLayerIds = protectedFeatureLayers.union(protectorFeatureLayers).intersection(allLayerIds);
+  const showLayerIds = protectedFeatureLayers
+    .union(protectorFeatureLayers)
+    .intersection(allLayerIds);
   const showLayers = new Set(getLeafNodeIdsForLayerIds(networkTreeConfig, showLayerIds));
 
   const doUpdate =

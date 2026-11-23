@@ -32,7 +32,7 @@ export const Default: Story = {
       handlers: [
         http.get('/api/pixel/:lat/:lon', ({ params }) => {
           const { lat, lon } = params;
-          console.log(lat, lon)
+          console.log(lat, lon);
           if (lat !== '18.0000' || lon !== '-78.0000') {
             return HttpResponse.json({ error: 'Not found' }, { status: 404 });
           }

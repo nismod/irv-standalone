@@ -155,11 +155,7 @@ const getRagStatus = (records): RagStatus => {
   );
 };
 
-export const FluvialDataSection = ({
-  pixel_layer,
-}: {
-  pixel_layer: string;
-}) => {
+export const FluvialDataSection = ({ pixel_layer }: { pixel_layer: string }) => {
   const layerParams = useAtomValue(pixelDrillerDataParameters(pixel_layer));
   const records = useAtomValue(
     pixelDrillerDataRecords({

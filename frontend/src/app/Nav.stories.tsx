@@ -39,9 +39,7 @@ const meta = {
     msw: {
       handlers: [
         mapConfigHandler,
-        http.get('/api/auth/me', () =>
-          HttpResponse.json({ authenticated: false, user: null }),
-        ),
+        http.get('/api/auth/me', () => HttpResponse.json({ authenticated: false, user: null })),
       ],
     },
   },

@@ -49,9 +49,7 @@ export const GWLAndReturnPeriod: Story = {
   },
   parameters: {
     msw: {
-      handlers: [
-        http.get('/api/pixel/:lon/:lat', () => HttpResponse.json(mockPixelData)),
-      ],
+      handlers: [http.get('/api/pixel/:lon/:lat', () => HttpResponse.json(mockPixelData))],
     },
   },
 };

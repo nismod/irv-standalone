@@ -4,9 +4,11 @@ import { getAssetDataFormats } from './data-formats';
 describe('damage labels', () => {
   it('names the hazards contributing to a selected total', () => {
     const fieldSpec = {
-      fieldGroup: 'damages_expected', field: 'ead_mean',
+      fieldGroup: 'damages_expected',
+      field: 'ead_mean',
       fieldDimensions: {
-        parameters: { GWL: 2 }, protection_standard: 0,
+        parameters: { GWL: 2 },
+        protection_standard: 0,
         hazard_parameters: { fluvial: { GWL: 2 }, pluvial: { GWL: 2 } },
       },
     };
@@ -15,6 +17,8 @@ describe('damage labels', () => {
       fluvial: { label: 'River flooding' },
       pluvial: { label: 'Surface flooding' },
     });
-    expect(formats.getDataLabel(fieldSpec)).toBe('Direct Damages (River flooding + Surface flooding)');
+    expect(formats.getDataLabel(fieldSpec)).toBe(
+      'Direct Damages (River flooding + Surface flooding)',
+    );
   });
 });
