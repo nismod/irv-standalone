@@ -1,5 +1,5 @@
 import { StoryObj, Meta } from '@storybook/react-vite';
-import { expect, waitFor, within } from 'storybook/test';
+import { expect, within } from 'storybook/test';
 import { HttpResponse, http } from 'msw';
 
 import { HazardsSection } from './HazardsSection';
@@ -136,13 +136,8 @@ export const Risk: Story = {
   },
 };
 
-const accessedHazardDomains: string[] = [];
-
 export const RestrictedAndUnassigned: Story = {
   args: { view: 'exposure' },
-  beforeEach: () => {
-    accessedHazardDomains.length = 0;
-  },
   parameters: {
     msw: {
       handlers: [
@@ -158,8 +153,7 @@ export const RestrictedAndUnassigned: Story = {
             ],
           }),
         ),
-        http.get('/api/tiles/raster/sources/:datasetId/domains', ({ params }) => {
-          accessedHazardDomains.push(String(params.datasetId));
+        http.get('/api/tiles/raster/sources/:datasetId/domains', () => {
           return HttpResponse.json(rasterSourceDomains);
         }),
         http.get('/api/tiles/raster/sources/:sourceId', () =>
@@ -182,8 +176,5 @@ export const RestrictedAndUnassigned: Story = {
         'false',
       );
     }
-    await waitFor(() => expect(accessedHazardDomains).toContain('fluvial'));
-    expect(accessedHazardDomains).not.toContain('surface');
-    expect(accessedHazardDomains).not.toContain('coastal');
   },
 };

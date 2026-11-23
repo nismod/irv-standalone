@@ -29,7 +29,7 @@
     "d3-shape": "^3.2.0",
     "deck.gl": "^9.1.4",
     "immer": "^11.1.4",
-    "jotai": "^2.18.1",
+    "jotai": "^3.0.2",
     "jotai-family": "^1.0.1",
     "jotai-location": "^0.6.2",
     "json-stable-stringify": "^1.0.1",
