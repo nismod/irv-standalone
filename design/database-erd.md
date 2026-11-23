@@ -1,6 +1,6 @@
 # Database entity relationship diagram
 
-This diagram reflects the current Django model definitions in `irvapp/map/models/`, `irvapp/raster/models.py`, and `irvapp/content/models.py`. Django's built-in `auth.Group` is shown because datasets reference it. Unmanaged/external tables and implicit tree-query fields are omitted.
+This diagram reflects the current Django model definitions in `irvapp/map/models/`, `irvapp/raster/models.py`, and `irvapp/content/models.py`. Django's built-in `auth.Group` is shown because datasets reference it. Unmanaged/external tables and implicit tree-query fields are omitted. Entity attributes are abbreviated to keep the diagram readable.
 
 ```mermaid
 erDiagram
@@ -43,7 +43,7 @@ erDiagram
     RASTER_LAYER {
         string id PK
         string identity_kind
-        int tile_source_id
+        bigint tile_source_id
         string label
         string quantity
         string unit
@@ -56,7 +56,7 @@ erDiagram
     FEATURE {
         bigint id PK
         string string_id
-        string layer_id
+        string layer
         string sublayer
         json properties
         geometry geom
@@ -72,7 +72,7 @@ erDiagram
         string name
     }
     RASTER_TILE_SOURCE {
-        int id PK
+        bigint id PK
         string description
         json keys
         string database
