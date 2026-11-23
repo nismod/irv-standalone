@@ -205,6 +205,11 @@ on the identity in Django admin. Configure layer labels, units, colours,
 and display order on the raster layer in Django admin. Datasets continue to
 support non-raster data as well.
 
+Unassigned raster layers appear in the hazard catalogue as disabled until a
+dataset is assigned. Raster layers assigned to an inaccessible hazard dataset
+also remain visible but disabled. Once assigned to a non-hazard dataset, a
+layer no longer appears in the hazard catalogue.
+
 Because raster keys are supplied by the caller, access to a shared raster
 database requires access to every dataset whose layers use that database. This
 applies to tile and domain requests and also to separate source records pointing

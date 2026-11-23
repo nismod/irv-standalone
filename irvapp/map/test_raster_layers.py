@@ -55,6 +55,36 @@ class RasterLayerAccessTests(TestCase):
         self.assertEqual(self.client.get('/tiles/raster/private/x/0/0/0.png').status_code, 403)
         self.assertEqual(render.call_count, 2)
 
+    def test_hazard_catalogue_includes_unassigned_and_restricted_rasters(self):
+        source = RasterTileSource.objects.create(keys=['region'], database='unassigned.sqlite')
+        raster = RasterLayer.objects.create(id='unassigned', tile_source=source, label='Unassigned hazard',
+                                            quantity='depth', unit='m', stacking_order=0, display_order=0)
+        other = Dataset.objects.create(id='land', label='Land', group='exposure')
+        LayerIdentity.objects.create(id='land-cover', kind='raster', dataset=other)
+        RasterLayer.objects.create(id='land-cover', tile_source=source, label='Land cover',
+                                   quantity='class', unit='', stacking_order=0, display_order=0)
+
+        response = self.client.get('/map/raster-layers', {'group': 'hazards'})
+        layers = {row['id']: row for row in response.json()['results']}
+        self.assertEqual(set(layers), {'river', 'coastal', 'private', 'unassigned'})
+        self.assertFalse(layers['private']['has_access'])
+        self.assertFalse(layers['unassigned']['has_access'])
+        self.assertIsNone(layers['unassigned']['dataset'])
+        self.assertIsNone(layers['unassigned']['group'])
+        self.assertEqual(self.client.get('/map/raster-layers/unassigned').status_code, 403)
+        self.assertNotIn('unassigned', {row['id'] for row in self.client.get('/map/raster-layers', {'group': 'exposure'}).json()['results']})
+
+        raster.identity.dataset = self.dataset
+        raster.identity.save(update_fields=['dataset'])
+        # Its source is also used by the inaccessible land-cover dataset.
+        self.assertFalse(next(row for row in self.client.get('/map/raster-layers', {'group': 'hazards'}).json()['results'] if row['id'] == 'unassigned')['has_access'])
+        other.access_groups.add(self.group)
+        self.assertTrue(next(row for row in self.client.get('/map/raster-layers', {'group': 'hazards'}).json()['results'] if row['id'] == 'unassigned')['has_access'])
+
+        raster.identity.dataset = other
+        raster.identity.save(update_fields=['dataset'])
+        self.assertNotIn('unassigned', {row['id'] for row in self.client.get('/map/raster-layers', {'group': 'hazards'}).json()['results']})
+
     @patch("raster.views.sources._source_options")
     @patch("raster.views.tiles._get_singleband_image", return_value=b"png")
     def test_shared_database_requires_access_to_all_datasets(self, render, domains):

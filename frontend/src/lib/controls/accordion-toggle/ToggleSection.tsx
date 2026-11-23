@@ -19,6 +19,7 @@ interface ToggleSectionProps {
   id: string;
   label: string;
   disabled?: boolean;
+  forceCollapsed?: boolean;
   children: ReactNode;
 }
 
@@ -26,6 +27,7 @@ export const ToggleSection: FC<ToggleSectionProps> = ({
   id,
   label,
   disabled = false,
+  forceCollapsed = false,
   children,
 }) => {
   const toggleState = useContext(ToggleStateContext);
@@ -34,11 +36,11 @@ export const ToggleSection: FC<ToggleSectionProps> = ({
   const htmlId = useId();
 
   return (
-    <Accordion disabled={disabled} expanded={show} onChange={handleShow}>
+    <Accordion disabled={disabled} expanded={show && !forceCollapsed} onChange={handleShow}>
       <AccordionSummary
         id={`${htmlId}-header`}
         aria-controls={`${htmlId}-details`}
-        expandIcon={show ? <Visibility /> : <VisibilityOff />}
+        expandIcon={show && !forceCollapsed ? <Visibility /> : <VisibilityOff />}
       >
         {label}
       </AccordionSummary>
