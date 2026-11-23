@@ -2,7 +2,8 @@ import { CssBaseline } from '@mui/material';
 import { StyledEngineProvider } from '@mui/styled-engine';
 import { ThemeProvider } from '@mui/material/styles';
 import type { Preview } from '@storybook/react-vite';
-import { initialize, mswLoader } from 'msw-storybook-addon';
+import { mswLoader } from 'msw-storybook-addon/csf3';
+import { setupWorker } from 'msw/browser';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { Provider, atom } from 'jotai';
 
@@ -13,16 +14,15 @@ import { useStateEffect } from '../src/lib/recoil/state-effects/use-state-effect
 import { viewSectionsState } from '../src/app/config/views';
 import { sectionsConfigState } from '../src/app/config/sections';
 
-/*
- * Initializes MSW
- * See https://github.com/mswjs/msw-storybook-addon#configuring-msw
- * to learn how to customize it
- */
-initialize({
-  serviceWorker: {
-    url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
-  },
-});
+const initializeMsw = async () => {
+  const worker = setupWorker();
+  await worker.start({
+    serviceWorker: {
+      url: `${import.meta.env.BASE_URL}mockServiceWorker.js`,
+    },
+  });
+  return worker;
+};
 
 const mockViewState = atom('exposure');
 const mockViewStateEffectState = atom((get) => ({
@@ -69,7 +69,7 @@ const preview: Preview = {
       </Provider>
     ),
   ],
-  loaders: [mswLoader],
+  loaders: [mswLoader(initializeMsw)],
   tags: ['autodocs'],
 };
 
