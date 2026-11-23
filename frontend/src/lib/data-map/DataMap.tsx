@@ -1,4 +1,4 @@
-import type { MapboxOverlay } from '@deck.gl/mapbox';
+import type { MapLibreOverlay } from '@deck.gl/maplibre';
 import { Layer, LayersList, PickingInfo } from 'deck.gl';
 import { useMap } from 'react-map-gl/maplibre';
 import { FC, useRef } from 'react';
@@ -101,7 +101,7 @@ export const DataMap: FC<{
   interactionGroups: Map<string, InteractionGroupConfig>;
   viewLayers: ViewLayer[];
 }> = ({ firstLabelId, interactionGroups, viewLayers }) => {
-  const deckRef = useRef<MapboxOverlay>(null);
+  const deckRef = useRef<MapLibreOverlay>(null);
   const { current: map } = useMap();
   const zoom = map.getMap().getZoom();
   const viewLayersParams = useAtomValue(viewLayersParamsState);
