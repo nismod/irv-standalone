@@ -4,6 +4,7 @@ import reactRecommended from 'eslint-plugin-react/configs/recommended.js';
 import reactJSXRuntime from 'eslint-plugin-react/configs/jsx-runtime.js';
 import reactHooks from 'eslint-plugin-react-hooks';
 import importPlugin from 'eslint-plugin-import';
+import { defaultConditionNames } from 'eslint-import-resolver-typescript';
 import typescript from 'typescript-eslint';
 import storybook from 'eslint-plugin-storybook';
 
@@ -32,6 +33,8 @@ export default [
         typescript: {
           // https://github.com/import-js/eslint-plugin-import/issues/1872#issuecomment-789895457
           project: '.',
+          // Jotai v3 otherwise resolves every subpath to its TypeScript-version error stub.
+          conditionNames: ['types@>=5.5', ...defaultConditionNames],
         },
       },
     },
