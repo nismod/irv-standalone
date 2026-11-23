@@ -259,7 +259,7 @@ class Command(BaseCommand):
             return
 
         datasets = (
-            RasterLayer.objects.filter(dataset__group__iexact="hazards")
+            RasterLayer.objects.filter(identity__dataset__group__iexact="hazards")
             .select_related("tile_source")
             .order_by("pk")
         )

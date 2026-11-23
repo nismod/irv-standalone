@@ -9,10 +9,11 @@ class RasterTileSourceAdmin(admin.ModelAdmin):
     search_fields = ["raster_layers__identity__id", "raster_layers__label"]
 
     def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related("raster_layers__dataset")
+        return super().get_queryset(request).prefetch_related("raster_layers__identity__dataset")
 
     @admin.display(description="Datasets")
     def dataset_list(self, source):
         return ", ".join(
-            layer.dataset.label for layer in source.raster_layers.all()
+            layer.identity.dataset.label for layer in source.raster_layers.all()
+            if layer.identity.dataset_id is not None
         )

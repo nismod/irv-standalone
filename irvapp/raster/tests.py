@@ -9,7 +9,7 @@ from django.test import SimpleTestCase, TestCase, override_settings
 from django.utils.cache import has_vary_header
 from rest_framework.test import APIClient
 
-from map.models import Dataset, RasterLayer
+from map.models import Dataset, LayerIdentity, RasterLayer
 from raster import ingestion as ingest
 from raster.management.commands.ingest_rasters import Command
 
@@ -25,8 +25,9 @@ from .views import (
 
 
 def create_raster_layer(dataset, source, unit=""):
+    LayerIdentity.objects.create(id=dataset.pk, kind="raster", dataset=dataset)
     return RasterLayer.objects.create(
-        id=dataset.pk, dataset=dataset, tile_source=source, label=dataset.label,
+        id=dataset.pk, tile_source=source, label=dataset.label,
         quantity="", unit=unit, license=dataset.license,
         stacking_order=0, display_order=0,
     )

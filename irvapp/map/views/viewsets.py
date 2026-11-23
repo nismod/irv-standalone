@@ -146,7 +146,7 @@ class FeatureLayerViewset(viewsets.ReadOnlyModelViewSet):
         return super().retrieve(request, *args, **kwargs)
 
     def get_queryset(self):
-        return FeatureLayer.objects.select_related("dataset").prefetch_related("dataset__access_groups").order_by("pk")
+        return FeatureLayer.objects.select_related("identity__dataset").prefetch_related("identity__dataset__access_groups").order_by("pk")
 
 
 class RasterLayerViewset(viewsets.ReadOnlyModelViewSet):
@@ -164,9 +164,9 @@ class RasterLayerViewset(viewsets.ReadOnlyModelViewSet):
         return super().list(request, *args, **kwargs)
 
     def get_queryset(self):
-        queryset = RasterLayer.objects.select_related("dataset", "tile_source").prefetch_related("dataset__access_groups").order_by("pk")
+        queryset = RasterLayer.objects.select_related("identity__dataset", "tile_source").prefetch_related("identity__dataset__access_groups").order_by("pk")
         group = self.request.query_params.get("group")
-        return queryset.filter(dataset__group__iexact=group) if group else queryset
+        return queryset.filter(identity__dataset__group__iexact=group) if group else queryset
 
 
 class NetworkLayerStyleViewset(viewsets.ReadOnlyModelViewSet):

@@ -165,7 +165,8 @@ model validation is applied by Django forms, not by direct database writes.
 
 #### Feature layers and datasets
 
-Feature layers belong to datasets and inherit their access groups. Set their
+Feature layers belong to datasets through their layer identities and inherit
+their access groups. Assign the dataset on the identity in Django admin. Set their
 stacking and display order on the feature layer in Django admin; display order
 orders linked siblings in the infrastructure tree. Migration 0029 links layers whose IDs match
 dataset IDs and copies their order values. It warns about unmatched layers,
@@ -188,7 +189,9 @@ existing relative order. Display order uses the same values while the current
 sidebar sections and feature-tree hierarchy remain separate.
 
 Each feature or raster layer has a one-to-one identity as its primary key.
-Normal Django saves create the identity when needed; direct database inserts
+Feature- and raster-layer saves create an unassigned identity when needed.
+Both can remain unassigned until datasets are available; unassigned layers are
+not accessible through the app. Direct database inserts
 must create a matching `layer_identities` row first. Deleting a layer leaves its
 identity available for review or explicit deletion. The existing ETL does not
 yet create identity records for new feature layers.
@@ -196,8 +199,9 @@ yet create identity records for new feature layers.
 #### Raster layers and datasets
 
 A dataset controls access for its raster layers through its access groups. Each
-raster layer belongs to one dataset and references one raster tile source;
-multiple layers can use the same source. Configure layer labels, units, colours,
+raster layer's identity can belong to one dataset and the layer references one
+raster tile source; multiple layers can use the same source. Assign the dataset
+on the identity in Django admin. Configure layer labels, units, colours,
 and display order on the raster layer in Django admin. Datasets continue to
 support non-raster data as well.
 

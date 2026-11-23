@@ -6,7 +6,8 @@ from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase, TransactionTestCase
 from rest_framework.test import APIClient
 
-from map.models import Dataset, RasterLayer
+from map.models import Dataset, FeatureLayer, LayerIdentity, RasterLayer
+from map.permissions import inaccessible_hazard_ids
 from raster.models import RasterTileSource
 
 
@@ -24,16 +25,18 @@ class RasterLayerAccessTests(TestCase):
         )
         self.dataset.access_groups.add(self.group)
         for name in ("river", "coastal"):
+            LayerIdentity.objects.create(id=name, kind="raster", dataset=self.dataset)
             RasterLayer.objects.create(
-                id=name, dataset=self.dataset, tile_source=self.source, label=name,
+                id=name, tile_source=self.source, label=name,
                 quantity="depth", unit="m", stacking_order=0, display_order=0,
             )
         restricted = Dataset.objects.create(
             id="restricted", label="Restricted", group="hazards",
         )
         restricted_source = RasterTileSource.objects.create(keys=["region"], database="private.sqlite")
+        LayerIdentity.objects.create(id="private", kind="raster", dataset=restricted)
         RasterLayer.objects.create(
-            id="private", dataset=restricted, tile_source=restricted_source, label="Private",
+            id="private", tile_source=restricted_source, label="Private",
             quantity="depth", unit="m", stacking_order=0, display_order=0,
         )
 
@@ -81,6 +84,34 @@ class RasterLayerAccessTests(TestCase):
         self.assertEqual(self.client.get('/tiles/raster/sources/river/domains').status_code, 403)
         render.assert_not_called()
         domains.assert_not_called()
+
+    @patch("raster.views.tiles._get_singleband_image", return_value=b"png")
+    def test_both_layer_types_can_be_unassigned_and_become_accessible_after_assignment(self, render):
+        feature = FeatureLayer.objects.create(layer_name='new-feature', sector='transport', subsector='road', asset_type='edge')
+        raster = RasterLayer.objects.create(id='new-raster', tile_source=self.source, label='New',
+                                            quantity='depth', unit='m', stacking_order=0, display_order=0)
+        self.assertIsNone(feature.identity.dataset_id)
+        self.assertIsNone(raster.identity.dataset_id)
+        feature.full_clean()
+        raster.full_clean()
+
+        for user in (self.user, User.objects.create_superuser(username='superuser')):
+            self.client.force_authenticate(user)
+            self.assertEqual(self.client.get('/map/feature-layers/new-feature').status_code, 403)
+            self.assertEqual(self.client.get('/map/raster-layers/new-raster').status_code, 403)
+            self.assertEqual(self.client.get('/tiles/raster/new-raster/x/0/0/0.png').status_code, 403)
+            self.assertEqual(self.client.get('/tiles/raster/river/x/0/0/0.png').status_code, 403)
+            self.assertIn('new-raster', inaccessible_hazard_ids(user))
+        render.assert_not_called()
+
+        for layer in (feature, raster):
+            layer.identity.dataset = self.dataset
+            layer.identity.save(update_fields=['dataset'])
+        self.client.force_authenticate(self.user)
+        self.assertEqual(self.client.get('/map/feature-layers/new-feature').status_code, 200)
+        self.assertEqual(self.client.get('/map/raster-layers/new-raster').status_code, 200)
+        self.assertEqual(self.client.get('/tiles/raster/new-raster/x/0/0/0.png').status_code, 200)
+        self.assertNotIn('new-raster', inaccessible_hazard_ids(self.user))
 
 
 class RasterLayerMigrationTests(TransactionTestCase):

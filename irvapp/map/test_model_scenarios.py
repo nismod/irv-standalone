@@ -9,7 +9,7 @@ from django.test.utils import CaptureQueriesContext
 from rest_framework.test import APIClient
 
 from map.models import (
-    AdaptationCostBenefit, DamagesExpected, Dataset, Feature, FeatureLayer, ModelParameterSet,
+    AdaptationCostBenefit, DamagesExpected, Dataset, Feature, FeatureLayer, LayerIdentity, ModelParameterSet,
 )
 
 
@@ -24,8 +24,9 @@ class ModelScenarioTests(TestCase):
         dataset.access_groups.add(access_group)
         self.features = []
         for name, sector in (("roads", "transport"), ("power", "energy")):
+            LayerIdentity.objects.create(id=name, kind="feature", dataset=dataset)
             layer = FeatureLayer.objects.create(
-                layer_name=name, sector=sector, subsector=name, asset_type="edge", dataset=dataset,
+                layer_name=name, sector=sector, subsector=name, asset_type="edge",
             )
             self.features.append(Feature.objects.create(
                 layer=layer, string_id=name, properties={}, geom=Point(0, 0, srid=4326),

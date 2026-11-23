@@ -16,6 +16,7 @@ from map.models import (
     DamagesExpected,
     DamagesRp,
     Dataset,
+    LayerIdentity,
     RasterLayer,
     Feature,
     FeatureLayer,
@@ -63,8 +64,9 @@ class SyntheticResultsTests(TestCase):
                 label=hazard.title(),
                 group="hazards",
             )
+            LayerIdentity.objects.create(id=hazard, kind="raster", dataset=dataset)
             RasterLayer.objects.create(
-                id=hazard, dataset=dataset, tile_source=source, label=dataset.label,
+                id=hazard, tile_source=source, label=dataset.label,
                 quantity="depth", unit="m", stacking_order=0, display_order=0,
             )
 
@@ -499,7 +501,7 @@ class SyntheticResultsTests(TestCase):
         self,
     ):
         dataset = Dataset.objects.create(id="infrastructure", label="Infrastructure", group="infrastructure")
-        FeatureLayer.objects.filter(pk__in=["roads", "power"]).update(dataset=dataset)
+        LayerIdentity.objects.filter(pk__in=["roads", "power"]).update(dataset=dataset)
         self.seed()
         client = APIClient()
         client.force_authenticate(

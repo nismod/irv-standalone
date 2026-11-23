@@ -111,8 +111,8 @@ class RasterTileImageView(APIView):
         try:
             parsed_keys = _parse_keys(keys)
             layer = (
-                RasterLayer.objects.select_related("tile_source", "dataset")
-                .prefetch_related("dataset__access_groups")
+                RasterLayer.objects.select_related("tile_source", "identity__dataset")
+                .prefetch_related("identity__dataset__access_groups")
                 .get(pk=dataset_id)
             )
             self.check_object_permissions(request, layer)

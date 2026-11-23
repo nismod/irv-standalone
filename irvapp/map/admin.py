@@ -36,8 +36,13 @@ class FeatureLayerAdmin(admin.ModelAdmin):
         "stacking_order",
         "display_order",
     ]
-    autocomplete_fields = ["dataset", "identity"]
+    autocomplete_fields = ["identity"]
     search_fields = ["identity__id"]
+    list_select_related = ("identity__dataset",)
+
+    @admin.display(description="Dataset", ordering="identity__dataset__id")
+    def dataset(self, layer):
+        return layer.identity.dataset
 
 
 @admin.register(Dataset)
@@ -55,8 +60,13 @@ class DatasetAdmin(admin.ModelAdmin):
 @admin.register(RasterLayer)
 class RasterLayerAdmin(admin.ModelAdmin):
     list_display = ["id", "label", "dataset", "tile_source"]
-    autocomplete_fields = ["dataset", "tile_source", "identity"]
+    autocomplete_fields = ["tile_source", "identity"]
     search_fields = ["identity__id", "label"]
+    list_select_related = ("identity__dataset", "tile_source")
+
+    @admin.display(description="Dataset", ordering="identity__dataset__id")
+    def dataset(self, layer):
+        return layer.identity.dataset
 
 
 class LayerIdentityForm(forms.ModelForm):
@@ -84,8 +94,10 @@ class LayerIdentityForm(forms.ModelForm):
 @admin.register(LayerIdentity)
 class LayerIdentityAdmin(admin.ModelAdmin):
     form = LayerIdentityForm
-    list_display = ["id", "kind"]
+    list_display = ["id", "kind", "dataset"]
     search_fields = ["id"]
+    autocomplete_fields = ["dataset"]
+    list_select_related = ("dataset",)
 
 
 @admin.register(NetworkLayerStyle)

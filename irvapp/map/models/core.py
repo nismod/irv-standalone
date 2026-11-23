@@ -58,6 +58,9 @@ class LayerIdentity(models.Model):
 
     id = models.CharField(primary_key=True)
     kind = models.CharField(max_length=16, choices=[("feature", "Feature"), ("raster", "Raster")])
+    dataset = models.ForeignKey(
+        "Dataset", models.PROTECT, null=True, blank=True, related_name="layer_identities",
+    )
 
     class Meta:
         db_table = "layer_identities"
@@ -116,9 +119,6 @@ class FeatureLayer(IdentityLayer, LayerOrdering):
         LayerIdentity, models.PROTECT, primary_key=True, db_column="layer_name", related_name="featurelayer",
     )
     identity_kind = models.CharField(max_length=16, default="feature", db_default="feature", editable=False)
-    dataset = models.ForeignKey(
-        "Dataset", models.PROTECT, null=True, blank=True, related_name="feature_layers"
-    )
     sector = models.CharField()
     subsector = models.CharField()
     asset_type = models.CharField()
@@ -199,7 +199,6 @@ class RasterLayer(IdentityLayer, LayerOrdering):
         LayerIdentity, models.PROTECT, primary_key=True, db_column="id", related_name="rasterlayer",
     )
     identity_kind = models.CharField(max_length=16, default="raster", db_default="raster", editable=False)
-    dataset = models.ForeignKey(Dataset, models.PROTECT, related_name="raster_layers")
     tile_source = models.ForeignKey(
         "raster.RasterTileSource", models.PROTECT, related_name="raster_layers"
     )

@@ -8,7 +8,7 @@ from django.db.migrations.executor import MigrationExecutor
 from django.test import TestCase, TransactionTestCase
 from rest_framework.test import APIClient
 
-from map.models import Dataset, FeatureLayer
+from map.models import Dataset, FeatureLayer, LayerIdentity
 
 
 class FeatureLayerTests(TestCase):
@@ -19,8 +19,9 @@ class FeatureLayerTests(TestCase):
         self.dataset = Dataset.objects.create(id='roads', label='Roads', group='infrastructure')
         self.dataset.access_groups.add(self.group)
         for name in ('road_edges_motorway', 'road_edges_class_a'):
+            LayerIdentity.objects.create(id=name, kind='feature', dataset=self.dataset)
             FeatureLayer.objects.create(
-                layer_name=name, dataset=self.dataset, sector='transport', subsector='road',
+                layer_name=name, sector='transport', subsector='road',
                 asset_type=name, stacking_order=2, display_order=3,
             )
         FeatureLayer.objects.create(layer_name='unlinked', sector='', subsector='', asset_type='')
@@ -41,6 +42,16 @@ class FeatureLayerTests(TestCase):
         self.assertEqual(self.client.get('/map/feature-layers/road_edges_motorway').status_code, 403)
         self.assertEqual(self.client.get('/map/feature-layers/road_edges_class_a').status_code, 403)
 
+    def test_reassigning_identity_changes_layer_access(self):
+        other = Dataset.objects.create(id='other', label='Other', group='infrastructure')
+        identity = LayerIdentity.objects.get(pk='road_edges_motorway')
+        identity.dataset = other
+        identity.save(update_fields=['dataset'])
+        self.assertEqual(self.client.get('/map/feature-layers/road_edges_motorway').status_code, 403)
+        self.assertEqual(self.client.get('/map/feature-layers/road_edges_class_a').status_code, 200)
+        other.access_groups.add(self.group)
+        self.assertEqual(self.client.get('/map/feature-layers/road_edges_motorway').status_code, 200)
+
     @patch('vector_proxy.views.urlopen')
     def test_tile_proxy_uses_layer_dataset_not_matching_id(self, urlopen):
         self.dataset.access_groups.clear()
@@ -60,11 +71,11 @@ class FeatureLayerTests(TestCase):
         call_command('link_feature_layers', stdout=output)
         layer.refresh_from_db()
         unmatched.refresh_from_db()
-        self.assertEqual(layer.dataset_id, 'late')
-        self.assertEqual(FeatureLayer.objects.get(pk='unlinked').dataset_id, 'unlinked')
-        self.assertIsNone(unmatched.dataset_id)
+        self.assertEqual(layer.identity.dataset_id, 'late')
+        self.assertEqual(FeatureLayer.objects.get(pk='unlinked').identity.dataset_id, 'unlinked')
+        self.assertIsNone(unmatched.identity.dataset_id)
         self.assertIn('missing', output.getvalue())
-        self.assertEqual(FeatureLayer.objects.get(pk='road_edges_motorway').dataset_id, 'roads')
+        self.assertEqual(FeatureLayer.objects.get(pk='road_edges_motorway').identity.dataset_id, 'roads')
         output = StringIO()
         call_command('link_feature_layers', stdout=output)
         self.assertIn('Linked 0', output.getvalue())

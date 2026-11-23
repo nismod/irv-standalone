@@ -26,13 +26,14 @@ class LayerIdentityTests(TestCase):
         with self.assertRaises(IntegrityError), transaction.atomic():
             LayerIdentity.objects.filter(pk='roads').update(kind='raster')
         with self.assertRaises(IntegrityError), transaction.atomic():
-            RasterLayer.objects.create(id='roads', dataset=self.dataset, tile_source=self.source,
+            RasterLayer.objects.create(id='roads', tile_source=self.source,
                 label='Raster', quantity='', unit='', stacking_order=0, display_order=0)
         with self.assertRaises(ProtectedError):
             LayerIdentity.objects.get(pk='roads').delete()
         feature.delete()
         LayerIdentity.objects.get(pk='roads').delete()
-        raster = RasterLayer.objects.create(id='roads', dataset=self.dataset, tile_source=self.source,
+        LayerIdentity.objects.create(id='roads', kind='raster', dataset=self.dataset)
+        raster = RasterLayer.objects.create(id='roads', tile_source=self.source,
             label='Raster', quantity='', unit='', stacking_order=0, display_order=0)
         self.assertEqual(LayerIdentity.objects.get(pk='roads').kind, 'raster')
         with self.assertRaises(IntegrityError), transaction.atomic():
@@ -50,12 +51,13 @@ class LayerIdentityTests(TestCase):
         self.assertEqual(FeatureLayer.objects.get(pk='legacy').identity_id, 'legacy')
         with self.assertRaises(IntegrityError), transaction.atomic():
             with connection.cursor() as cursor:
-                cursor.execute("INSERT INTO raster_layers (id, dataset_id, tile_source_id, label, quantity, unit, stacking_order, display_order) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
-                    ['legacy', self.dataset.pk, self.source.pk, 'Raster', '', '', 0, 0])
+                cursor.execute("INSERT INTO raster_layers (id, tile_source_id, label, quantity, unit, stacking_order, display_order) VALUES (%s,%s,%s,%s,%s,%s,%s)",
+                    ['legacy', self.source.pk, 'Raster', '', '', 0, 0])
 
     def test_rename_collision_keeps_original_identity(self):
         FeatureLayer.objects.create(layer_name='feature', sector='', subsector='', asset_type='')
-        RasterLayer.objects.create(id='raster', dataset=self.dataset, tile_source=self.source,
+        LayerIdentity.objects.create(id='raster', kind='raster', dataset=self.dataset)
+        RasterLayer.objects.create(id='raster', tile_source=self.source,
             label='Raster', quantity='', unit='', stacking_order=0, display_order=0)
         with self.assertRaises(IntegrityError), transaction.atomic():
             FeatureLayer.objects.filter(pk='feature').update(identity_id='raster')
@@ -105,10 +107,11 @@ class ConcurrentLayerIdentityTests(TransactionTestCase):
             try:
                 barrier.wait(timeout=5)
                 with transaction.atomic():
+                    LayerIdentity.objects.get_or_create(pk='concurrent', defaults={'kind': kind, 'dataset_id': dataset.pk})
                     if kind == 'feature':
                         FeatureLayer.objects.create(layer_name='concurrent', sector='', subsector='', asset_type='')
                     else:
-                        RasterLayer.objects.create(id='concurrent', dataset_id=dataset.pk, tile_source_id=source.pk,
+                        RasterLayer.objects.create(id='concurrent', tile_source_id=source.pk,
                             label='Raster', quantity='', unit='', stacking_order=0, display_order=0)
                 return 'created'
             except IntegrityError:
@@ -130,8 +133,11 @@ class LayerIdentityMigrationTests(TransactionTestCase):
             with self.assertRaisesRegex(RuntimeError, 'reserved'):
                 MigrationExecutor(connection).migrate(before)
         finally:
-            LayerIdentity.objects.filter(pk='reserved').delete()
             executor = MigrationExecutor(connection)
+            apps = executor.loader.project_state([
+                ('map', '0031_layeridentity'), ('raster', '0010_rastertilesource_path_template'),
+            ]).apps
+            apps.get_model('map', 'LayerIdentity').objects.filter(pk='reserved').delete()
             executor.migrate(executor.loader.graph.leaf_nodes())
 
     def test_existing_layers_become_identity_relations_without_triggers(self):

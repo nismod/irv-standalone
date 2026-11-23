@@ -13,7 +13,8 @@ class LayerIdentityAdminTests(TestCase):
         FeatureLayer.objects.create(layer_name="roads", sector="", subsector="", asset_type="")
         dataset = Dataset.objects.create(id="hazards", label="Hazards", group="hazards")
         source = RasterTileSource.objects.create(keys=["type"])
-        RasterLayer.objects.create(id="rain", dataset=dataset, tile_source=source,
+        LayerIdentity.objects.create(id="rain", kind="raster", dataset=dataset)
+        RasterLayer.objects.create(id="rain", tile_source=source,
             label="Rain", quantity="depth", unit="m", stacking_order=0, display_order=0)
         LayerIdentity.objects.create(id="unattached", kind="feature")
 
@@ -64,3 +65,15 @@ class LayerIdentityAdminTests(TestCase):
         with self.assertRaises(ValidationError) as error:
             identity.full_clean()
         self.assertIn("kind", error.exception.message_dict)
+
+    def test_attached_layers_can_clear_dataset_in_admin(self):
+        LayerIdentity.objects.filter(pk="roads").update(dataset_id="hazards")
+        for identity_id, model, endpoint in (("rain", RasterLayer, "raster-layers"),
+                                             ("roads", FeatureLayer, "feature-layers")):
+            with self.subTest(identity_id=identity_id):
+                url = reverse("admin:map_layeridentity_change", args=[identity_id])
+                response = self.client.post(url, {"id": identity_id, "dataset": "", "_save": "Save"})
+                self.assertEqual(response.status_code, 302)
+                self.assertIsNone(LayerIdentity.objects.get(pk=identity_id).dataset_id)
+                self.assertTrue(model.objects.filter(pk=identity_id).exists())
+                self.assertEqual(self.client.get(f'/map/{endpoint}/{identity_id}').status_code, 403)

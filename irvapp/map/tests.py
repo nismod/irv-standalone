@@ -35,8 +35,8 @@ def grant_layer_access(user, layer):
     group = Group.objects.create(name=f"access-{layer.pk}")
     dataset.access_groups.add(group)
     user.groups.add(group)
-    layer.dataset = dataset
-    layer.save(update_fields=["dataset"])
+    layer.identity.dataset = dataset
+    layer.identity.save(update_fields=["dataset"])
 
 
 class ModelParameterKeyTests(SimpleTestCase):
