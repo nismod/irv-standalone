@@ -11,7 +11,6 @@ from .core import (
 from .risk import (
     AdaptationCostBenefit,
     DamagesExpected,
-    DamagesNpv,
     DamagesRp,
     ModelParameter,
     ModelParameterSet,
@@ -22,7 +21,6 @@ __all__ = [
     "SyntheticDataRun",
     "AdaptationCostBenefit",
     "DamagesExpected",
-    "DamagesNpv",
     "DamagesRp",
     "ModelParameter",
     "ModelParameterSet",

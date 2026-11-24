@@ -159,34 +159,6 @@ class DamagesExpected(models.Model):
         )]
 
 
-class DamagesNpv(models.Model):
-    pk = models.CompositePrimaryKey(
-        "parameter_set_id",
-        "feature_id",
-        "hazard",
-    )
-    id = models.BigIntegerField(
-        editable=False,
-        null=True,
-        unique=True,
-        db_default=SequenceNextValue("damages_npv_id_seq"),
-    )
-    feature = models.ForeignKey(Feature, models.CASCADE)
-    hazard = models.CharField(max_length=8)
-    parameter_set = models.ForeignKey(
-        ModelParameterSet, models.PROTECT, db_index=False
-    )
-    ead_amin = models.FloatField(blank=True, null=True)
-    ead_mean = models.FloatField(blank=True, null=True)
-    ead_amax = models.FloatField(blank=True, null=True)
-    eael_amin = models.FloatField(blank=True, null=True)
-    eael_mean = models.FloatField(blank=True, null=True)
-    eael_amax = models.FloatField(blank=True, null=True)
-
-    class Meta:
-        db_table = "damages_npv"
-
-
 class DamagesRp(models.Model):
     pk = models.CompositePrimaryKey(
         "parameter_set_id",

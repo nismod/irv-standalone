@@ -767,44 +767,6 @@
       }
     }
   ],
-  "damages_npv": [
-    {
-      "ead_amin": 5355366.592011428,
-      "ead_mean": 12470578.365074333,
-      "ead_amax": 22647744.946309365,
-      "eael_amin": 4476.588110748501,
-      "eael_mean": 4708.951190967155,
-      "eael_amax": 4995.6675698459785,
-      "hazard": "fluvial",
-      "parameters": {
-        "rcp": "2.6"
-      }
-    },
-    {
-      "ead_amin": 5355366.592011428,
-      "ead_mean": 12470578.365074333,
-      "ead_amax": 22647744.946309365,
-      "eael_amin": 4476.588110748501,
-      "eael_mean": 4708.951190967155,
-      "eael_amax": 4995.6675698459785,
-      "hazard": "fluvial",
-      "parameters": {
-        "rcp": "4.5"
-      }
-    },
-    {
-      "ead_amin": 5348502.487422377,
-      "ead_mean": 12451434.01282779,
-      "ead_amax": 22611017.55590553,
-      "eael_amin": 4476.588110748501,
-      "eael_mean": 4708.951190967155,
-      "eael_amax": 4995.6675698459785,
-      "hazard": "fluvial",
-      "parameters": {
-        "rcp": "8.5"
-      }
-    }
-  ],
   "adaptation": [
     {
       "adaptation_cost": 812897685.4019508,
