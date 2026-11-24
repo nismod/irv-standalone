@@ -10,7 +10,18 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        # In reverse, restore ownership after Django has recreated the table.
+        migrations.RunSQL(
+            sql=migrations.RunSQL.noop,
+            reverse_sql="ALTER SEQUENCE damages_npv_id_seq OWNED BY damages_npv.id",
+        ),
         migrations.DeleteModel(
             name='DamagesNpv',
+        ),
+        # The table drop also drops its owned sequence. Recreate it before the
+        # reverse DeleteModel creates a column with a nextval() default.
+        migrations.RunSQL(
+            sql=migrations.RunSQL.noop,
+            reverse_sql="CREATE SEQUENCE damages_npv_id_seq",
         ),
     ]

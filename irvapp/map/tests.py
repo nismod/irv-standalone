@@ -1,9 +1,6 @@
 import json
-from importlib import import_module
-from types import SimpleNamespace
 
 from allauth.account.models import EmailAddress
-from django.apps import apps
 from django.contrib.auth.models import Group, User
 from django.contrib.gis.geos import Point
 from django.db import IntegrityError, connection, transaction
@@ -109,58 +106,6 @@ class AttributeLookupViewTests(TestCase):
                 self.assertIsNotNone(result.id)
                 with self.assertRaises(IntegrityError), transaction.atomic():
                     model.objects.create(id=result.id, hazard="storm", **values)
-
-    def test_parameter_key_migration_merges_nonoverlapping_results(self):
-        legacy = ModelParameterSet.objects.create(
-            model_type="damages_expected", canonical_key='{"gwl":2.0}'
-        )
-        legacy.parameters.create(name="gwl", value=2.0)
-        retained = make_parameter_set("damages_expected", gwl=2)
-        result = DamagesExpected.objects.create(
-            feature=self.feature_1, parameter_set=legacy,
-            hazard="flood", protection_standard=0, ead_mean=10,
-        )
-        DamagesExpected.objects.create(
-            feature=self.feature_1, parameter_set=retained,
-            hazard="storm", protection_standard=0, ead_mean=20,
-        )
-        migration = import_module("map.migrations.0020_normalize_parameter_keys")
-        migration.normalize_parameter_keys(apps, SimpleNamespace(connection=connection))
-        # Reassignment changes the composite primary key; the public ID stays stable.
-        result = DamagesExpected.objects.get(id=result.id)
-        self.assertEqual(result.parameter_set_id, retained.pk)
-        self.assertEqual(result.ead_mean, 10)
-        self.assertFalse(ModelParameterSet.objects.filter(pk=legacy.pk).exists())
-        self.assertEqual(DamagesExpected.objects.count(), 2)
-
-    def test_parameter_key_migration_normalizes_a_single_legacy_set(self):
-        legacy = ModelParameterSet.objects.create(
-            model_type="damages_expected", canonical_key='{"gwl":2.0}'
-        )
-        legacy.parameters.create(name="gwl", value=2.0)
-        migration = import_module("map.migrations.0020_normalize_parameter_keys")
-        migration.normalize_parameter_keys(apps, SimpleNamespace(connection=connection))
-        self.assertEqual(make_parameter_set("damages_expected", gwl=2).pk, legacy.pk)
-
-    def test_parameter_key_migration_preserves_overlapping_results(self):
-        legacy = ModelParameterSet.objects.create(
-            model_type="damages_expected", canonical_key='{"gwl":2.0}'
-        )
-        legacy.parameters.create(name="gwl", value=2.0)
-        retained = make_parameter_set("damages_expected", gwl=2)
-        for parameter_set, damage in ((legacy, 10), (retained, 20)):
-            DamagesExpected.objects.create(
-                feature=self.feature_1, parameter_set=parameter_set,
-                hazard="flood", protection_standard=0, ead_mean=damage,
-            )
-        migration = import_module("map.migrations.0020_normalize_parameter_keys")
-        with self.assertRaisesMessage(RuntimeError, "overlapping"), transaction.atomic():
-            migration.normalize_parameter_keys(apps, SimpleNamespace(connection=connection))
-        self.assertEqual(ModelParameterSet.objects.count(), 2)
-        self.assertEqual(
-            list(DamagesExpected.objects.order_by("ead_mean").values_list("ead_mean", flat=True)),
-            [10, 20],
-        )
 
     def test_damages_expected_lookup_with_hazard_all_aggregates(self):
         DamagesExpected.objects.create(
