@@ -26,16 +26,21 @@ can also represent a subset of hazards. Shared parameter values and protection
 standards must agree across hazards. Damage requests use the bulk attributes
 API and sum exactly one selected scenario per accessible hazard.
 
-For subsets or differing parameter schemas, `hazard_parameters` maps each
-selected hazard to its parameter object while `parameters` contains combined
-control values. Partial selections omit `hazard`; full selections use
-`hazard: "all"`. Full selections with a shared parameter object may omit
-`hazard_parameters`.
+Requests use one of three forms:
+
+- **Single hazard:** send the named `hazard` and its parameters.
+- **Partial multi-hazard total:** omit `hazard` and send an explicit
+  `hazard_parameters` mapping from each selected hazard to its parameter
+  object. `parameters` contains the combined control values.
+- **All hazards:** send `hazard: "all"`. The request may omit the mapping when
+  all parameter objects are identical.
 
 ## Consequences
 
-Scenario controls, totals, and matching raster layers follow the selected
-hazards and parameter combinations. A shared “All Hazards” scenario is not
-available when the selected hazards have incompatible values for a shared
-parameter or protection standard; those hazards must be selected separately
-or with a compatible subset.
+The visible damage hazard radio group lets users select one hazard or “All
+Hazards”. Arbitrary multi-hazard subsets are supported through state/API
+requests, not by that sidebar control. Scenario controls, totals, and matching
+raster layers follow the selected hazards and parameter combinations. A shared
+“All Hazards” scenario is not available when selected hazards have incompatible
+values for a shared parameter or protection standard; represent compatible
+subsets through state/API requests.

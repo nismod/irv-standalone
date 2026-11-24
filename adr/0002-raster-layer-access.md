@@ -18,10 +18,12 @@ the layer. A layer can be assigned to any dataset, including datasets used for
 non-raster data. Labels, units, colours, and display order belong to the raster
 layer.
 
-Requests to a shared raster database require access to every dataset whose
-layers use that database. This applies to tile and domain requests and includes
-separate source records pointing at the same database. Separate raster
-databases are required when those datasets need different access rights.
+Every layer using a raster database must have a dataset assignment, and the
+requester must have access to every associated dataset. An unassigned layer
+blocks tile and domain access to that entire database for all users, including
+superusers, until it is assigned or moved. This applies across separate source
+records pointing at the same database. Separate raster databases are required
+when datasets need different access rights.
 
 Unassigned layers and layers in inaccessible hazard datasets remain visible in
 the hazard catalogue as disabled. Layers assigned to non-hazard datasets are
@@ -33,4 +35,6 @@ omitted from that catalogue. Raster metadata is served at
 Migration 0027 creates a raster layer for each existing dataset with a tile
 source while preserving its ID and display settings. Administrators should
 review these layers and move them into shared datasets as appropriate. Moving
-a layer changes its effective access to the permissions of its new dataset.
+a layer changes the set of datasets governing access to every layer that shares
+its database; the effective access of the moved layer and its database peers may
+change.
