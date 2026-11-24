@@ -1,11 +1,4 @@
 from map.views import (
-    FeatureViewset,
-    AdaptationCostBenefitViewset,
-    DamagesExpectedViewset,
-    DamagesRpViewset,
-    AttributeLookupView,
-    ProtectedFeaturesView,
-    SortedFeaturesView,
     MapConfigViewSet,
     InfrastructureTreeViewSet,
     DatasetViewset,
@@ -15,13 +8,15 @@ from map.views import (
 )
 from rest_framework.routers import DefaultRouter
 from django.urls import path
-from map.views.model_scenarios import ModelScenariosView
+from map.risk.provider import get_risk_provider
+
+risk = get_risk_provider()
 
 router = DefaultRouter(trailing_slash=False)
-router.register(r'features', FeatureViewset)
-router.register(r'adaptation-cost-benefits', AdaptationCostBenefitViewset)
-router.register(r'damages-expected', DamagesExpectedViewset)
-router.register(r'damages-rp', DamagesRpViewset)
+router.register(r'features', risk.feature_viewset, basename='feature')
+router.register(r'adaptation-cost-benefits', risk.adaptation_viewset, basename='adaptationcostbenefit')
+router.register(r'damages-expected', risk.expected_damages_viewset, basename='damagesexpected')
+router.register(r'damages-rp', risk.return_period_damages_viewset, basename='damagesrp')
 router.register(r'datasets', DatasetViewset)
 router.register(r'raster-layers', RasterLayerViewset)
 router.register(r'feature-layers', FeatureLayerViewset)
@@ -35,14 +30,14 @@ router.register(
 
 urlpatterns = [
     *router.urls,
-    path('model-scenarios/<str:field_group>', ModelScenariosView.as_view()),
+    path('model-scenarios/<str:field_group>', risk.scenarios_view.as_view()),
     path(
         'features/sorted-by/<str:field_group>',
-        SortedFeaturesView.as_view(),
+        risk.sorted_features_view.as_view(),
     ),
     path(
         'features/<int:protector_id>/protected-by',
-        ProtectedFeaturesView.as_view(),
+        risk.protected_features_view.as_view(),
     ),
-    path('attributes/<str:field_group>', AttributeLookupView.as_view()),
+    path('attributes/<str:field_group>', risk.attribute_lookup_view.as_view()),
 ]
