@@ -20,6 +20,9 @@ Other functionality:
 This README covers requirements and steps through how to prepare data for
 visualisation and how to run the tool.
 
+Architectural decisions are recorded
+in [Architecture Decision Records](adr/README.md).
+
 1. Data preparation
 2. Build and run
 3. Deployment
@@ -153,98 +156,26 @@ docker compose -f docker-compose.dev.yml exec django python manage.py createsupe
 
 ### Populating the database
 
-#### Infrastructure tree
+#### Infrastructure tree and layers
 
-Infrastructure tree leaves can be linked to feature layers in Django admin.
-Each layer can be linked to at most one node, and nodes with children must not
-have a layer. Migration 0026 links leaves whose node IDs match existing layer
-names and warns about unmatched leaves. Review those warnings and set the links
-in admin after the relevant layers have been loaded. Unlinked leaves are
-disabled in the map. They remain allowed during this transition;
-model validation is applied by Django forms, not by direct database writes.
+Migration 0026 links infrastructure tree leaves whose node IDs match feature
+layer names and warns about unmatched leaves. Review warnings after loading
+layers, then link remaining leaves in Django admin. After loading feature
+layers, run `python manage.py link_feature_layers`; assign any remaining layers
+to datasets in admin. See [ADR 0001](adr/0001-layer-identities-and-datasets.md)
+for layer identity, access, and ordering decisions.
 
-#### Feature layers and datasets
+Migration 0027 creates raster layers for existing datasets with tile sources.
+Review the generated layers and move them to shared datasets as needed. Assign
+datasets on layer identities and configure labels, units, colours, and display
+order on raster layers in Django admin. See [ADR 0002](adr/0002-raster-layer-access.md)
+for raster access rules.
 
-Feature layers belong to datasets through their layer identities and inherit
-their access groups. Assign the dataset on the identity in Django admin. Set their
-stacking and display order on the feature layer in Django admin; display order
-orders linked siblings in the infrastructure tree. Migration 0029 links layers whose IDs match
-dataset IDs and copies their order values. It warns about unmatched layers,
-which remain unlinked and unavailable through the vector tile proxy until an
-administrator assigns a dataset. Layer IDs continue to identify vector tiles.
-After loading feature layers, run `python manage.py link_feature_layers` in the
-Django environment. It links unassigned layers whose IDs match dataset IDs and
-reports any remaining layers for manual assignment. Existing assignments are
-left intact.
-Feature and result APIs also restrict their responses to layers in datasets that
-the signed-in user can access. Unlinked layers are excluded. Inaccessible
-feature and result detail URLs return 404, and aggregate lookups exclude their
-data.
-
-Feature and raster layers share a single ID namespace. Migration 0031 stops
-and reports any IDs already used by both types so they can be resolved before
-retrying. The database enforces uniqueness for later writes. Stacking order is
-shared across both types when drawing the map; equal values retain their
-existing relative order. Display order uses the same values while the current
-sidebar sections and feature-tree hierarchy remain separate.
-
-Each feature or raster layer has a one-to-one identity as its primary key.
-Feature- and raster-layer saves create an unassigned identity when needed.
-Both can remain unassigned until datasets are available; unassigned layers are
-not accessible through the app. Direct database inserts
-must create a matching `layer_identities` row first. Deleting a layer leaves its
-identity available for review or explicit deletion. The existing ETL does not
-yet create identity records for new feature layers.
-
-#### Raster layers and datasets
-
-A dataset controls access for its raster layers through its access groups. Each
-raster layer's identity can belong to one dataset and the layer references one
-raster tile source; multiple layers can use the same source. Assign the dataset
-on the identity in Django admin. Configure layer labels, units, colours,
-and display order on the raster layer in Django admin. Datasets continue to
-support non-raster data as well.
-
-Unassigned raster layers appear in the hazard catalogue as disabled until a
-dataset is assigned. Raster layers assigned to an inaccessible hazard dataset
-also remain visible but disabled. Once assigned to a non-hazard dataset, a
-layer no longer appears in the hazard catalogue.
-
-Because raster keys are supplied by the caller, access to a shared raster
-database requires access to every dataset whose layers use that database. This
-applies to tile and domain requests and also to separate source records pointing
-to the same database. To provide different access rights, use separate raster
-databases; otherwise a user who lacks access to any one dataset on the shared
-database cannot use its raster layers.
-
-Migration 0027 creates a raster layer for each existing dataset with a tile
-source, preserving its ID and display settings. Review the resulting layers and
-move them into shared datasets as needed. Moving a layer changes its access to
-the permissions of its new dataset. Raster layer metadata is available at
-`/api/map/raster-layers`; raster tile and domain URLs use the layer ID.
-
-#### Model Scenarios
-
-Model scenarios used by the map and asset list are discovered from result rows at
-`GET /api/map/model-scenarios/{field_group}`, where `field_group` is
-`damages_expected` or `adaptation`. The endpoint accepts repeated `layer` filters,
-asset filters (`sector`, `subsector`, `asset_type`), and an optional `hazard`.
-Adaptation scenarios can also be scoped by `protector_id`. Each row contains a
-complete `parameters` object alongside fixed result dimensions such as protection
-standard or adaptation option. The controls preserve these combinations and value
-types. “All Hazards” combines the available parameters in the selected asset
-scope: for example, coastal SLR and river/surface GWL can be selected together.
-The damage hazard radio group selects one hazard or “All Hazards”. The scenario
-logic also supports subsets supplied through state, such as river and surface
-flooding without coastal flooding; controls, totals, and matching raster layers
-continue to follow those selections.
-Shared parameter values and protection standards must agree across hazards.
-Damage requests use the bulk attributes API, which sums exactly one selected
-scenario per accessible hazard. The optional `hazard_parameters` dimension maps
-each selected hazard to its parameter object for subsets or differing schemas; `parameters`
-contains the combined control values. Partial selections omit `hazard`; full
-selections use `hazard: "all"`. Full selections with a shared parameter object
-continue to work without this mapping.
+Model scenarios are discovered from result rows via
+`GET /api/map/model-scenarios/{field_group}` (`damages_expected` or `adaptation`).
+It accepts layer and asset filters, an optional hazard, and for adaptation an
+optional `protector_id`. See [ADR 0003](adr/0003-model-scenario-selection.md)
+for scenario combination and multi-hazard request behavior.
 
 The first time that you run the Django app, the backend database will be empty.
 The next step runs `pg_restore` to load data to the database from a backup.
