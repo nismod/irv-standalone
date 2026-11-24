@@ -16,7 +16,6 @@ def insert_fixtures(model, model_type, features, scenarios, seed, adaptations):
     dimensions = {
         "damages_expected": ["protection_standard"],
         "damages_rp": ["rp", "exposure"],
-        "damages_npv": [],
         "adaptation": [
             "adaptation_name",
             "adaptation_protection_level",
@@ -27,7 +26,6 @@ def insert_fixtures(model, model_type, features, scenarios, seed, adaptations):
     means = {
         "damages_expected": ["ead", "eael"],
         "damages_rp": ["damage", "loss"],
-        "damages_npv": ["ead", "eael"],
         "adaptation": ["avoided_ead", "avoided_eael"],
     }[model_type]
     columns = ["parameter_set_id", "feature_id", "hazard", *dimensions]
@@ -48,10 +46,6 @@ def insert_fixtures(model, model_type, features, scenarios, seed, adaptations):
                 round((annual * fraction)::numeric, 2) AS ead,
                 round((annual * 0.35 * fraction)::numeric, 2) AS eael
             FROM metrics CROSS JOIN (VALUES (0, 1.0), (100, 0.6)) AS protection(standard, fraction)
-        """,
-        "damages_npv": """
-            SELECT metrics.*, round((annual * 15)::numeric, 2) AS ead,
-                round((annual * 0.35 * 15)::numeric, 2) AS eael FROM metrics
         """,
         "damages_rp": """
             SELECT period_values.*, round((damage * 0.35)::numeric, 2) AS loss,

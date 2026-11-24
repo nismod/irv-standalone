@@ -132,7 +132,6 @@ class SyntheticResultsTests(TestCase):
         expected_counts = {
             "damages_expected": 96,
             "damages_rp": 72,
-            "damages_npv": 48,
             "adaptation": 144,
         }
         run = SyntheticDataRun.objects.get()
@@ -362,7 +361,6 @@ class SyntheticResultsTests(TestCase):
         expected = {
             "damages_expected": 95,
             "damages_rp": 72,
-            "damages_npv": 48,
             "adaptation": 144,
         }
         for key, manifest in run.result_ids.items():
@@ -403,14 +401,13 @@ class SyntheticResultsTests(TestCase):
         self.assertEqual(
             list(DamagesExpected.objects.values_list("id", flat=True)), [imported.id]
         )
-        for key in ("damages_rp", "damages_npv", "adaptation"):
+        for key in ("damages_rp", "adaptation"):
             self.assertFalse(RESULT_MODELS[key].objects.exists())
 
     def imported_results(self):
         dimensions = {
             "damages_expected": {"protection_standard": 0, "ead_mean": 777},
             "damages_rp": {"rp": 100, "damage_mean": 777},
-            "damages_npv": {"ead_mean": 777},
             "adaptation": {
                 "adaptation_name": "Imported option",
                 "adaptation_protection_level": 100,

@@ -19,8 +19,6 @@ erDiagram
     MODEL_PARAMETER_SET ||--o{ ADAPTATION_COST_BENEFIT : parameter_set
     FEATURE ||--o{ DAMAGES_EXPECTED : feature
     MODEL_PARAMETER_SET ||--o{ DAMAGES_EXPECTED : parameter_set
-    FEATURE ||--o{ DAMAGES_NPV : feature
-    MODEL_PARAMETER_SET ||--o{ DAMAGES_NPV : parameter_set
     FEATURE ||--o{ DAMAGES_RP : feature
     MODEL_PARAMETER_SET ||--o{ DAMAGES_RP : parameter_set
 
@@ -111,13 +109,6 @@ erDiagram
         bigint feature_id PK
         string hazard PK
         int protection_standard PK
-        float ead_mean
-    }
-    DAMAGES_NPV {
-        bigint id
-        bigint parameter_set_id PK
-        bigint feature_id PK
-        string hazard PK
         float ead_mean
     }
     DAMAGES_RP {

@@ -228,7 +228,7 @@ Replacement and generation run in one transaction: a failure restores the old
 results. Large replacements hold locks on result tables until they commit.
 
 The command creates expected annual damage at protection standards 0 and 100,
-return-period damage, NPV fixtures (15 times annual values), and three visibly
+return-period damage and three visibly
 named synthetic adaptation options with positive costs. Larger samples include
 zero and missing values. The first sampled feature in each layer acts as a
 synthetic protector, including a self-protection result; the output lists its

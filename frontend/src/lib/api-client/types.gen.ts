@@ -80,21 +80,6 @@ export type DamagesExpected = {
     feature: number;
 };
 
-export type DamagesNpv = {
-    readonly id: number;
-    readonly parameters: {
-        [key: string]: unknown;
-    };
-    hazard: string;
-    ead_amin?: number | null;
-    ead_mean?: number | null;
-    ead_amax?: number | null;
-    eael_amin?: number | null;
-    eael_mean?: number | null;
-    eael_amax?: number | null;
-    feature: number;
-};
-
 export type DamagesRp = {
     readonly id: number;
     readonly parameters: {
@@ -133,7 +118,6 @@ export type FeatureDetail = {
     readonly adaptation: Array<AdaptationCostBenefit>;
     readonly damages_expected: Array<DamagesExpected>;
     readonly damages_return_period: Array<DamagesRp>;
-    readonly damages_npv: Array<DamagesNpv>;
     string_id: string;
     sublayer?: string | null;
     properties: unknown;
@@ -427,17 +411,6 @@ export type CurrentUserWritable = {
 export type DamagesExpectedWritable = {
     hazard: string;
     protection_standard: number;
-    ead_amin?: number | null;
-    ead_mean?: number | null;
-    ead_amax?: number | null;
-    eael_amin?: number | null;
-    eael_mean?: number | null;
-    eael_amax?: number | null;
-    feature: number;
-};
-
-export type DamagesNpvWritable = {
-    hazard: string;
     ead_amin?: number | null;
     ead_mean?: number | null;
     ead_amax?: number | null;

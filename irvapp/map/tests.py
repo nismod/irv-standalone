@@ -15,7 +15,6 @@ from raster.models import RasterTileSource
 from map.models import (
     AdaptationCostBenefit,
     DamagesExpected,
-    DamagesNpv,
     DamagesRp,
     Dataset,
     Feature,
@@ -97,7 +96,6 @@ class AttributeLookupViewTests(TestCase):
         cases = [
             (AdaptationCostBenefit, {"adaptation_name": "wall", "adaptation_protection_level": 1.0}),
             (DamagesExpected, {"protection_standard": 0}),
-            (DamagesNpv, {}),
             (DamagesRp, {"rp": 100}),
         ]
         for model, dimensions in cases:
@@ -644,7 +642,7 @@ class FeatureRouteTests(TestCase):
         self.assertEqual(payload["damages_expected"][0]["parameters"]["epoch"], 2050)
         self.assertEqual(len(payload["damages_return_period"]), 1)
         self.assertEqual(payload["damages_return_period"][0]["rp"], 100)
-        self.assertEqual(payload["damages_npv"], [])
+        self.assertNotIn("damages_npv", payload)
 
 
 class DatasetRouteTests(TestCase):

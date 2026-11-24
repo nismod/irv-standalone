@@ -13,7 +13,6 @@ from map.model_parameters import canonical_parameter_key
 from map.models import (
     AdaptationCostBenefit,
     DamagesExpected,
-    DamagesNpv,
     DamagesRp,
     RasterLayer,
     Feature,
@@ -29,7 +28,6 @@ from map.synthetic_sql import insert_fixtures
 RESULT_MODELS = {
     "damages_expected": DamagesExpected,
     "damages_rp": DamagesRp,
-    "damages_npv": DamagesNpv,
     "adaptation": AdaptationCostBenefit,
 }
 ADAPTATIONS = (
@@ -311,7 +309,6 @@ class Command(BaseCommand):
             for item in combinations:
                 per_feature["damages_expected"] += 2
                 per_feature["damages_rp"] += len(item["return_periods"])
-                per_feature["damages_npv"] += 1
                 per_feature["adaptation"] += len(ADAPTATIONS)
         feature_count = sum(map(len, samples.values()))
         self.stdout.write(
@@ -544,13 +541,6 @@ class Command(BaseCommand):
                     ),
                 )
             )
-        pending["damages_npv"].append(
-            DamagesNpv(
-                **common("damages_npv"),
-                **uncertainty("ead", None if annual is None else round(annual * 15, 2)),
-                **uncertainty("eael", None if loss is None else round(loss * 15, 2)),
-            )
-        )
         for rp, damage in zip(item["return_periods"], damages):
             pending["damages_rp"].append(
                 DamagesRp(
@@ -608,6 +598,8 @@ class Command(BaseCommand):
             return
         with transaction.atomic():
             for key, ids in run.result_ids.items():
+                if key == "damages_npv":  # Runs created before this result type was removed.
+                    continue
                 if isinstance(ids, dict):
                     for first, last in ids["ranges"]:
                         RESULT_MODELS[key].objects.filter(
@@ -628,5 +620,7 @@ class Command(BaseCommand):
 
     def report(self, result_ids):
         for key, ids in result_ids.items():
+            if key == "damages_npv":
+                continue
             count = ids["count"] if isinstance(ids, dict) else len(ids)
             self.stdout.write(f"  {key}: {count:,}")

@@ -25,7 +25,6 @@ from map.models import (
     AdaptationCostBenefit,
     DamagesExpected,
     DamagesRp,
-    DamagesNpv,
     Dataset,
     FeatureLayerStyle,
     RasterLayer,
@@ -47,7 +46,6 @@ class FeatureViewset(viewsets.ReadOnlyModelViewSet):
                 Prefetch("adaptationcostbenefit_set", queryset=with_model_parameters(AdaptationCostBenefit.objects.exclude(hazard__in=restricted))),
                 Prefetch("damagesexpected_set", queryset=with_model_parameters(DamagesExpected.objects.exclude(hazard__in=restricted))),
                 Prefetch("damagesrp_set", queryset=with_model_parameters(DamagesRp.objects.exclude(hazard__in=restricted))),
-                Prefetch("damagesnpv_set", queryset=with_model_parameters(DamagesNpv.objects.exclude(hazard__in=restricted))),
             )
         return queryset
 

@@ -7,7 +7,6 @@ from .model_parameters import canonical_parameter_key
 from .models import (
     AdaptationCostBenefit,
     DamagesExpected,
-    DamagesNpv,
     DamagesRp,
     Dataset,
     Feature,
@@ -64,19 +63,6 @@ class DamagesRpSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = DamagesRp
-        exclude = ["parameter_set", "pk"]
-
-
-class DamagesNpvSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(read_only=True)
-    parameters = serializers.SerializerMethodField()
-
-    @extend_schema_field(serializers.DictField(child=serializers.JSONField()))
-    def get_parameters(self, instance):
-        return instance.parameter_set.values
-
-    class Meta:
-        model = DamagesNpv
         exclude = ["parameter_set", "pk"]
 
 
@@ -188,12 +174,6 @@ class FeatureDetailSerializer(serializers.ModelSerializer):
         many=True,
         read_only=True,
     )
-    damages_npv = DamagesNpvSerializer(
-        source='damagesnpv_set',
-        many=True,
-        read_only=True,
-    )
-
     class Meta:
         model = Feature
         fields = '__all__'
