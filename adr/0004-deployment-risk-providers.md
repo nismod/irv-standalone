@@ -33,6 +33,24 @@ An implementation may subclass the default provider and replace individual
 views, or supply all of them. Providers can use models and migrations in
 additional installed Django apps and their own import commands.
 
+For example, a deployment can include `country_risk` on the Python path and
+define `country_risk.provider.CountryRiskProvider`, subclassing the default
+provider and replacing the required views. Its settings module can extend the
+project settings:
+
+```python
+from irvapp.settings import *
+
+INSTALLED_APPS = [*INSTALLED_APPS, "country_risk"]
+RISK_PROVIDER = "country_risk.provider.CountryRiskProvider"
+```
+
+Set `DJANGO_SETTINGS_MODULE` to the dotted path of that settings module for
+the web application and management commands. Include the provider package in
+the deployment image and run migrations for its installed apps before starting
+the application. The default settings do not read `RISK_PROVIDER` from the
+environment; set it in the settings module as shown.
+
 ## Consequences
 
 Provider views must enforce feature-layer and hazard access permissions and
