@@ -20,17 +20,17 @@ class MapConfig(models.Model):
         db_table = "map_config"
 
 
-class InfrastructureNode(OrderableTreeNode):
+class InfrastructureTree(OrderableTreeNode):
     node_id = models.CharField(primary_key=True)
     node_name = models.CharField()
     feature_layer = models.OneToOneField(
         "FeatureLayer", on_delete=models.PROTECT, null=True, blank=True,
-        related_name="infrastructure_node",
+        related_name="infrastructure_tree",
     )
     objects = TreeQuerySet.as_manager(with_tree_fields=True)
 
     class Meta(OrderableTreeNode.Meta):
-        db_table = "infrastructure_nodes"
+        db_table = "infrastructure_trees"
 
     def __str__(self):
         return self.node_id

@@ -10,8 +10,8 @@ erDiagram
     RASTER_TILE_SOURCE ||--o{ RASTER_LAYER : tile_source
     FEATURE_LAYER ||--o{ FEATURE : layer
     FEATURE_LAYER o|--o| FEATURE_LAYER_STYLE : feature_layer
-    INFRASTRUCTURE_NODE o|--o| FEATURE_LAYER : feature_layer
-    INFRASTRUCTURE_NODE o|--o{ INFRASTRUCTURE_NODE : parent
+    INFRASTRUCTURE_TREE o|--o| FEATURE_LAYER : feature_layer
+    INFRASTRUCTURE_TREE o|--o{ INFRASTRUCTURE_TREE : parent
     DATASET }o--o{ AUTH_GROUP : access_groups
 
     MODEL_PARAMETER_SET ||--o{ MODEL_PARAMETER : parameters
@@ -77,7 +77,7 @@ erDiagram
         string database
         string path_template
     }
-    INFRASTRUCTURE_NODE {
+    INFRASTRUCTURE_TREE {
         string node_id PK
         string node_name
         string parent_id

@@ -1,4 +1,4 @@
-import { type InfrastructureNode } from 'lib/api-client';
+import { type InfrastructureTree } from 'lib/api-client';
 import { type TreeNode } from 'lib/controls/checkbox-tree/tree-node';
 
 interface NetworkLayerData {
@@ -8,7 +8,7 @@ interface NetworkLayerData {
 }
 
 export function buildHierarchyFromNodes(
-  nodes: InfrastructureNode[],
+  nodes: InfrastructureTree[],
   leafIndex = { value: 0 },
 ): TreeNode<NetworkLayerData>[] {
   return nodes.map((node) => {

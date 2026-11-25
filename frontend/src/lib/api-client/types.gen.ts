@@ -137,12 +137,12 @@ export type FeatureLayer = {
     readonly has_access: boolean;
 };
 
-export type InfrastructureNode = {
+export type InfrastructureTree = {
     node_id: string;
     node_name: string;
     parent?: string | null;
     feature_layer?: string | null;
-    readonly children: Array<InfrastructureNode>;
+    readonly children: Array<InfrastructureTree>;
 };
 
 export type LoginCsrfErrorResponse = {
@@ -256,11 +256,11 @@ export type PaginatedFeatureList = {
     results: Array<Feature>;
 };
 
-export type PaginatedInfrastructureNodeList = {
+export type PaginatedInfrastructureTreeList = {
     count: number;
     next?: string | null;
     previous?: string | null;
-    results: Array<InfrastructureNode>;
+    results: Array<InfrastructureTree>;
 };
 
 export type PaginatedMapConfigList = {
@@ -463,7 +463,7 @@ export type FeatureLayerWritable = {
     display_order?: number;
 };
 
-export type InfrastructureNodeWritable = {
+export type InfrastructureTreeWritable = {
     node_id: string;
     node_name: string;
     parent?: string | null;
@@ -539,11 +539,11 @@ export type PaginatedFeatureListWritable = {
     results: Array<FeatureWritable>;
 };
 
-export type PaginatedInfrastructureNodeListWritable = {
+export type PaginatedInfrastructureTreeListWritable = {
     count: number;
     next?: string | null;
     previous?: string | null;
-    results: Array<InfrastructureNodeWritable>;
+    results: Array<InfrastructureTreeWritable>;
 };
 
 export type PaginatedRasterLayerListWritable = {
@@ -1123,7 +1123,7 @@ export type MapInfrastructureTreeListData = {
 };
 
 export type MapInfrastructureTreeListResponses = {
-    200: PaginatedInfrastructureNodeList;
+    200: PaginatedInfrastructureTreeList;
 };
 
 export type MapInfrastructureTreeListResponse = MapInfrastructureTreeListResponses[keyof MapInfrastructureTreeListResponses];
@@ -1138,7 +1138,7 @@ export type MapInfrastructureTreeRetrieveData = {
 };
 
 export type MapInfrastructureTreeRetrieveResponses = {
-    200: InfrastructureNode;
+    200: InfrastructureTree;
 };
 
 export type MapInfrastructureTreeRetrieveResponse = MapInfrastructureTreeRetrieveResponses[keyof MapInfrastructureTreeRetrieveResponses];

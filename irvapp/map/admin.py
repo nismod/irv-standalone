@@ -6,7 +6,7 @@ from tree_queries.admin import TreeAdmin
 from .models import (
     FeatureLayer,
     Feature,
-    InfrastructureNode,
+    InfrastructureTree,
     MapConfig,
     Dataset,
     FeatureLayerStyle,
@@ -172,7 +172,7 @@ class MapConfigAdmin(admin.ModelAdmin):
     list_display = ["config_name", "config_value", "config_type"]
 
 
-@admin.register(InfrastructureNode)
-class InfrastructureNodeAdmin(TreeAdmin):
+@admin.register(InfrastructureTree)
+class InfrastructureTreeAdmin(TreeAdmin):
     list_display = [*TreeAdmin.list_display, "node_name", "feature_layer"]
     position_field = "position"  # Enables sibling ordering controls
