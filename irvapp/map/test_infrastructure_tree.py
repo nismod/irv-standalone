@@ -53,8 +53,14 @@ class InfrastructureTreeTests(TestCase):
             node_id=self.layer.pk, node_name="Matching", parent=self.root,
         )
         migration = import_module("map.migrations.0026_infrastructure_node_feature_layer")
+        historical_apps = SimpleNamespace(
+            get_model=lambda app_label, model_name: (
+                InfrastructureTree if (app_label, model_name) == ("map", "InfrastructureNode")
+                else apps.get_model(app_label, model_name)
+            ),
+        )
         with patch("warnings.warn") as warn:
-            migration.link_matching_leaves(apps, SimpleNamespace(connection=connection))
+            migration.link_matching_leaves(historical_apps, SimpleNamespace(connection=connection))
         matching.refresh_from_db()
         self.root.refresh_from_db()
         self.assertEqual(matching.feature_layer_id, self.layer.pk)
