@@ -1,14 +1,14 @@
 from rest_framework import serializers, viewsets
 from rest_framework.permissions import IsAuthenticated
 
-from map.models import InfrastructureNode
+from map.models import InfrastructureTree
 
 
-class InfrastructureNodeSerializer(serializers.ModelSerializer):
+class InfrastructureTreeSerializer(serializers.ModelSerializer):
 
     def get_fields(self):
-        fields = super(InfrastructureNodeSerializer, self).get_fields()
-        fields['children'] = InfrastructureNodeSerializer(
+        fields = super(InfrastructureTreeSerializer, self).get_fields()
+        fields['children'] = InfrastructureTreeSerializer(
             many=True,
             read_only=True,
             context=self.context,
@@ -16,16 +16,16 @@ class InfrastructureNodeSerializer(serializers.ModelSerializer):
         return fields
 
     class Meta:
-        model = InfrastructureNode
+        model = InfrastructureTree
         fields = ['node_id', 'node_name', 'parent', 'feature_layer', 'children']
 
 
-class InfrastructureNodeViewSet(viewsets.ReadOnlyModelViewSet):
+class InfrastructureTreeViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
-    serializer_class = InfrastructureNodeSerializer
+    serializer_class = InfrastructureTreeSerializer
 
     def get_queryset(self):
-        queryset = InfrastructureNode.objects.all()
+        queryset = InfrastructureTree.objects.all()
         if self.action == "list":
             return queryset.filter(parent=None)
         return queryset

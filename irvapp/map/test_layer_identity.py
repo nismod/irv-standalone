@@ -145,17 +145,17 @@ class LayerIdentityMigrationTests(TransactionTestCase):
         after = [('map', '0031_layeridentity'), ('raster', '0010_rastertilesource_path_template')]
         executor = MigrationExecutor(connection)
         executor.migrate(before)
-        apps = executor.loader.project_state(before).apps
-        dataset = apps.get_model('map', 'Dataset').objects.create(id='dataset', label='Dataset', group='hazards')
-        source = apps.get_model('raster', 'RasterTileSource').objects.create(keys=['type'])
-        feature = apps.get_model('map', 'FeatureLayer').objects.create(layer_name='roads', sector='', subsector='', asset_type='')
-        apps.get_model('map', 'Feature').objects.create(
-            layer=feature, string_id='road-1', properties={}, geom=Point(0, 0, srid=4326),
-        )
-        apps.get_model('map', 'InfrastructureNode').objects.create(node_id='road-node', node_name='Roads', feature_layer=feature)
-        apps.get_model('map', 'RasterLayer').objects.create(id='rain', dataset=dataset, tile_source=source,
-            label='Rain', quantity='depth', unit='m', stacking_order=2, display_order=4)
         try:
+            apps = executor.loader.project_state(before).apps
+            dataset = apps.get_model('map', 'Dataset').objects.create(id='dataset', label='Dataset', group='hazards')
+            source = apps.get_model('raster', 'RasterTileSource').objects.create(keys=['type'])
+            feature = apps.get_model('map', 'FeatureLayer').objects.create(layer_name='roads', sector='', subsector='', asset_type='')
+            apps.get_model('map', 'Feature').objects.create(
+                layer=feature, string_id='road-1', properties={}, geom=Point(0, 0, srid=4326),
+            )
+            apps.get_model('map', 'InfrastructureNode').objects.create(node_id='road-node', node_name='Roads', feature_layer=feature)
+            apps.get_model('map', 'RasterLayer').objects.create(id='rain', dataset=dataset, tile_source=source,
+                label='Rain', quantity='depth', unit='m', stacking_order=2, display_order=4)
             executor = MigrationExecutor(connection)
             executor.migrate(after)
             apps = executor.loader.project_state(after).apps

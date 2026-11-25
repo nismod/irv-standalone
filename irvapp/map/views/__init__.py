@@ -14,7 +14,7 @@ from .api_views import (
     AttributeLookupView,
 )
 from .map_config import MapConfigViewSet
-from .infrastructure_tree import InfrastructureNodeViewSet
+from .infrastructure_tree import InfrastructureTreeViewSet
 from .pagination import FastAPIPagination
 from .mixins import FieldGroupQueryParsingMixin
 
@@ -28,7 +28,7 @@ __all__ = [
     "AttributeLookupView",
     "MapConfigViewSet",
     "FastAPIPagination",
-    "InfrastructureNodeViewSet",
+    "InfrastructureTreeViewSet",
     "FieldGroupQueryParsingMixin",
     "DatasetViewset",
     "NetworkLayerStyleViewset",

@@ -7,7 +7,7 @@ from map.views import (
     ProtectedFeaturesView,
     SortedFeaturesView,
     MapConfigViewSet,
-    InfrastructureNodeViewSet,
+    InfrastructureTreeViewSet,
     DatasetViewset,
     NetworkLayerStyleViewset,
     RasterLayerViewset,
@@ -29,7 +29,7 @@ router.register(r'network-layer-styles', NetworkLayerStyleViewset)
 router.register(r'config', MapConfigViewSet, basename='map-config')
 router.register(
     r'infrastructure-tree',
-    InfrastructureNodeViewSet,
+    InfrastructureTreeViewSet,
     basename='infrastructure-tree',
 )
 

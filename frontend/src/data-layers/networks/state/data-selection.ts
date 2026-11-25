@@ -10,12 +10,12 @@ import {
 import { sectionStyleValueState } from 'lib/state/sections';
 import { STORAGE_PREFIX, atomWithQueryParams, setUrlParam } from 'lib/state/map-view/map-url';
 
-import { type InfrastructureNode, mapInfrastructureTreeList } from 'lib/api-client';
+import { type InfrastructureTree, mapInfrastructureTreeList } from 'lib/api-client';
 import { dfs } from 'lib/controls/checkbox-tree/tree-node';
 import { buildHierarchyFromNodes, orderHierarchyLayers } from './infrastructure-hierarchy';
 import { networkFeatureLayersMetadataState } from './metadata';
 
-async function fetchInfrastructureNodes(): Promise<InfrastructureNode[]> {
+async function fetchInfrastructureTrees(): Promise<InfrastructureTree[]> {
   try {
     const { data, error } = await mapInfrastructureTreeList({
       baseUrl: '/api',
@@ -37,7 +37,7 @@ async function fetchInfrastructureNodes(): Promise<InfrastructureNode[]> {
 export const networkTreeExpandedState = atom<string[]>([]);
 
 const networkTreeHierarchyQuery = atom(async () => {
-  const networkTreeNodes = await fetchInfrastructureNodes();
+  const networkTreeNodes = await fetchInfrastructureTrees();
   return buildHierarchyFromNodes(networkTreeNodes);
 });
 

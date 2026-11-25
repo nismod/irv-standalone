@@ -2,7 +2,7 @@ from .core import (
     Dataset,
     Feature,
     FeatureLayer,
-    InfrastructureNode,
+    InfrastructureTree,
     MapConfig,
     FeatureLayerStyle,
     RasterLayer,
@@ -29,7 +29,7 @@ __all__ = [
     "LayerIdentity",
     "Feature",
     "FeatureLayer",
-    "InfrastructureNode",
+    "InfrastructureTree",
     "MapConfig",
     "FeatureLayerStyle",
 ]
