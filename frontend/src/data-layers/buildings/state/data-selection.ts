@@ -1,36 +1,55 @@
 import { atom } from 'jotai';
+import { unwrap } from 'jotai/utils';
 
+import { mapDatasetsList, mapFeatureLayersList } from 'lib/api-client';
 import { atomWithStoredJson } from 'lib/state/map-view/map-url';
 
 export const buildingsStyleState = atom('type');
 
-export const BUILDING_TYPES = [
-  'buildings_commercial',
-  'buildings_residential',
-  'buildings_institutional',
-  'buildings_mixed',
-  'buildings_industrial',
-  'buildings_recreation',
-  'buildings_other',
-  'buildings_resort',
-];
+async function fetchBuildingLayerIds(): Promise<string[]> {
+  try {
+    const datasets: string[] = [];
+    let offset = 0;
+    const limit = 100;
+    while (true) {
+      const { data, error } = await mapDatasetsList({
+        baseUrl: '/api',
+        credentials: 'include',
+        query: { group: 'buildings', limit, offset },
+      });
+      if (error || !data) throw error ?? new Error('Missing buildings datasets');
+      datasets.push(...data.results.filter(({ has_access }) => has_access).map(({ id }) => id));
+      if (!data.next) break;
+      if (data.results.length === 0) throw new Error('Empty buildings dataset page');
+      offset += data.results.length;
+    }
+    const datasetIds = new Set(datasets);
+    const layers: string[] = [];
+    offset = 0;
+    while (true) {
+      const { data, error } = await mapFeatureLayersList({
+        baseUrl: '/api',
+        credentials: 'include',
+        query: { limit, offset },
+      });
+      if (error || !data) throw error ?? new Error('Missing feature layer metadata');
+      layers.push(
+        ...data.results
+          .filter((layer) => layer.has_access && layer.dataset && datasetIds.has(layer.dataset))
+          .map((layer) => layer.layer_name),
+      );
+      if (!data.next) return [...new Set(layers)];
+      if (data.results.length === 0) throw new Error('Empty feature layer page');
+      offset += data.results.length;
+    }
+  } catch (error) {
+    console.error('Error fetching building layer catalogue:', error);
+    return [];
+  }
+}
 
-export type BuildingType = (typeof BUILDING_TYPES)[number];
+const buildingLayerIdsQuery = atom(fetchBuildingLayerIds);
+export const buildingLayerIdsState = unwrap(buildingLayerIdsQuery, (previous) => previous ?? []);
 
-export type BuildingSelection = Record<BuildingType, boolean>;
-
-const defaultBuildingSelection: BuildingSelection = {
-  buildings_commercial: true,
-  buildings_residential: true,
-  buildings_institutional: true,
-  buildings_mixed: true,
-  buildings_industrial: true,
-  buildings_recreation: true,
-  buildings_other: true,
-  buildings_resort: true,
-};
-
-export const buildingSelectionState = atomWithStoredJson<BuildingSelection>(
-  'buiSel',
-  defaultBuildingSelection,
-);
+export type BuildingSelection = Record<string, boolean>;
+export const buildingSelectionState = atomWithStoredJson<BuildingSelection>('buiSel', {});
