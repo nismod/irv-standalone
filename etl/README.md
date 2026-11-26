@@ -141,8 +141,13 @@ Each feature source reload is atomic. Existing UIDs and their results are
 preserved; the reload rejects duplicate or foreign UIDs and refuses to remove a
 feature referenced by a result or as a protector. Each result file is imported
 atomically in batches using its composite key; repeated keys update values and
-duplicate keys in one input fail. An existing adaptation key with a different
-protector is rejected. A failed transaction leaves the prior database state.
+duplicate keys in one input fail. Duplicate detection uses a temporary SQLite
+index on disk, removed on success or failure; ensure the temporary directory
+(`TMPDIR`, when set) has space proportional to the number of result keys.
+Parameter sets are cached in memory. Profile the complete import with a
+representative Jamaica file and the intended worker limits before staging. An
+existing adaptation key with a different protector is rejected. A failed
+transaction leaves the prior database state.
 Results are upserted, not replaced: rows that disappear from an input, including
 values changed to zero, remain in the database. Use a fresh disposable database
 for changed-input rehearsals; do not rely on a rerun to remove stale results.

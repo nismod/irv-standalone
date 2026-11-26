@@ -47,6 +47,25 @@ class JamaicaETLTests(TestCase):
                            list(yield_expected_damages(path)) * 2)
         self.assertEqual(DamagesExpected.objects.count(), 1)
 
+    def test_duplicate_after_first_batch_rolls_back_results_and_parameters(self):
+        from map.models import ModelParameterSet
+        from result_import import import_results
+
+        keys = ['parameter_set', 'feature', 'hazard', 'rp']
+        fields = ['exposure', 'damage_amin', 'damage_mean', 'damage_amax',
+                  'loss_amin', 'loss_mean', 'loss_amax']
+        params = {'rcp': '8.5', 'epoch': 2080}
+
+        def rows():
+            for rp in range(1001):
+                yield params, {'feature_id': 10, 'hazard': 'fluvial', 'rp': rp, 'exposure': 1}
+            yield params, {'feature_id': 10, 'hazard': 'fluvial', 'rp': 0, 'exposure': 2}
+
+        with self.assertRaisesRegex(ValueError, 'Duplicate'):
+            import_results(DamagesRp, 'damages_rp', keys, fields, rows())
+        self.assertFalse(DamagesRp.objects.exists())
+        self.assertFalse(ModelParameterSet.objects.filter(model_type='damages_rp').exists())
+
     def test_return_period_outer_join_and_uid_validation(self):
         from damages_rp_to_db import yield_return_period_damages
         from result_import import import_results
