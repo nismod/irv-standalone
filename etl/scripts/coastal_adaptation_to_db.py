@@ -4,32 +4,26 @@ import logging
 
 import pandas
 
-from sqlalchemy.orm import Session
-from tqdm import tqdm
-
-from backend.db.database import SessionLocal
-from backend.db.models import AdaptationCostBenefit
-from backend.db.operations import upsert
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path("scripts").resolve()))
+import django_runtime  # noqa: F401
+from map.models import AdaptationCostBenefit
+from result_import import import_results
 
 
 def yield_adaptation(data):
-    """Generate NPVDamage database model objects."""
+    """Yield Jamaica adaptation results and their scenario parameters."""
     for row in data.itertuples():
-        yield AdaptationCostBenefit(
-            feature_id=row.uid,
-            hazard="flooding",
-            rcp=row.rcp,
-            adaptation_name=row.adaptation_option,
-            adaptation_protection_level=row.protection_level,
-            protector_feature_id=row.protector_feature_id,
-            adaptation_cost=row.adapt_cost_npv,
-            avoided_ead_amin=row.avoided_ead_amin,
-            avoided_ead_mean=row.avoided_ead_mean,
-            avoided_ead_amax=row.avoided_ead_amax,
-            avoided_eael_amin=row.avoided_eael_amin,
-            avoided_eael_mean=row.avoided_eael_mean,
-            avoided_eael_amax=row.avoided_eael_amax,
-        )
+        yield ({"rcp": str(row.rcp)}, dict(
+            feature_id=int(row.uid), hazard="flooding",
+            adaptation_name=str(row.adaptation_option),
+            adaptation_protection_level=float(row.protection_level),
+            protector_feature_id=int(row.protector_feature_id), adaptation_cost=row.adapt_cost_npv,
+            avoided_ead_amin=row.avoided_ead_amin, avoided_ead_mean=row.avoided_ead_mean,
+            avoided_ead_amax=row.avoided_ead_amax, avoided_eael_amin=row.avoided_eael_amin,
+            avoided_eael_mean=row.avoided_eael_mean, avoided_eael_amax=row.avoided_eael_amax,
+        ))
 
 
 def parse_adaptation(data):
@@ -37,6 +31,8 @@ def parse_adaptation(data):
     # files come in "fat" format, with string column names representing
     # hazard, RCP, variable (avoided_EAD/EAEL), and min/mean/max suffix
     data_cols = [c for c in data.columns if "EA" in c]
+    if not data_cols:
+        raise ValueError("No result columns found in source")
 
     data = data.rename(
         columns={
@@ -65,9 +61,10 @@ def parse_adaptation(data):
         "protector_feature_id",
     ]
 
+    if data[id_vars].isna().any().any():
+        raise ValueError("Adaptation source has missing identifiers or dimensions")
     if data.duplicated(subset=id_vars).sum() > 0:
-        logging.warning("Dropping duplicated adaptation options")
-        data = data.drop_duplicates(subset=id_vars, keep='first')
+        raise ValueError("Duplicate adaptation option identifiers in source")
 
     # melt to long format
     data = (
@@ -77,8 +74,12 @@ def parse_adaptation(data):
     )
 
     # parse string key column for metadata
-    meta = data.variable.str.extract(r"^([^_]+)__rcp_(\d.\d)__(\w+)$")
+    meta = data.variable.str.extract(r"^([^_]+)__rcp_([\w.]+)__(\w+)$")
     meta.columns = ["hazard", "rcp", "var"]
+    if (meta.isna().any().any() or not meta["var"].str.lower().isin([
+            "avoided_ead_amin", "avoided_ead_mean", "avoided_ead_amax",
+            "avoided_eael_amin", "avoided_eael_mean", "avoided_eael_amax"]).all()):
+        raise ValueError("Unrecognized adaptation column name")
 
     # join metadata columns
     data = data.join(meta)
@@ -133,6 +134,8 @@ def match_asset_to_protector(asset_ids, p_ids, protector_dict):
     flood_id_col = next(
         col for col in protector_dict.columns if col.startswith('flood_id')
     )
+    if not protector_dict.index.is_unique or not p_ids.index.is_unique:
+        raise ValueError("Duplicate asset or protector IDs in lookup")
     flood_ids = protector_dict.loc[asset_ids, flood_id_col]
     protector_uids = p_ids.loc[flood_ids, 'uid']
     return protector_uids.values
@@ -166,13 +169,18 @@ if __name__ == "__main__":
     )
     adaptation_with_ids = adaptation.copy()
 
-    ids = pandas.read_parquet(uid_fname).set_index(
-        network_layer.asset_id_column)
+    with open(uid_fname, "rb") as source:
+        ids = pandas.read_parquet(source).set_index(network_layer.asset_id_column)
+    if not ids.index.is_unique:
+        raise ValueError("Duplicate asset IDs in UID lookup")
     adaptation = adaptation.join(ids).reset_index(drop=True)
+    if adaptation["uid"].isna().any():
+        raise ValueError("Adaptation source contains assets missing from UID lookup")
 
-    p_ids = pandas.read_parquet(p_uid_fname).set_index("id")
-    protector_dict = pandas.read_parquet(
-        protector_dict_fname).set_index(network_layer.asset_id_column)
+    with open(p_uid_fname, "rb") as source:
+        p_ids = pandas.read_parquet(source).set_index("id")
+    with open(protector_dict_fname, "rb") as source:
+        protector_dict = pandas.read_parquet(source).set_index(network_layer.asset_id_column)
     protector_ids = match_asset_to_protector(
         adaptation_with_ids.index, p_ids, protector_dict)
     adaptation['protector_feature_id'] = protector_ids
@@ -180,16 +188,12 @@ if __name__ == "__main__":
     adaptation_df = parse_adaptation(adaptation)
     adaptation = yield_adaptation(adaptation_df)
 
-    db: Session
-    with SessionLocal() as db:
-        for i, damage_npv in enumerate(
-            tqdm(adaptation, desc=f"{layer_name}_adaptation", total=len(
-                adaptation_df))
-        ):
-            upsert(db, damage_npv)
-            if i % 1000 == 0:
-                db.commit()
-        db.commit()
+    import_results(
+        AdaptationCostBenefit, "adaptation",
+        ["parameter_set", "feature", "hazard", "adaptation_name", "adaptation_protection_level"],
+        ["protector_feature_id", "adaptation_cost", "avoided_ead_amin", "avoided_ead_mean", "avoided_ead_amax", "avoided_eael_amin", "avoided_eael_mean", "avoided_eael_amax"],
+        adaptation,
+    )
 
     with open(str(output), "w") as fh:
         fh.write(f"Loaded to database.\n\n")

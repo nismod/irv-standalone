@@ -1,0 +1,4 @@
+# Dependencies used by the Django/PostGIS ETL integration tests.
+pyarrow~=21.0
+fiona~=1.10
+shapely~=2.0

@@ -6,11 +6,14 @@ import pandas
 from pyproj import CRS, Transformer
 from shapely.geometry import shape
 from shapely.ops import transform
-from sqlalchemy import delete
-from sqlalchemy.orm import Session
+import sys
+from pathlib import Path
 
-from backend.db.database import SessionLocal
-from backend.db.models import Feature
+sys.path.insert(0, str(Path("scripts").resolve()))
+import django_runtime  # noqa: F401
+from django.contrib.gis.geos import GEOSGeometry
+from django.db import transaction
+from map.models import AdaptationCostBenefit, DamagesExpected, DamagesRp, Feature
 
 
 def yield_features(layer, network_tilelayer, analysis_data_dir):
@@ -48,7 +51,7 @@ def yield_features(layer, network_tilelayer, analysis_data_dir):
             if layer.ref == "roads_nodes" and not props["asset_type"]:
                 props["asset_type"] = "junction"
             tilelayer_details = get_tilelayer_by_asset_type(
-                layer.ref, props, network_tilelayers
+                layer.ref, props, network_tilelayer
             )
             props["sector"] = tilelayer_details.sector
             props["subsector"] = tilelayer_details.subsector
@@ -56,9 +59,9 @@ def yield_features(layer, network_tilelayer, analysis_data_dir):
             yield Feature(
                 id=props["uid"],
                 string_id=props["asset_id"],
-                layer=tilelayer_details.layer,
+                layer_id=tilelayer_details.layer,
                 properties=props,
-                geom=geom.wkt,
+                geom=GEOSGeometry(geom.wkt, srid=4326),
             )
 
 
@@ -124,6 +127,35 @@ def get_tilelayers_by_network_source(network_source, network_tilelayers):
         raise e
 
 
+def reload_features(features, tilelayers):
+    # Preserve existing feature IDs and their results. The whole source reload
+    # rolls back on a malformed feature, collision, or unsafe removal.
+    if not tilelayers:
+        raise ValueError("No tile layers configured for this source")
+    with transaction.atomic():
+        seen = set()
+        for feature in features:
+            if feature.pk is None or feature.pk in seen:
+                raise ValueError(f"Missing or duplicate feature UID: {feature.pk}")
+            seen.add(feature.pk)
+            existing = Feature.objects.filter(pk=feature.pk).first()
+            if existing and existing.layer_id not in tilelayers:
+                raise ValueError(f"Feature UID {feature.pk} already belongs to {existing.layer_id}")
+            feature.save(force_insert=existing is None)
+        if not seen:
+            raise ValueError("Refusing to replace a feature layer with an empty source")
+        removed = Feature.objects.filter(layer_id__in=tilelayers).exclude(pk__in=seen)
+        removed_ids = removed.values_list("pk", flat=True)
+        if (DamagesExpected.objects.filter(feature_id__in=removed_ids).exists()
+                or DamagesRp.objects.filter(feature_id__in=removed_ids).exists()
+                or AdaptationCostBenefit.objects.filter(feature_id__in=removed_ids).exists()
+                or AdaptationCostBenefit.objects.filter(protector_feature_id__in=removed_ids).exists()):
+            raise ValueError("Cannot remove features referenced by results or as protectors")
+        removed.delete()
+        print(f"Loaded {len(seen)} features")
+
+
+
 if __name__ == "__main__":
     try:
         layer = snakemake.wildcards.layer
@@ -151,19 +183,7 @@ if __name__ == "__main__":
         get_tilelayers_by_network_source(layer, network_tilelayers)
     )
 
-    db: Session
-    with SessionLocal() as db:
-        db.execute(delete(Feature).where(Feature.layer.in_(tilelayers)))
-        db.commit()
-
-        for i, feature in enumerate(
-            yield_features(layer, network_tilelayers, analysis_data_dir)
-        ):
-            db.add(feature)
-            if i % 1000 == 0:
-                print(f"Processed {i} features", end="\r")
-                db.commit()
-        db.commit()
+    reload_features(yield_features(layer, network_tilelayers, analysis_data_dir), tilelayers)
 
     with open(str(output), "w") as fh:
         fh.write("Loaded to database.\n\n")

@@ -4,31 +4,26 @@ import logging
 
 import pandas
 
-from sqlalchemy.orm import Session
-from tqdm import tqdm
-
-from backend.db.database import SessionLocal
-from backend.db.models import AdaptationCostBenefit
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path("scripts").resolve()))
+import django_runtime  # noqa: F401
+from map.models import AdaptationCostBenefit
+from result_import import import_results
 
 
 def yield_adaptation(data):
-    """Generate NPVDamage database model objects."""
+    """Yield Jamaica adaptation results and their scenario parameters."""
     for row in data.itertuples():
-        yield AdaptationCostBenefit(
-            feature_id=row.uid,
-            hazard=row.hazard,
-            rcp=row.rcp,
-            adaptation_name=row.adaptation_option,
-            adaptation_protection_level=row.protection_level,
-            adaptation_cost=row.adapt_cost_npv,
-            protector_feature_id=row.uid,
-            avoided_ead_amin=row.avoided_ead_amin,
-            avoided_ead_mean=row.avoided_ead_mean,
-            avoided_ead_amax=row.avoided_ead_amax,
-            avoided_eael_amin=row.avoided_eael_amin,
-            avoided_eael_mean=row.avoided_eael_mean,
-            avoided_eael_amax=row.avoided_eael_amax,
-        )
+        yield ({"rcp": str(row.rcp)}, dict(
+            feature_id=int(row.uid), hazard=str(row.hazard),
+            adaptation_name=str(row.adaptation_option),
+            adaptation_protection_level=float(row.protection_level),
+            protector_feature_id=int(row.uid), adaptation_cost=row.adapt_cost_npv,
+            avoided_ead_amin=row.avoided_ead_amin, avoided_ead_mean=row.avoided_ead_mean,
+            avoided_ead_amax=row.avoided_ead_amax, avoided_eael_amin=row.avoided_eael_amin,
+            avoided_eael_mean=row.avoided_eael_mean, avoided_eael_amax=row.avoided_eael_amax,
+        ))
 
 
 def parse_adaptation(data):
@@ -36,6 +31,8 @@ def parse_adaptation(data):
     # files come in "fat" format, with string column names representing
     # hazard, RCP, variable (avoided_EAD/EAEL), and min/mean/max suffix
     data_cols = [c for c in data.columns if "EA" in c]
+    if not data_cols:
+        raise ValueError("No result columns found in source")
 
     data = data.rename(
         columns={
@@ -57,9 +54,10 @@ def parse_adaptation(data):
         "adapt_cost_npv",
     ]
 
+    if data[id_vars].isna().any().any():
+        raise ValueError("Adaptation source has missing identifiers or dimensions")
     if data.duplicated(subset=id_vars).sum() > 0:
-        logging.warning("Dropping duplicated adaptation options")
-        data = data.drop_duplicates(subset=id_vars, keep='first')
+        raise ValueError("Duplicate adaptation option identifiers in source")
 
     # melt to long format
     data = (
@@ -69,8 +67,12 @@ def parse_adaptation(data):
     )
 
     # parse string key column for metadata
-    meta = data.variable.str.extract(r"^([^_]+)__rcp_(\d.\d)__(\w+)$")
+    meta = data.variable.str.extract(r"^([^_]+)__rcp_([\w.]+)__(\w+)$")
     meta.columns = ["hazard", "rcp", "var"]
+    if (meta.isna().any().any() or not meta["var"].str.lower().isin([
+            "avoided_ead_amin", "avoided_ead_mean", "avoided_ead_amax",
+            "avoided_eael_amin", "avoided_eael_mean", "avoided_eael_amax"]).all()):
+        raise ValueError("Unrecognized adaptation column name")
 
     # join metadata columns
     data = data.join(meta)
@@ -143,23 +145,23 @@ if __name__ == "__main__":
     adaptation = pandas.read_csv(avoided_risk_fname).set_index(
         network_layer.asset_id_column
     )
-    ids = pandas.read_parquet(uid_fname).set_index(
-        network_layer.asset_id_column)
+    with open(uid_fname, "rb") as source:
+        ids = pandas.read_parquet(source).set_index(network_layer.asset_id_column)
+    if not ids.index.is_unique:
+        raise ValueError("Duplicate asset IDs in UID lookup")
     adaptation = adaptation.join(ids).reset_index(drop=True)
+    if adaptation["uid"].isna().any():
+        raise ValueError("Adaptation source contains assets missing from UID lookup")
 
     adaptation_df = parse_adaptation(adaptation)
     adaptation = yield_adaptation(adaptation_df)
 
-    db: Session
-    with SessionLocal() as db:
-        for i, damage_npv in enumerate(
-            tqdm(adaptation, desc=f"{layer_name}_adaptation", total=len(
-                adaptation_df))
-        ):
-            db.add(damage_npv)
-            if i % 1000 == 0:
-                db.commit()
-        db.commit()
+    import_results(
+        AdaptationCostBenefit, "adaptation",
+        ["parameter_set", "feature", "hazard", "adaptation_name", "adaptation_protection_level"],
+        ["protector_feature_id", "adaptation_cost", "avoided_ead_amin", "avoided_ead_mean", "avoided_ead_amax", "avoided_eael_amin", "avoided_eael_mean", "avoided_eael_amax"],
+        adaptation,
+    )
 
     with open(str(output), "w") as fh:
         fh.write(f"Loaded to database.\n\n")

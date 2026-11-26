@@ -6,6 +6,7 @@ on:
     branches: [ main ]
     paths:
       - 'irvapp/**'
+      - 'etl/**'
       - '.github/workflows/django-tests.yml'
   release:
     types: [ published ]
@@ -13,6 +14,7 @@ on:
     branches: [ main ]
     paths:
       - 'irvapp/**'
+      - 'etl/**'
       - '.github/workflows/django-tests.yml'
 
 defaults:
@@ -55,7 +57,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        pip install -r requirements.txt -r ../etl/test-requirements.txt
 
     # - name: Run linting checks
     #   run: |
@@ -68,4 +70,12 @@ jobs:
         PGPASSWORD: postgres
         PGDATABASE: irv_test
       run: |
-        python manage.py test
+        python manage.py test --noinput
+
+    - name: Verify ETL tests run without skips
+      env:
+        PGUSER: postgres
+        PGPASSWORD: postgres
+        PGDATABASE: irv_test
+      run: |
+        python manage.py test map.test_jamaica_etl --noinput --testrunner map.etl_test_runner.ETLTestRunner

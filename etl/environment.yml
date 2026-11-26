@@ -1,4 +1,4 @@
-# union of jamaica-infrastructure and irv-jamaica backend and ETL requirements as of 2025-08-15
+# ETL and Django application dependencies
 # to install this environment:
 # micromamba create -f environment.yml -y
 name: irv-jamaica-etl
@@ -6,9 +6,9 @@ channels:
   - conda-forge # majority of dependencies
   - nodefaults # avoid anaconda license issues
 dependencies:
-  - python~=3.12
+  - python~=3.13
   - pip:
-      - -e ../backend
+      - -r ../irvapp/requirements.txt
       - nismod-snail==0.5.3
       - snkit~=1.9.0
       - terracotta==0.9.1 # required for ETL
@@ -19,9 +19,9 @@ dependencies:
   - python-igraph~=0.11.6
   - matplotlib~=3.9
   - networkx~=3.3
-  - numpy~=2.1
+  - numpy>=2.1
   - openpyxl~=3.1
-  - pandas~=2.2
+  - pandas~=3.0
   - pathos~=0.3.2
   - pyarrow~=21.0
   - rasterio~=1.4
@@ -32,11 +32,4 @@ dependencies:
   - tippecanoe~=2.78
   - tqdm
   - ujson~=5.10
-  - xarray~=2024.9
-  # irv-jamaica/backend
-  - fastapi-pagination~=0.13.1
-  - fastapi~=0.116.1
-  - geoalchemy2~=0.18.0 # also used in ETL
-  - psycopg2-binary==2.9.10
-  - pydantic~=2.11
-  - uvicorn~=0.35.0
+  - xarray~=2026.4

@@ -92,14 +92,82 @@ and are converted to MBTiles, for example regions and nature-based solutions.
 
 ## Requirements
 
-- Postgres database, potentially running in a local container for development
-  - schema defined in `../backend/backend/db/models.py`
-- Python, snakemake and other packages
-  - requirements in `../backend/Pipfile`
+- PostGIS database, potentially running in a local container for development
+  - Django models and migrations are in `../irvapp`; configure `PGDATABASE`,
+    `PGUSER`, `PGPASSWORD`, `PGHOST`, and `PGPORT` as for the application
+- Python, Snakemake and other packages in `environment.yml`
 - [`jq`](https://stedolan.github.io/jq/)
 - [`geojson-polygon-labels`](https://github.com/andrewharvey/geojson-polygon-labels)
 - [`tippecanoe`](https://github.com/mapbox/tippecanoe)
 
+
+### Jamaica database import
+
+The Jamaica feature, damage, adaptation and vector-export loaders use the
+Django models and PostGIS connection. They retain the Jamaica RCP/epoch input
+conventions; Mauritius and St Lucia formats have not been assessed. The NPV
+model and its ETL target have been removed. The migrated workflow has not yet
+been rehearsed with representative Jamaica files or a staging database. Do not
+use it on production until that validation is complete.
+
+Create the environment from the `etl` directory with
+`micromamba create -f environment.yml`, activate it, and apply the application
+migrations with `python ../irvapp/manage.py migrate`. Check the database and
+connection settings before importing. From `etl`, run:
+
+```sh
+python ../irvapp/manage.py migrate --check
+snakemake --cores 1 logs/feature_layers.txt
+python ../irvapp/manage.py link_feature_layers
+```
+
+The importer creates missing feature identities and layers atomically, rejects
+raster ID collisions and conflicting CSV definitions, and leaves existing
+metadata and ordering intact. It reports differing metadata and layers without
+a dataset. `link_feature_layers` assigns matching dataset IDs only; review
+remaining assignments in Django admin. Tree and style links are not reconciled
+by this importer and must be reviewed separately. Unassigned layers are not
+available through the application.
+
+Run `snakemake --cores 1 load_to_database` to load the standard feature,
+expected-damage, return-period and adaptation targets. Coastal adaptation is a
+separate, optional target: run `snakemake --cores 1 all_coastal_adaptation_to_db`
+after confirming that its source files and protector mappings exist. The rules
+express feature-before-result dependencies, including coastal protectors. Export
+tile layers after feature import; tiles carry the database UID and use the
+scenario-aware API for damage attributes.
+
+Each feature source reload is atomic. Existing UIDs and their results are
+preserved; the reload rejects duplicate or foreign UIDs and refuses to remove a
+feature referenced by a result or as a protector. Each result file is imported
+atomically in batches using its composite key; repeated keys update values and
+duplicate keys in one input fail. Duplicate detection uses a temporary SQLite
+index on disk, removed on success or failure; ensure the temporary directory
+(`TMPDIR`, when set) has space proportional to the number of result keys.
+Parameter sets are cached in memory. Profile the complete import with a
+representative Jamaica file and the intended worker limits before staging. An
+existing adaptation key with a different protector is rejected. A failed
+transaction leaves the prior database state.
+Results are upserted, not replaced: rows that disappear from an input, including
+values changed to zero, remain in the database. Use a fresh disposable database
+for changed-input rehearsals; do not rely on a rerun to remove stale results.
+The existing Jamaica parsers retain their positive-value filter, so zero-only
+scenarios are not discoverable. Return-period files must have the same UID order
+and length; their confidence is retained when present. Validate source counts,
+scenario values and totals, and protector mappings before accepting an import.
+
+Snakemake logs are completion markers for the database and inputs used at the
+time, not proof of current database state. After changing databases or restoring
+a backup, force the relevant rules to rerun; for example:
+
+```sh
+snakemake --cores 1 --forcerun feature_layers_to_db logs/feature_layers.txt
+```
+
+Use a disposable PostGIS database for initial and repeated imports, changed-input
+and interruption tests. Rehearse against a staging copy before production.
+Review unassigned datasets, tree and style links, raster access and pixel-stack
+catalogues separately; these steps are not handled by the Jamaica loaders.
 
 ### GDAL tools
 

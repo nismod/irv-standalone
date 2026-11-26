@@ -23,6 +23,30 @@ damage_exp_files = pandas.read_csv(config["damage_exp_files"])
 adaptation_files = pandas.read_csv(config["adaptation_files"])
 
 
+
+def network_log_for_damage(wildcards):
+    matches = pandas.concat([network_layers, network_layers_areal_protection])
+    matches = matches[matches.damage_ref == wildcards.layer]
+    if len(matches) != 1:
+        raise ValueError(f"Expected one network source for damage ref {wildcards.layer}")
+    return f"logs/network/{matches.iloc[0].ref}.txt"
+
+
+def network_log_for_tile(wildcards):
+    matches = network_tilelayers[network_tilelayers.layer == wildcards.layer]
+    refs = matches.ref.unique()
+    if len(refs) != 1:
+        raise ValueError(f"Expected one network source for tile layer {wildcards.layer}")
+    return f"logs/network/{refs[0]}.txt"
+
+
+def network_source(wildcards):
+    matches = pandas.concat([network_layers, network_layers_areal_protection])
+    matches = matches[matches.ref == wildcards.layer]
+    if len(matches) != 1:
+        raise ValueError(f"Expected one network source for {wildcards.layer}")
+    return os.path.join(config["analysis_data_dir"], "processed_data/networks_uids", matches.iloc[0].path)
+
 wildcard_constraints:
     layer="[^/]+",
 
@@ -46,7 +70,6 @@ rule load_to_database:
         expand("logs/network/{layer}.txt", layer=network_layers_areal_protection.ref),
         expand("logs/damages_rp/{layer}.txt", layer=damage_rp_files.ref),
         expand("logs/damages_exp/{layer}.txt", layer=damage_exp_files.ref),
-        expand("logs/damages_npv/{layer}.txt", layer=network_layers.damage_ref),
         expand(
             "logs/adaptation/{hazard}/{layer}.txt",
             zip,
@@ -69,6 +92,8 @@ rule networks_to_db:
     """
     input:
         "logs/feature_layers.txt",
+        network_source,
+        config["network_layers"], config["network_layers_areal_protection"], config["network_tilelayers"],
     output:
         "logs/network/{layer}.txt",
     script:
@@ -77,6 +102,7 @@ rule networks_to_db:
 
 rule damages_rp_to_db:
     input:
+        network=network_log_for_damage,
         damage=f"{config['analysis_data_dir']}/results/direct_damages_summary_uids/{{layer}}_damages.parquet",
         exposure=f"{config['analysis_data_dir']}/results/direct_damages_summary_uids/{{layer}}_exposures.parquet",
         loss=f"{config['analysis_data_dir']}/results/direct_damages_summary_uids/{{layer}}_losses.parquet",
@@ -88,6 +114,7 @@ rule damages_rp_to_db:
 
 rule damages_exp_to_db:
     input:
+        network=network_log_for_damage,
         expected=f"{config['analysis_data_dir']}/results/direct_damages_summary_uids/{{layer}}_EAD_EAEL.parquet",
     output:
         "logs/damages_exp/{layer}.txt",
@@ -95,18 +122,10 @@ rule damages_exp_to_db:
         "./scripts/damages_exp_to_db.py"
 
 
-rule damages_npv_to_db:
-    input:
-        npv=f"{config['analysis_data_dir']}/results/loss_damage_npvs/{{layer}}_EAD_EAEL_npvs.csv",
-        uid=f"{config['analysis_data_dir']}/processed_data/networks_uids/id_lookups/{{layer}}_ids.parquet",
-    output:
-        "logs/damages_npv/{layer}.txt",
-    script:
-        "./scripts/damages_npv_to_db.py"
-
 
 rule adaptation_to_db:
     input:
+        network=network_log_for_damage,
         avoided_risk=f"{config['analysis_data_dir']}/results/adaptation_benefits_costs_bcr/{{hazard}}_{{layer}}_adaptation_costs_avoided_EAD_EAEL.csv",
         uid=f"{config['analysis_data_dir']}/processed_data/networks_uids/id_lookups/{{layer}}_ids.parquet",
         network_layers=config["network_layers"]
@@ -118,6 +137,7 @@ rule adaptation_to_db:
 
 rule coastal_adaptation_to_db:
     input:
+        network=network_log_for_damage,
         avoided_risk=f"{config['analysis_data_dir']}/results/adaptation_benefits_costs_bcr/coastal_{{layer}}_adaptation_costs_avoided_EAD_EAEL.csv",
         uid=f"{config['analysis_data_dir']}/processed_data/networks_uids/id_lookups/{{layer}}_ids.parquet",
         network_layers=config["network_layers_areal_protection"],
@@ -131,6 +151,8 @@ rule coastal_adaptation_to_db:
 
 rule coastal_adaptation_protected_assets_to_db:
     input:
+        network=network_log_for_damage,
+        protector="logs/network/coastal_protection_areas.txt",
         avoided_risk=f"{config['analysis_data_dir']}/results/adaptation_benefits_costs_bcr/coastal_{{layer}}_adaptation_costs_avoided_EAD_EAEL.csv",
         protector_dict=f"{config['analysis_data_dir']}/results/coastal_protection_assets/network_protection_mappings/{{layer}}_coastal_filtered.parquet",
         uid=f"{config['analysis_data_dir']}/processed_data/networks_uids/id_lookups/{{layer}}_ids.parquet",
@@ -162,6 +184,8 @@ rule all_coastal_adaptation_to_db:
 rule db_to_geojsonseq:
     """Load from database to GeoJSONSeq
     """
+    input:
+        network_log_for_tile,
     output:
         "vector/{layer}.geojsonl",
     script:
@@ -176,7 +200,7 @@ rule geojsonseq_to_vector_tiles_coastal_protection:
     shell:
         """
         tippecanoe \\
-            --use-attribute-for-id=id \\
+            --use-attribute-for-id=uid \\
             --layer=coast_nodes_cpf \\
             --output={output} \\
             --maximum-zoom=g \\

@@ -1,52 +1,15 @@
-"""Load feature layer definitions to database."""
+"""Run the Django feature-layer importer from Snakemake."""
 
-import pandas
-from sqlalchemy.orm import Session
-
-from backend.db.database import SessionLocal
-from backend.db.models import FeatureLayer
+import subprocess
+import sys
+from pathlib import Path
 
 
 if __name__ == "__main__":
-    try:
-        output = snakemake.output
-        network_tilelayers_fname = snakemake.config["network_tilelayers"]
-    except NameError:
-        print("Expected to run from snakemake")
-        exit()
-
-    network_tilelayers = pandas.read_csv(network_tilelayers_fname)
-    db: Session
-    with SessionLocal() as db:
-
-        for row in network_tilelayers.itertuples():
-            query = (
-                db.query(FeatureLayer)
-                .filter(
-                    FeatureLayer.layer_name == row.layer,
-                    FeatureLayer.sector == row.sector,
-                    FeatureLayer.subsector == row.subsector,
-                    FeatureLayer.asset_type == row.asset_type,
-                )
-                .first()
-            )
-
-            if not query:
-                print("does not exist, creating", end=" ")
-                instance = FeatureLayer(
-                    layer_name=row.layer,
-                    sector=row.sector,
-                    subsector=row.subsector,
-                    asset_type=row.asset_type,
-                )
-                db.add(instance)
-            else:
-                print("exists, skipping", end=" ")
-
-            print(row.layer, row.sector, row.subsector, row.asset_type)
-
-        db.commit()
-
-    with open(str(output), "w") as fh:
-        fh.write(f"Loaded to database.\n\n")
-        fh.write(f"From:\n{network_tilelayers_fname}\n\n")
+    manage_py = Path("../irvapp/manage.py").resolve()
+    source = snakemake.input[0]
+    subprocess.run(
+        [sys.executable, str(manage_py), "import_feature_layers", str(source)],
+        check=True,
+    )
+    Path(str(snakemake.output[0])).write_text(f"Loaded from {source}\n")
