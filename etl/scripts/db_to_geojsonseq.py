@@ -1,68 +1,30 @@
-"""Write from database to GeoJSONSeq file for one visualisation layer."""
-from operator import attrgetter
+"""Write database features as GeoJSONSeq with stable vector tile IDs."""
+import json
+import sys
+from pathlib import Path
 
-import ujson as json
-
-from geoalchemy2.shape import to_shape
-from shapely.geometry import mapping
-from sqlalchemy import select
-from sqlalchemy.orm import Session, selectinload
-from tqdm import tqdm
-
-from backend.db.database import SessionLocal
-from backend.db.models import Feature
+sys.path.insert(0, str(Path("scripts").resolve()))
+import django_runtime  # noqa: F401
+from map.models import Feature
 
 
-def feature_as_geojson(feature: Feature):
-    properties = {
-        "asset_id": feature.properties["asset_id"],
-        "asset_type": feature.properties["asset_type"],
-    }
-    # sort so any higher protection standard will overwrite
-    damages = sorted(
-        feature.damages_expected,
-        key=attrgetter("protection_standard"),
-    )
-    for damage in damages:
-        key = (
-            f"{damage.hazard}__rcp_{damage.rcp}"
-            f"__epoch_{damage.epoch}__conf_None"
-        )
-        properties[f"ead__{key}"] = damage.ead_mean
-        properties[f"eael__{key}"] = damage.eael_mean
-
+def feature_as_geojson(feature):
+    # Damage values are obtained through the scenario-aware API. Embedding
+    # them in tiles would collapse distinct parameter sets and protection levels.
     return {
         "type": "Feature",
-        "id": feature.id,
-        "geometry": mapping(to_shape(feature.geom)),
-        "properties": properties,
+        "id": feature.pk,
+        "geometry": json.loads(feature.geom.geojson),
+        "properties": {
+            "uid": feature.pk,
+            "asset_id": feature.properties.get("asset_id"),
+            "asset_type": feature.properties.get("asset_type"),
+        },
     }
-
-
-def yield_features_for_layer(layer: str):
-    db: Session
-    with SessionLocal() as db:
-        query = (
-            select(Feature)
-            .options(selectinload(Feature.damages_expected))
-            .filter(Feature.layer == layer)
-            .execution_options(yield_per=1000)
-        )
-        for partition in db.execute(query).partitions(1000):
-            for (feature,) in partition:
-                yield feature
 
 
 if __name__ == "__main__":
-    try:
-        layer = snakemake.wildcards.layer
-        output = snakemake.output
-    except NameError:
-        print("Expected to run from snakemake")
-        exit()
-
-    with open(str(output), "w") as fh:
-        for feature in tqdm(yield_features_for_layer(layer)):
-            geojson = feature_as_geojson(feature)
-            json.dump(geojson, fh, indent=0, ensure_ascii=False)
-            fh.write("\n")
+    layer = snakemake.wildcards.layer
+    with open(str(snakemake.output[0]), "w", encoding="utf-8") as output:
+        for feature in Feature.objects.filter(layer_id=layer).order_by("pk").iterator(chunk_size=1000):
+            output.write(json.dumps(feature_as_geojson(feature), ensure_ascii=False) + "\n")

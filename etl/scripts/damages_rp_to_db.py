@@ -2,11 +2,13 @@
 """
 import pyarrow.parquet as pq
 
-from sqlalchemy.orm import Session
-from tqdm import tqdm
-
-from backend.db.database import SessionLocal
-from backend.db.models import ReturnPeriodDamage
+import sys
+from itertools import zip_longest
+from pathlib import Path
+sys.path.insert(0, str(Path("scripts").resolve()))
+import django_runtime  # noqa: F401
+from map.models import DamagesRp
+from result_import import import_results
 
 
 def yield_return_period_damages(exposure_fname, damage_fname, loss_fname):
@@ -14,72 +16,48 @@ def yield_return_period_damages(exposure_fname, damage_fname, loss_fname):
     potentially very large parquet files in row batches.
     """
     batch_size = 100
-    exp_pf = pq.ParquetFile(exposure_fname)
-    exp_batches = exp_pf.iter_batches(batch_size)
-    dmg_pf = pq.ParquetFile(damage_fname)
-    dmg_batches = dmg_pf.iter_batches(batch_size)
-    loss_pf = pq.ParquetFile(loss_fname)
-    loss_batches = loss_pf.iter_batches(batch_size)
+    with open(exposure_fname, "rb") as exp_source, open(damage_fname, "rb") as dmg_source, open(loss_fname, "rb") as loss_source:
+        exp_pf = pq.ParquetFile(exp_source)
+        exp_batches = exp_pf.iter_batches(batch_size)
+        dmg_pf = pq.ParquetFile(dmg_source)
+        dmg_batches = dmg_pf.iter_batches(batch_size)
+        loss_pf = pq.ParquetFile(loss_source)
+        loss_batches = loss_pf.iter_batches(batch_size)
 
-    # Loop while there are still batches, joining each set of three batches
-    # (one from each file) at each iteration. This works so long as the Parquet
-    # files share asset order and number of rows.
-    while True:
-        try:
-            exp_df = parse_rp_damage_batch(next(exp_batches)).rename(
-                columns={"none": "exposure"}
-            )
-            dmg_df = parse_rp_damage_batch(next(dmg_batches)).rename(
-                columns={
-                    "amin": "damage_amin",
-                    "mean": "damage_mean",
-                    "amax": "damage_amax",
-                }
-            )
-            loss_df = parse_rp_damage_batch(next(loss_batches)).rename(
-                columns={
-                    "amin": "loss_amin",
-                    "mean": "loss_mean",
-                    "amax": "loss_amax",
-                }
-            )
-            batch_df = dmg_df.join(loss_df).join(exp_df).fillna(0).reset_index()
-
-            # in case of data not having non-zero values in this batch
-            expected_columns = [
-                "damage_amin",
-                "damage_mean",
-                "damage_amax",
-                "loss_amin",
-                "loss_mean",
-                "loss_amax",
-                "exposure",
-            ]
-            ensure_columns(batch_df, expected_columns)
-
+        for exp_batch, dmg_batch, loss_batch in zip_longest(exp_batches, dmg_batches, loss_batches):
+            if exp_batch is None or dmg_batch is None or loss_batch is None:
+                raise ValueError("Exposure, damage and loss files have different row counts")
+            uids = [batch.column(batch.schema.get_field_index("uid")).to_pylist()
+                    for batch in (exp_batch, dmg_batch, loss_batch)]
+            if uids[0] != uids[1] or uids[0] != uids[2]:
+                raise ValueError("Exposure, damage and loss files have different UID order")
+            exp_df = parse_rp_damage_batch(exp_batch).rename(columns={"none": "exposure"})
+            dmg_df = parse_rp_damage_batch(dmg_batch).rename(columns={
+                "amin": "damage_amin", "mean": "damage_mean", "amax": "damage_amax"})
+            loss_df = parse_rp_damage_batch(loss_batch).rename(columns={
+                "amin": "loss_amin", "mean": "loss_mean", "amax": "loss_amax"})
+            batch_df = dmg_df.join(loss_df, how="outer").join(exp_df, how="outer").fillna(0).reset_index()
+            columns = ["damage_amin", "damage_mean", "damage_amax", "loss_amin", "loss_mean", "loss_amax", "exposure"]
+            ensure_columns(batch_df, columns)
             for row in batch_df.itertuples():
-                yield ReturnPeriodDamage(
-                    feature_id=row.uid,
-                    hazard=row.hazard,
-                    rcp=row.rcp,
-                    epoch=row.epoch,
-                    rp=row.rp,
-                    exposure=row.exposure,
-                    damage_amin=row.damage_amin,
-                    damage_mean=row.damage_mean,
-                    damage_amax=row.damage_amax,
-                    loss_amin=row.loss_amin,
-                    loss_mean=row.loss_mean,
-                    loss_amax=row.loss_amax,
+                params = {"rcp": str(row.rcp), "epoch": int(row.epoch)}
+                if row.conf != "None":
+                    params["confidence"] = str(row.conf)
+                yield params, dict(
+                    feature_id=int(row.uid), hazard=str(row.hazard), rp=int(row.rp),
+                    **{name: getattr(row, name) for name in columns},
                 )
-        except StopIteration:
-            break
+
 
 
 def parse_rp_damage_batch(batch):
     """Parse a parquet (arrow) row batch to pandas"""
     data = batch.to_pandas()
     data_cols = [c for c in batch.schema.names if "rp" in c]
+    if not data_cols:
+        raise ValueError("No result columns found in source")
+    if data["uid"].isna().any():
+        raise ValueError("Return-period source has missing feature IDs")
 
     melted = (
         data.melt(id_vars="uid", value_vars=data_cols)
@@ -91,7 +69,11 @@ def parse_rp_damage_batch(batch):
         r"^(\w+)__rp_(\d+)__rcp_([\w\d.]+)__epoch_(\d+)__?conf_([^_]+)_?(\w+)?"
     )
     meta.columns = ["hazard", "rp", "rcp", "epoch", "conf", "var"]
+    if meta[["hazard", "rp", "rcp", "epoch", "conf"]].isna().any().any():
+        raise ValueError("Unrecognized return-period damage column name")
     meta["var"] = meta["var"].fillna("none")
+    if not meta["var"].isin(["none", "amin", "mean", "amax"]).all():
+        raise ValueError("Unrecognized return-period damage statistic")
 
     return (
         melted.join(meta)
@@ -101,7 +83,6 @@ def parse_rp_damage_batch(batch):
             columns="var",
             values="value",
         )
-        .query("conf == '50' or conf == 'None'")
     )
 
 
@@ -124,15 +105,11 @@ if __name__ == "__main__":
         print("Expected to run from snakemake")
         exit()
 
-    damage_rps = yield_return_period_damages(exposure, damage, loss)
-
-    db: Session
-    with SessionLocal() as db:
-        for i, damage_rp in enumerate(tqdm(damage_rps, desc=f"{layer}_rp")):
-            db.add(damage_rp)
-            if i % 10000 == 0:
-                db.commit()
-        db.commit()
+    import_results(
+        DamagesRp, "damages_rp", ["parameter_set", "feature", "hazard", "rp"],
+        ["exposure", "damage_amin", "damage_mean", "damage_amax", "loss_amin", "loss_mean", "loss_amax"],
+        yield_return_period_damages(exposure, damage, loss),
+    )
 
     with open(str(output), "w") as fh:
         fh.write(f"Loaded to database.\n\n")

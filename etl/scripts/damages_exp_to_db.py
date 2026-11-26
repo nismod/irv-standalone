@@ -2,37 +2,33 @@
 """
 import pyarrow.parquet as pq
 
-from sqlalchemy.orm import Session
-from tqdm import tqdm
-
-from backend.db.database import SessionLocal
-from backend.db.models import ExpectedDamage
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path("scripts").resolve()))
+import django_runtime  # noqa: F401
+from map.models import DamagesExpected
+from result_import import import_results
 
 
 def yield_expected_damages(expected_fname):
     """Generate ExpectedDamage database model objects, reading through
     potentially very large parquet files in row batches.
     """
-    pf = pq.ParquetFile(expected_fname)
-    batch_size = 100
-    batches = pf.iter_batches(batch_size)
+    with open(expected_fname, "rb") as source:
+        pf = pq.ParquetFile(source)
+        batch_size = 100
+        batches = pf.iter_batches(batch_size)
 
-    for batch in batches:
-        batch_df = parse_exp_damage_batch(batch)
-        for row in batch_df.itertuples():
-            yield ExpectedDamage(
-                feature_id=row.uid,
-                hazard=row.hazard,
-                rcp=row.rcp,
-                epoch=row.epoch,
-                protection_standard=row.protection_standard,
-                ead_amin=row.ead_amin,
-                ead_mean=row.ead_mean,
-                ead_amax=row.ead_amax,
-                eael_amin=row.eael_amin,
-                eael_mean=row.eael_mean,
-                eael_amax=row.eael_amax,
-            )
+        for batch in batches:
+            batch_df = parse_exp_damage_batch(batch)
+            for row in batch_df.itertuples():
+                yield ({"rcp": str(row.rcp), "epoch": int(row.epoch)}, dict(
+                    feature_id=int(row.uid), hazard=str(row.hazard),
+                    protection_standard=int(row.protection_standard),
+                    ead_amin=row.ead_amin, ead_mean=row.ead_mean, ead_amax=row.ead_amax,
+                    eael_amin=row.eael_amin, eael_mean=row.eael_mean, eael_amax=row.eael_amax,
+                ))
+
 
 
 def parse_exp_damage_batch(batch):
@@ -41,11 +37,16 @@ def parse_exp_damage_batch(batch):
     # parquet files come in "fat" format, with string column names representing
     # damage type, defended status, and min/mean/max suffix
     data_cols = [c for c in batch.schema.names if "EA" in c]
+    if not data_cols:
+        raise ValueError("No result columns found in source")
 
     # no protection_standard in list by default, append if in scheme
     id_vars = ["uid", "hazard", "rcp", "epoch"]
     if "protection_standard" in batch.schema.names:
         id_vars.append("protection_standard")
+
+    if data[id_vars].isna().any().any():
+        raise ValueError("Expected damage source has missing scenario or feature IDs")
 
     # melt to long format
     data = (
@@ -57,6 +58,10 @@ def parse_exp_damage_batch(batch):
     # parse string key column for metadata
     meta = data.variable.str.extract(r"^([^_]+)_(\w+)_([^_]+)$")
     meta.columns = ["damage", "defended", "var"]
+    if (meta.isna().any().any()
+            or not meta.damage.str.lower().isin(["ead", "eael"]).all()
+            or not meta["var"].isin(["amin", "mean", "amax"]).all()):
+        raise ValueError("Unrecognized expected damage column name")
 
     # join metadata columns
     data = data.join(meta)
@@ -112,15 +117,12 @@ if __name__ == "__main__":
         print("Expected to run from snakemake")
         exit()
 
-    damage_exp = yield_expected_damages(expected)
-
-    db: Session
-    with SessionLocal() as db:
-        for i, damage_exp in enumerate(tqdm(damage_exp, desc=f"{layer}_exp")):
-            db.add(damage_exp)
-            if i % 1000 == 0:
-                db.commit()
-        db.commit()
+    import_results(
+        DamagesExpected, "damages_expected",
+        ["parameter_set", "feature", "hazard", "protection_standard"],
+        ["ead_amin", "ead_mean", "ead_amax", "eael_amin", "eael_mean", "eael_amax"],
+        yield_expected_damages(expected),
+    )
 
     with open(str(output), "w") as fh:
         fh.write(f"Loaded to database.\n\n")
