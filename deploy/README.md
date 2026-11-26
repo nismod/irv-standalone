@@ -8,8 +8,8 @@ The virtual machine runs several services, coordinated by docker compose
 - Frontend React application, built using node and npm. In production this is
   stored and served as static files (HTML/JS/CSS).
 - Backend Django application (`irvapp`), which serves the API - including
-  raster tiles (from tiledb) and pixel data - and proxies the vector
-  tileserver
+  raster tiles (using the Terracotta Python library) and pixel data - and
+  proxies the vector tileserver
 - Vector tileserver, tileserver-gl-light - not exposed directly, reached by
   the backend over the compose network
 

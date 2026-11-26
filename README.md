@@ -31,32 +31,19 @@ in [Architecture Decision Records](adr/README.md).
 
 The visualisation tool runs using prepared versions of analysis data and results:
 
-- Rasters stored as Cloud-Optimised GeoTIFFs, with metadata ingested into a
-  SQLite database
+- Rasters stored as Cloud-Optimised GeoTIFFs, with metadata ingested into
+  Terracotta databases by a Django management command
+- Zarr raster stacks for pixel queries, prepared by a Django management command
 - Vector (asset or feature) data stored in a PostgreSQL database
 - Vector data preprocessed into Mapbox Vector Tiles
 
 See `./etl` directory for details.
 
-### App currency
-
-After applying Django migrations, edit the `currency` entry under **Map configs**
-in Django admin. Set its type to **String** and its value to a three-letter ISO
-currency code, such as `MUR`, `GBP`, or `USD`, then reload the app. The default is
-`JMD`.
-
-The frontend exposes this as `mapViewConfig.app.currency`. Asset damage and
-adaptation field specs carry a display `unit`, such as `MUR` or `MUR/day`, which
-their legend, tooltip, and list formatters use. Damage chart and table headings
-use the configured currency's symbol, retaining `J$` for `JMD`. Number formatting
-follows the browser locale.
-The data must already be expressed in that currency; this setting does not
-convert values. Raster financial layers retain their dataset-specific units.
-
 ## Build and run
 
-Running the application requires several server processes: the vector and raster
-tileservers, the app backend, and the app frontend.
+Running the application requires the vector tileserver, the Django backend,
+the PostgreSQL database, and the app frontend. Django serves raster tiles and
+pixel data using the prepared raster metadata and stacks.
 
 To run all of these through docker compose on a local machine, run:
 
@@ -78,65 +65,12 @@ Install required packages. Run from the `frontend` directory:
 npm install
 ```
 
-### Run the vector tileserver
-
-Run the tileserver directly (from the root of the project) using docker:
-
-```bash
-docker compose -f docker-compose.dev.yml up vector-tileserver -d
-```
-
-### Run the raster tileserver
-
-Install the raster tileserver either in a local environment, or as a docker container.
-
-For example, installing using conda:
-
-```bash
-conda create --name infrariskvis python=3.8 numpy rasterio shapely crick
-conda activate infrariskvis
-pip install terracotta[recommended]
-```
-
-Or build using docker:
-
-```bash
-docker compose -f docker-compose.dev.yml build raster-tileserver
-```
-
-Prepare the raster tileserver database:
-
-```bash
-docker compose -f docker-compose.dev.yml run --rm raster-tile-ingester
-```
-
-Prepare the pixel stack data:
-
-```bash
-python irvapp/manage.py ingest_pixel_stacks \
-  /path/to/jamaica-infrastructure/processed_data \
-  tileserver/stacks
-```
-
-The ingester reads `RASTER_BASE_PATH`, `RASTER_PATH_TEMPLATE`, `TC_DRIVER_PATH`,
-and optionally `TC_DRIVER_PROVIDER`. For example, a PostgreSQL-backed ingest can
-be run with:
-
-```bash
-python irvapp/manage.py ingest_rasters tileserver/raster/data \
-  --path-template '{type}__rp_{rp}__rcp_{rcp}__epoch_{epoch}__conf_{confidence}.tif' \
-  --database 'postgresql://user:password@localhost/terracotta'
-```
-
-Run the raster tileserver:
-
-```bash
-docker compose -f docker-compose.dev.yml up raster-tileserver -d
-```
-
 ### Run the backend Django app
 
-Run `docker-compose` to run the Django app, Postgres database, and tile servers in containers (behind a Traefik proxy.) The Django app runs in development mode, picking up any local changes that you make to the code in the `irvapp/` directory.
+Run `docker compose` to run the Django app, Postgres database, vector tileserver,
+and frontend in containers (behind a Traefik proxy.) The Django app runs in
+development mode, picking up any local changes that you make to the code in the
+`irvapp/` directory.
 
 ```bash
 docker compose -f docker-compose.dev.yml up -d
@@ -153,6 +87,32 @@ If this is your first time running the Django app, you'll need to create an admi
 ```bash
 docker compose -f docker-compose.dev.yml exec django python manage.py createsuperuser
 ```
+
+### Map configuration
+
+With the app running and migrations applied, sign in to
+[Django admin](http://localhost/admin/) using the admin account created above.
+
+Use **Map configs** to set up the initial base map view when configuring the app
+for the first time. Set `latitude` and `longitude` to the centre of your study
+area and `zoom` to the starting zoom level. Adjust `minZoom`, `maxZoom`,
+`minPitch`, and `maxPitch` to control the permitted view range. These entries
+use the **Number** type. Migrations seed defaults for Jamaica; update them for
+your study area, then reload the app.
+
+#### App currency
+
+Edit the `currency` entry under **Map configs**. Set its type to **String** and
+its value to a three-letter ISO currency code, such as `MUR`, `GBP`, or `USD`,
+then reload the app. The default is `JMD`.
+
+The frontend exposes this as `mapViewConfig.app.currency`. Asset damage and
+adaptation field specs carry a display `unit`, such as `MUR` or `MUR/day`, which
+their legend, tooltip, and list formatters use. Damage chart and table headings
+use the configured currency's symbol, retaining `J$` for `JMD`. Number formatting
+follows the browser locale.
+The data must already be expressed in that currency; this setting does not
+convert values. Raster financial layers retain their dataset-specific units.
 
 ### Populating the database
 
@@ -193,7 +153,39 @@ PGDATABASE=jamaicadev \
 pg_restore -cC -j 8 -d jamaicadev ./archive/jamaicadev_2023-05-16.dump
 ```
 
-##### Synthetic development results
+#### Raster and pixel data
+
+Django serves raster tiles using the Terracotta Python library. Configure
+`RasterTileSource` records in Django admin with a `path_template` for the raster
+files and a `database` for their metadata (default: `terracotta.sqlite`). Link
+the sources to raster layers as described above.
+
+After applying migrations and loading or configuring those records, ingest the
+prepared rasters with the Django management command. From the project root:
+
+```bash
+docker compose -f docker-compose.dev.yml run --rm \
+  --volume ./tileserver/raster/data:/data/raster:rw \
+  django python manage.py ingest_rasters /data/raster
+```
+
+The command reads each source's `path_template` and `database` from the Django
+database. Relative paths are resolved against the supplied base directory,
+which defaults to `RASTER_BASE_PATH` or `/data/raster`. The volume override
+allows ingestion to write metadata; the running Django service mounts the same
+directory read-only and uses `TILEDB_URI=/data/raster` to find metadata databases.
+Raster paths recorded during ingestion must also be accessible to that service.
+
+Prepare the pixel stack data with the Django command below, using a local
+Python environment with the backend requirements installed:
+
+```bash
+python irvapp/manage.py ingest_pixel_stacks \
+  /path/to/jamaica-infrastructure/processed_data \
+  tileserver/stacks
+```
+
+#### Synthetic development results
 
 Once feature geometries and hazard rasters have been imported, the optional
 `seed_synthetic_results` command creates **synthetic UI fixtures**, not risk
